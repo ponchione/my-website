@@ -1,0 +1,83 @@
+{
+  "experience": [
+    {
+      "id": 1,
+      "company": "Applied Research Associates Inc.",
+      "location": "Remote",
+      "url": "https://www.ara.com/",
+      "title": "Staff Software Engineer II",
+      "startDate": "April 2023",
+      "endDate": "Present",
+      "projects": [
+        {
+          "id": 1,
+          "project": "GeoRMS Platform - Army Corps of Engineers",
+          "responsibilities": [
+            "Architected Python/Pandas ETL pipeline processing geospatial data with React/Electron frontend using Leaflet, Turf.js, Recharts, and Zustand state management.",
+            "Developed ML event detection algorithm and data quality framework for automated validation and anomaly detection.",
+            "Built time-series visualization and analytics dashboards for operational intelligence."
+          ]
+        },
+        {
+          "id": 2,
+          "project": "AssetFox - PennDOT",
+          "responsibilities": [
+            "Developed enterprise asset management system using C# .NET, Vue.js/Vuetify, MS SQL Server for statewide infrastructure lifecycle modeling.",
+            "Optimized complex stored procedures and APIs supporting proprietary simulation engine for budget/deterioration forecasting.",
+            "Managed Azure DevOps CI/CD pipelines and Microsoft Azure cloud deployments."
+          ]
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "company": "Goodville Mutual Casualty Company",
+      "location": "New Holland, PA",
+      "url": "https://www.goodville.com/",
+      "title": "Senior Java Web Developer",
+      "startDate": "July 2021",
+      "endDate": "April 2023",
+      "responsibilities": [
+        "Modernized insurance systems with Java/Spring Boot microservices, Docker containers, and Kubernetes orchestration.",
+        "Built payment processing (Authorize.NET), third-party integrations, and Drools rules engine for rating/premium calculations.",
+        "Integrated modern portals with legacy IBMi DB2 databases ensuring seamless data migration."
+      ]
+    },
+    {
+      "id": 3,
+      "company": "Arcadia.io",
+      "location": "Pittsburgh, PA",
+      "url": "https://arcadia.io/",
+      "title": "Software Engineer in Test",
+      "startDate": "February 2021",
+      "endDate": "July 2021",
+      "responsibilities": [
+        "Developed Python/Locust performance testing suites identifying critical bottlenecks and scalability issues.",
+        "Maintained and enhanced Cypress.js UI test automation framework for comprehensive QA coverage.",
+        "Led \"one-man performance testing team\" before transitioning to full-stack test automation role."
+      ]
+    },
+    {
+      "id": 4,
+      "company": "PNC Bank",
+      "location": "Pittsburgh, PA",
+      "url": "https://www.pnc.com/en/personal-banking.html",
+      "title": "Java Engineer",
+      "startDate": "February 2020",
+      "endDate": "February 2021",
+      "responsibilities": [
+        "Developed Spring Boot APIs orchestrating JMeter/Gatling performance tests with MySQL database for result analytics.",
+        "Containerized testing infrastructure deployed to Kubernetes/OpenShift environments.",
+        "Created enterprise-wide performance monitoring dashboards and automated test execution frameworks."
+      ]
+    }
+  ],
+  "education": {
+    "id": 1,
+    "school": "Indiana University of Pennsylvania",
+    "url": "https://www.iup.edu/index.html",
+    "level": "Bachelors of Science",
+    "degree": "Mathematics",
+    "year": 2016
+  }
+}
