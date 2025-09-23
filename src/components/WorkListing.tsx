@@ -6,6 +6,7 @@ import {
     CardHeader,
     CardTitle
 } from "@/components/ui/card.tsx";
+import {Badge} from "@/components/ui/badge";
 
 type WorkListingProps = {
     job: WorkExperience
@@ -47,6 +48,15 @@ export function WorkListing({ job }: WorkListingProps) {
                         </div>
                     </div>
                 )}
+
+                <div className={"mt-4"}>
+                    <h4 className={"text-sm font-semibold mb-2 text-primary/70"}>Technologies Used:</h4>
+                    <div className="flex flex-wrap gap-2">
+                        {job.skills?.map((skill, index) => (
+                            <Badge key={index} variant={"secondary"}>{skill}</Badge>
+                        ))}
+                    </div>
+                </div>
             </CardContent>
         </Card>
     );

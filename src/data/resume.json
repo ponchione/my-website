@@ -27,6 +27,20 @@
             "Managed Azure DevOps CI/CD pipelines and Microsoft Azure cloud deployments."
           ]
         }
+      ],
+      "skills": [
+        "Python",
+        "Pandas/GeoPandas",
+        "React",
+        "TypeScript",
+        "Material UI",
+        "SQLite",
+        "Electron",
+        "C# .NET",
+        "Vue3",
+        "Vuetify",
+        "MS SQL",
+        "Azure"
       ]
     },
     {
@@ -41,6 +55,15 @@
         "Modernized insurance systems with Java/Spring Boot microservices, Docker containers, and Kubernetes orchestration.",
         "Built payment processing (Authorize.NET), third-party integrations, and Drools rules engine for rating/premium calculations.",
         "Integrated modern portals with legacy IBMi DB2 databases ensuring seamless data migration."
+      ],
+      "skills": [
+        "Java",
+        "Spring Boot",
+        "Groovy",
+        "MS SQL",
+        "Docker",
+        "Kubernetes",
+        "Drools"
       ]
     },
     {
@@ -55,6 +78,12 @@
         "Developed Python/Locust performance testing suites identifying critical bottlenecks and scalability issues.",
         "Maintained and enhanced Cypress.js UI test automation framework for comprehensive QA coverage.",
         "Led \"one-man performance testing team\" before transitioning to full-stack test automation role."
+      ],
+      "skills": [
+        "Python",
+        "Locust",
+        "JavaScript",
+        "Cypress.js"
       ]
     },
     {
@@ -69,6 +98,13 @@
         "Developed Spring Boot APIs orchestrating JMeter/Gatling performance tests with MySQL database for result analytics.",
         "Containerized testing infrastructure deployed to Kubernetes/OpenShift environments.",
         "Created enterprise-wide performance monitoring dashboards and automated test execution frameworks."
+      ],
+      "skills": [
+        "Java",
+        "Spring Boot",
+        "MySQL",
+        "JMeter",
+        "Gatling"
       ]
     }
   ],

@@ -17,12 +17,17 @@ export type WorkExperience = {
     endDate: string;
     projects?: Project[];
     responsibilities?: string[];
+    skills?: string[];
 }
 
 export type Project = {
     id: number;
     project: string;
     responsibilities: string[];
+}
+
+export type Skills = {
+    skills: string[];
 }
 
 export type Education = {
