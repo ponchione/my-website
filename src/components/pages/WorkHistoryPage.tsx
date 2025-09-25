@@ -6,7 +6,7 @@ const typedResumeData: Resume = resumeData;
 
 export function WorkHistoryPage() {
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 mt-6">
             {typedResumeData.experience.map((job) => (
                 <WorkListing key={job.id} job={job} />
             ))}
