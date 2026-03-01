@@ -71,7 +71,7 @@ function SocialLinks() {
                     <LinkedInIcon className="h-5 w-5" />
                 </Button>
             </a>
-            <a href="mailto:placeholder@example.com">
+            <a href="mailto:mitchell.ponchione@gmail.com">
                 <Button variant="ghost" size="icon">
                     <MailIcon className="h-5 w-5" />
                 </Button>
