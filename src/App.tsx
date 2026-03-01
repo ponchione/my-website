@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom';
 import { AboutPage } from './components/pages/AboutPage';
 import { WorkHistoryPage } from './components/pages/WorkHistoryPage';
+import { ProjectsPage } from './components/pages/ProjectsPage';
 import { SideNav, MobileHeader, MobileFooter } from "@/components/SideNav.tsx";
 
 function App() {
@@ -16,6 +17,7 @@ function App() {
                       <Routes>
                           <Route path="/" element={<AboutPage />} />
                           <Route path="/work-history" element={<WorkHistoryPage />} />
+                          <Route path="/projects" element={<ProjectsPage />} />
                       </Routes>
                   </main>
               </div>

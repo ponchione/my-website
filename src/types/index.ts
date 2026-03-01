@@ -38,3 +38,12 @@ export type Education = {
     degree: string;
     year: number;
 }
+
+export type PersonalProject = {
+    id: number;
+    name: string;
+    description: string;
+    tags: string[];
+    status: 'In Progress' | 'Planned' | 'Complete';
+    github_url?: string;
+}
