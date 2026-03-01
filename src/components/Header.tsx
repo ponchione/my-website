@@ -1,9 +1,5 @@
+// Header content has been moved to SideNav.
+// This component is intentionally left empty and can be removed.
 export function Header() {
-    return (
-        <header className="text-4xl font-bold tracking-tight text-primary sm:text-4xl">
-            <h1>
-                Mitchell Ponchione
-            </h1>
-        </header>
-    );
+    return null;
 }
