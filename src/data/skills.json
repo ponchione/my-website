@@ -10,7 +10,7 @@
     },
     {
       "name": "Cloud & DevOps",
-      "skills": ["Azure", "AWS", "Docker", "Kubernetes", "CI/CD"]
+      "skills": ["Azure", "Docker", "Kubernetes", "CI/CD"]
     },
     {
       "name": "Data",

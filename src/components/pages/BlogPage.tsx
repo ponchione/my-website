@@ -54,7 +54,7 @@ export function BlogPage() {
     return (
         <div className="space-y-6 mt-6">
             <p className="text-muted-foreground">
-                Thoughts, tutorials, and reflections on software engineering and technology.
+                Thoughts and reflections on software engineering and technology.
             </p>
             {sortedPosts.map((post) => (
                 <BlogCard key={post.slug} post={post} />
