@@ -1,0 +1,41 @@
+project:
+  name: my-website
+  path: "/home/gernsback/source/my-website"
+  language: typescript
+  framework: react
+
+index:
+  include:
+    - "**/*.tsx"
+    - "**/*.ts"
+    - "**/*.md"
+  exclude:
+    - "**/*.css"
+    - "**/*.html"
+    - "**/*.json"
+    - "**/node_modules/"
+    - "**/.git/"
+    - "**/dist/"
+    - "**/.vercel/"
+    - "**/package-lock.json"
+
+conventions:
+  module_path: "src/components"
+  shared_path: "src/lib"
+  sql_path: ""
+  docs_path: ""
+
+prompts:
+  scope: ""
+  verify: ""
+  build: ""
+
+executor:
+  tool: claude-code
+  timeout_minutes: 30
+
+safety:
+  forbidden_paths:
+    - "package-lock.json"
+  max_files_changed: 20
+  max_duration_mins: 45
