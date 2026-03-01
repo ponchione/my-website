@@ -2,11 +2,11 @@
   "categories": [
     {
       "name": "Languages",
-      "skills": ["C#", "Java", "Go", "Python", "TypeScript", "SQL"]
+      "skills": ["Go", "C#", "Java", "Python", "TypeScript", "SQL"]
     },
     {
       "name": "Frameworks",
-      "skills": [".NET", "Spring Boot", "React", "Next.js", "Vue.js", "Angular"]
+      "skills": [".NET", "Spring Boot", "React", "Next.js", "Vue.js"]
     },
     {
       "name": "Cloud & DevOps",

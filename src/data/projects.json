@@ -1,24 +1,10 @@
 [
   {
     "id": 1,
-    "name": "KickBrass",
-    "description": "A full-stack web application for managing and organizing brass instrument practice sessions and performances.",
-    "tags": ["Go", "React", "Next.js", "PostgreSQL"],
-    "status": "In Progress",
-    "github_url": "https://github.com/ponchione/kickbrass"
-  },
-  {
-    "id": 2,
     "name": "AI Agent Orchestrator",
     "description": "A lightweight orchestration layer for coordinating multiple AI agents using local language models.",
     "tags": ["Go", "SQLite", "llama.cpp"],
-    "status": "In Progress"
-  },
-  {
-    "id": 3,
-    "name": "Ballistic Calculator",
-    "description": "A high-performance ballistic trajectory calculator compiled to WebAssembly for client-side computation.",
-    "tags": ["Go", "WASM", "PowerSync"],
-    "status": "Planned"
+    "status": "In Progress",
+    "github_url": "https://github.com/ponchione/agent-conductor"
   }
 ]
