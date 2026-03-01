@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from 'react-router-dom';
-import { Menu } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -83,6 +84,38 @@ function Copyright() {
     );
 }
 
+function ThemeToggle() {
+    const { theme, setTheme } = useTheme();
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted) {
+        return (
+            <Button variant="ghost" size="icon" disabled aria-label="Toggle theme">
+                <Sun className="h-5 w-5" />
+            </Button>
+        );
+    }
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            aria-label="Toggle theme"
+        >
+            {theme === 'dark' ? (
+                <Sun className="h-5 w-5" />
+            ) : (
+                <Moon className="h-5 w-5" />
+            )}
+        </Button>
+    );
+}
+
 export function MobileHeader() {
     const [open, setOpen] = useState(false);
     const isMobile = useIsMobile();
@@ -120,7 +153,10 @@ export function MobileHeader() {
                     </nav>
                     <SheetFooter>
                         <Separator />
-                        <SocialLinks />
+                        <div className="flex items-center justify-between px-2">
+                            <SocialLinks />
+                            <ThemeToggle />
+                        </div>
                         <Copyright />
                     </SheetFooter>
                 </SheetContent>
@@ -166,7 +202,10 @@ export function SideNav() {
             {/* Social links and copyright */}
             <div className="flex flex-col gap-3">
                 <Separator />
-                <SocialLinks />
+                <div className="flex items-center justify-between px-2">
+                    <SocialLinks />
+                    <ThemeToggle />
+                </div>
                 <Copyright />
             </div>
         </nav>
