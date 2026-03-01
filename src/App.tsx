@@ -4,6 +4,7 @@ import { WorkHistoryPage } from './components/pages/WorkHistoryPage';
 import { ProjectsPage } from './components/pages/ProjectsPage';
 import { SkillsPage } from './components/pages/SkillsPage';
 import { BlogPage } from './components/pages/BlogPage';
+import { PostPage } from './components/pages/PostPage';
 import { SideNav, MobileHeader, MobileFooter } from "@/components/SideNav.tsx";
 
 function App() {
@@ -22,7 +23,7 @@ function App() {
                           <Route path="/projects" element={<ProjectsPage />} />
                           <Route path="/skills" element={<SkillsPage />} />
                           <Route path="/blog" element={<BlogPage />} />
-                          <Route path="/blog/:slug" element={<BlogPage />} />
+                          <Route path="/blog/:slug" element={<PostPage />} />
                       </Routes>
                   </main>
               </div>
