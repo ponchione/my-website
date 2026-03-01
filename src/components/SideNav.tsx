@@ -41,6 +41,11 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     Skills
                 </NavLink>
             </Button>
+            <Button variant="ghost" asChild className="w-full justify-start">
+                <NavLink to="/blog" onClick={onNavigate}>
+                    Blog
+                </NavLink>
+            </Button>
         </div>
     );
 }

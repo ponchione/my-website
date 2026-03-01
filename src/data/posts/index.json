@@ -1,0 +1,16 @@
+[
+  {
+    "slug": "hello-world",
+    "title": "Hello, World!",
+    "date": "2025-06-15T00:00:00.000Z",
+    "tags": ["introduction", "personal"],
+    "excerpt": "Welcome to my blog! This is my first post where I share a bit about myself and what you can expect from this space."
+  },
+  {
+    "slug": "placeholder-second-post",
+    "title": "Exploring New Technologies",
+    "date": "2025-05-20T00:00:00.000Z",
+    "tags": ["technology", "web development", "react"],
+    "excerpt": "A deep dive into some of the latest web technologies I've been experimenting with and my thoughts on where the industry is heading."
+  }
+]

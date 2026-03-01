@@ -56,3 +56,15 @@ export type SkillCategory = {
 export type SkillsData = {
     categories: SkillCategory[];
 }
+
+export type PostMeta = {
+    slug: string;
+    title: string;
+    date: string;
+    tags: string[];
+    excerpt: string;
+}
+
+export type Post = PostMeta & {
+    content: string;
+}
