@@ -1,0 +1,20 @@
+{
+  "categories": [
+    {
+      "name": "Languages",
+      "skills": ["C#", "Java", "Go", "Python", "TypeScript", "SQL"]
+    },
+    {
+      "name": "Frameworks",
+      "skills": [".NET", "Spring Boot", "React", "Next.js", "Vue.js", "Angular"]
+    },
+    {
+      "name": "Cloud & DevOps",
+      "skills": ["Azure", "AWS", "Docker", "Kubernetes", "CI/CD"]
+    },
+    {
+      "name": "Data",
+      "skills": ["MS SQL", "PostgreSQL", "SQLite", "Pandas", "ETL"]
+    }
+  ]
+}

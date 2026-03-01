@@ -47,3 +47,12 @@ export type PersonalProject = {
     status: 'In Progress' | 'Planned' | 'Complete';
     github_url?: string;
 }
+
+export type SkillCategory = {
+    name: string;
+    skills: string[];
+}
+
+export type SkillsData = {
+    categories: SkillCategory[];
+}
