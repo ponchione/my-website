@@ -1,6 +1,6 @@
 ---
 title: "Agency in an AI World"
-date: "2026-03-02"
+date: "2026-02-25"
 tags:
     - AI
 ---

@@ -24,26 +24,24 @@ function formatDate(isoDate: string): string {
 
 function BlogCard({ post }: { post: PostMeta }) {
     return (
-        <Card>
-            <CardHeader>
-                <CardTitle className="hover:underline">
-                    <Link to={`/blog/${post.slug}`}>
-                        {post.title}
-                    </Link>
-                </CardTitle>
-                <CardDescription>{formatDate(post.date)}</CardDescription>
-            </CardHeader>
+        <Link to={`/blog/${post.slug}`} className="block">
+            <Card className="transition-colors hover:bg-accent/50">
+                <CardHeader>
+                    <CardTitle>{post.title}</CardTitle>
+                    <CardDescription>{formatDate(post.date)}</CardDescription>
+                </CardHeader>
 
-            <CardContent className="space-y-4">
-                <p>{post.excerpt}</p>
+                <CardContent className="space-y-4">
+                    <p>{post.excerpt}</p>
 
-                <div className="flex flex-wrap gap-2">
-                    {post.tags.map((tag, index) => (
-                        <Badge key={index} variant="secondary">{tag}</Badge>
-                    ))}
-                </div>
-            </CardContent>
-        </Card>
+                    <div className="flex flex-wrap gap-2">
+                        {post.tags.map((tag, index) => (
+                            <Badge key={index} variant="secondary">{tag}</Badge>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </Link>
     );
 }
 

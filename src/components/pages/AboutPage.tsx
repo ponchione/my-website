@@ -19,7 +19,7 @@ export function AboutPage() {
                 <Separator />
 
                 <p>
-                    First and foremost, I'm a husband and father to a growing family of (soon to be) five.
+                    First and foremost, I'm a husband and father to a growing family of five.
                     That role has taught me invaluable lessons in patience and long-term planning.
                     But the engineer in me still needs an outlet, which I find in building experimental projects
                     with Go, or playing grand strategy games with friends. And when I need a complete reset, I find
