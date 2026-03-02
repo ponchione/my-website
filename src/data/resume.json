@@ -7,24 +7,26 @@
       "url": "https://www.ara.com/",
       "title": "Staff Software Engineer II",
       "startDate": "April 2023",
-      "endDate": "Present",
+      "endDate": "February 2026",
       "projects": [
         {
           "id": 1,
           "project": "GeoRMS Platform - Army Corps of Engineers",
           "responsibilities": [
-            "Architected Python/Pandas ETL pipeline processing geospatial data with React/Electron frontend using Leaflet, Turf.js, Recharts, and Zustand state management.",
-            "Developed ML event detection algorithm and data quality framework for automated validation and anomaly detection.",
-            "Built time-series visualization and analytics dashboards for operational intelligence."
+            "Designed and architected a geospatial analytics platform from scratch for the Army Corps of Engineers, creating a \"Google Maps for waterway dredging\" thats helping to transform national dredging project analysis and decision-making.",
+            "Leveraged LLMs throughout the full development lifecycle — from domain learning and data science fundamentals to architecture planning and implementation — compressing months of ramp-up across unfamiliar domains (dredging operations, Python/Pandas, React/Electron) into rapid, high-quality delivery.",
+            "Engineered a scalable ETL data pipeline in Python/Pandas to ingest, cleanse, and classify multifaceted operational data, including an ML-based classification algorithm, creating a unified queryable dataset for U.S. dredging operations.",
+            "Built a dynamic client-side aggregation engine within the Electron app that performs real-time statistical calculations, replacing days of manual analysis with immediate insights.",
+            "Authored the technical paper detailing the platform's data pipeline and application architecture for an ERDC publication."
           ]
         },
         {
           "id": 2,
           "project": "AssetFox - PennDOT",
           "responsibilities": [
-            "Developed enterprise asset management system using C# .NET, Vue.js/Vuetify, MS SQL Server for statewide infrastructure lifecycle modeling.",
-            "Optimized complex stored procedures and APIs supporting proprietary simulation engine for budget/deterioration forecasting.",
-            "Managed Azure DevOps CI/CD pipelines and Microsoft Azure cloud deployments."
+            "Led development of a statewide asset management platform using Vue3 and C#/.NET on Azure, enabling management of billions of dollars in state assets and improving capital planning accuracy.",
+            "Optimized REST APIs and SQL (LINQ) query performance to reduce latency and accelerate simulation and budget forecasting workflows for state planners.",
+            "Engineered CI/CD pipelines (Azure DevOps/Docker) to automate the release lifecycle, eliminating manual deployments and improving uptime for state civil engineers."
           ]
         }
       ],
@@ -40,7 +42,9 @@
         "Vue3",
         "Vuetify",
         "MS SQL",
-        "Azure"
+        "Azure",
+        "Azure DevOps",
+        "Docker"
       ]
     },
     {
@@ -52,9 +56,9 @@
       "startDate": "July 2021",
       "endDate": "April 2023",
       "responsibilities": [
-        "Modernized insurance systems with Java/Spring Boot microservices, Docker containers, and Kubernetes orchestration.",
-        "Built payment processing (Authorize.NET), third-party integrations, and Drools rules engine for rating/premium calculations.",
-        "Integrated modern portals with legacy IBMi DB2 databases ensuring seamless data migration."
+        "Led migration of a monolithic legacy insurance platform to a containerized microservices architecture using Java and Spring Boot, increasing deployment frequency and developer productivity.",
+        "Architected and developed a secure, RESTful API-based payment processing system integrated with Authorize.NET, enabling frictionless premium payments.",
+        "Designed a unified web portal that integrated with legacy IBM i/DB2 systems, consolidating workflows and improving data integrity across business operations."
       ],
       "skills": [
         "Java",
@@ -95,16 +99,33 @@
       "startDate": "February 2020",
       "endDate": "February 2021",
       "responsibilities": [
-        "Developed Spring Boot APIs orchestrating JMeter/Gatling performance tests with MySQL database for result analytics.",
-        "Containerized testing infrastructure deployed to Kubernetes/OpenShift environments.",
-        "Created enterprise-wide performance monitoring dashboards and automated test execution frameworks."
+        "Engineered an internal performance testing automation platform using Java (Spring Boot) and Kubernetes, providing self-service capabilities to 50+ developers.",
+        "Automated test execution and streamlined results analysis via a central dashboard, reducing performance-related production bugs."
       ],
       "skills": [
         "Java",
         "Spring Boot",
-        "MySQL",
-        "JMeter",
-        "Gatling"
+        "Kubernetes"
+      ]
+    },
+    {
+      "id": 5,
+      "company": "Goodville Mutual Casualty Company",
+      "location": "New Holland, PA",
+      "url": "https://www.goodville.com/",
+      "title": "Java Web Developer",
+      "startDate": "June 2017",
+      "endDate": "January 2020",
+      "responsibilities": [
+        "Developed and maintained core backend features for primary policy and claims management applications, integrating with MSSQL and legacy IBM i systems.",
+        "Implemented a complex, Drools-based rating engine to automate underwriting rules, reducing manual data entry and processing."
+      ],
+      "skills": [
+        "Java",
+        "Drools",
+        "MS SQL",
+        "IBM i",
+        "DB2"
       ]
     }
   ],
