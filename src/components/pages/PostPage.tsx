@@ -1,9 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import matter from 'gray-matter';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
+import { parseFrontmatter } from '@/lib/frontmatter';
 import './PostPage.css';
 
 const postFiles = import.meta.glob('/src/data/posts/*.md', {
@@ -26,7 +26,7 @@ function getPost(slug: string) {
     const raw = postFiles[key];
     if (!raw) return null;
 
-    const { data, content } = matter(raw);
+    const { data, content } = parseFrontmatter(raw);
     return {
         title: data.title as string,
         date: data.date as string,
