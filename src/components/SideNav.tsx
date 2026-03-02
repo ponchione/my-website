@@ -84,7 +84,7 @@ function Copyright() {
     return (
         <div className="flex space-x-2 text-sm text-muted-foreground px-2 pb-2">
             <CopyrightIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />
-            <span>2025 Mitchell Ponchione</span>
+            <span>2026 Mitchell Ponchione</span>
         </div>
     );
 }
