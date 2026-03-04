@@ -5,5 +5,12 @@
     "date": "2026-02-25",
     "tags": ["AI"],
     "excerpt": "There's a certain irony unfolding in the software community"
+  },
+  {
+    "slug": "micro_business_architecture",
+    "title": "Micro Business Architecture — The New MBA",
+    "date": "2026-03-04",
+    "tags": ["AI", "Business"],
+    "excerpt": "Okay, it's partly a joke. But there's a real point in there."
   }
 ]
