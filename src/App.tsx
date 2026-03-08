@@ -1,5 +1,6 @@
 import { SideNav, MobileHeader, MobileFooter } from "@/components/SideNav.tsx";
 import { AnimatedOutlet } from "@/components/AnimatedOutlet.tsx";
+import { Analytics } from "@vercel/analytics/react";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
               </div>
           </div>
           <MobileFooter />
+          <Analytics />
       </div>
   )
 }
