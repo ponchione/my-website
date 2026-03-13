@@ -9,6 +9,14 @@
   },
   {
     "id": 2,
+    "name": "Scrapeyard",
+    "description": "Scrapeyard is a config-driven web scraping service built with FastAPI and Scrapling",
+    "tags": ["Python", "SQLite"],
+    "status": "v1",
+    "github_url": "https://github.com/ponchione/scrapeyard"
+  },
+  {
+    "id": 3,
     "name": "simpli",
     "description": "Little toy programming language that I'm making for my kids.",
     "tags": ["Go", "SQLite"],
