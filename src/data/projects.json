@@ -1,8 +1,8 @@
 [
   {
     "id": 1,
-    "name": "AI Agent Orchestrator",
-    "description": "A lightweight orchestration layer for coordinating multiple AI agents using local language models.",
+    "name": "AI Agent Conductor",
+    "description": "A lightweight conductor layer for coordinating multiple AI agents.",
     "tags": ["Go", "SQLite", "llama.cpp"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/agent-conductor"
@@ -19,7 +19,7 @@
     "id": 3,
     "name": "simpli",
     "description": "Little toy programming language that I'm making for my kids.",
-    "tags": ["Go", "SQLite"],
+    "tags": ["Go"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/simpli"
   }
