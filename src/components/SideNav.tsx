@@ -69,6 +69,7 @@ function SocialLinks() {
                 href="https://github.com/ponchione"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub"
             >
                 <Button variant="ghost" size="icon">
                     <GithubIcon className="h-5 w-5" />
@@ -78,12 +79,13 @@ function SocialLinks() {
                 href="https://www.linkedin.com/in/mitchell-ponchione/"
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="LinkedIn"
             >
                 <Button variant="ghost" size="icon">
                     <LinkedInIcon className="h-5 w-5" />
                 </Button>
             </a>
-            <a href="mailto:mitchell.ponchione@gmail.com">
+            <a href="mailto:mitchell.ponchione@gmail.com" aria-label="Email">
                 <Button variant="ghost" size="icon">
                     <MailIcon className="h-5 w-5" />
                 </Button>
