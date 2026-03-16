@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { Menu, Sun, Moon } from 'lucide-react';
 import { useTheme } from 'next-themes';
+import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -18,30 +19,41 @@ import LinkedInIcon from '@/components/icons/LinkedInIcon';
 import MailIcon from '@/components/icons/MailIcon';
 import CopyrightIcon from '@/components/icons/CopyrightIcon';
 
+const activeClasses = 'bg-accent text-accent-foreground dark:bg-accent/50';
+
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
+    const { pathname } = useLocation();
+
+    const isActive = (path: string) => {
+        if (path === '/blog') {
+            return pathname === '/blog' || pathname.startsWith('/blog/');
+        }
+        return pathname === path;
+    };
+
     return (
         <div className="flex flex-col gap-2">
-            <Button variant="ghost" asChild className="w-full justify-start">
+            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/') && activeClasses)}>
                 <NavLink to="/" onClick={onNavigate}>
                     About
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start">
+            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/work-history') && activeClasses)}>
                 <NavLink to="/work-history" onClick={onNavigate}>
                     Work History
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start">
+            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/projects') && activeClasses)}>
                 <NavLink to="/projects" onClick={onNavigate}>
                     Projects
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start">
+            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/skills') && activeClasses)}>
                 <NavLink to="/skills" onClick={onNavigate}>
                     Skills
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className="w-full justify-start">
+            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/blog') && activeClasses)}>
                 <NavLink to="/blog" onClick={onNavigate}>
                     Blog
                 </NavLink>
