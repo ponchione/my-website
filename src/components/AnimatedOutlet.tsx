@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { AboutPage } from './pages/AboutPage';
 import { WorkHistoryPage } from './pages/WorkHistoryPage';
 import { ProjectsPage } from './pages/ProjectsPage';
-import { SkillsPage } from './pages/SkillsPage';
 import { BlogPage } from './pages/BlogPage';
 import { PostPage } from './pages/PostPage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 const pageVariants = {
     initial: {
@@ -78,9 +78,9 @@ export function AnimatedOutlet() {
                     <Route path="/" element={<AboutPage />} />
                     <Route path="/work-history" element={<WorkHistoryPage />} />
                     <Route path="/projects" element={<ProjectsPage />} />
-                    <Route path="/skills" element={<SkillsPage />} />
                     <Route path="/blog" element={<BlogPage />} />
                     <Route path="/blog/:slug" element={<PostPage />} />
+                    <Route path="*" element={<NotFoundPage />} />
                 </Routes>
             </motion.div>
         </AnimatePresence>

@@ -9,6 +9,8 @@ import {
     CardTitle
 } from "@/components/ui/card.tsx";
 import { Badge } from "@/components/ui/badge";
+import { ArrowRight } from 'lucide-react';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 
 const typedPostsData: PostMeta[] = postsData as PostMeta[];
 
@@ -24,7 +26,7 @@ function formatDate(isoDate: string): string {
 
 function BlogCard({ post }: { post: PostMeta }) {
     return (
-        <Link to={`/blog/${post.slug}`} className="block">
+        <Link to={`/blog/${post.slug}`} className="block group">
             <Card className="transition-colors hover:bg-accent/50">
                 <CardHeader>
                     <CardTitle>{post.title}</CardTitle>
@@ -39,6 +41,13 @@ function BlogCard({ post }: { post: PostMeta }) {
                             <Badge key={index} variant="secondary">{tag}</Badge>
                         ))}
                     </div>
+
+                    <div className="flex justify-end text-sm text-muted-foreground transition-colors group-hover:text-foreground">
+                        <span className="inline-flex items-center gap-1">
+                            Read
+                            <ArrowRight className="h-4 w-4" />
+                        </span>
+                    </div>
                 </CardContent>
             </Card>
         </Link>
@@ -46,6 +55,8 @@ function BlogCard({ post }: { post: PostMeta }) {
 }
 
 export function BlogPage() {
+    useDocumentTitle('Blog — Mitchell Ponchione');
+
     const sortedPosts = [...typedPostsData].sort(
         (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
     );

@@ -4,6 +4,7 @@ import remarkGfm from 'remark-gfm';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
 import { parseFrontmatter } from '@/lib/frontmatter';
+import { useDocumentTitle } from '@/hooks/use-document-title';
 import './PostPage.css';
 
 const postFiles = import.meta.glob('/src/data/posts/*.md', {
@@ -38,6 +39,10 @@ function getPost(slug: string) {
 
 export function PostPage() {
     const { slug } = useParams<{ slug: string }>();
+    const post = slug ? getPost(slug) : null;
+    const title = post ? `${post.title} — Mitchell Ponchione` : 'Not Found — Mitchell Ponchione';
+
+    useDocumentTitle(title);
 
     if (!slug) {
         return (
@@ -50,8 +55,6 @@ export function PostPage() {
             </div>
         );
     }
-
-    const post = getPost(slug);
 
     if (!post) {
         return (

@@ -48,11 +48,6 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
                     Projects
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/skills') && activeClasses)}>
-                <NavLink to="/skills" onClick={onNavigate}>
-                    Skills
-                </NavLink>
-            </Button>
             <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/blog') && activeClasses)}>
                 <NavLink to="/blog" onClick={onNavigate}>
                     Blog
@@ -98,7 +93,7 @@ function Copyright() {
     return (
         <div className="flex space-x-2 text-sm text-muted-foreground px-2 pb-2">
             <CopyrightIcon className="h-4 w-4 flex-shrink-0 mt-0.5" />
-            <span>2026 Mitchell Ponchione</span>
+            <span>{new Date().getFullYear()} Mitchell Ponchione</span>
         </div>
     );
 }

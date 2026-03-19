@@ -3,6 +3,7 @@
     "id": 1,
     "name": "AI Agent Conductor",
     "description": "A lightweight conductor layer for coordinating multiple AI agents.",
+    "updated": "March 2026",
     "tags": ["Go", "SQLite", "llama.cpp"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/agent-conductor"
@@ -11,16 +12,9 @@
     "id": 2,
     "name": "Scrapeyard",
     "description": "Scrapeyard is a config-driven web scraping service built with FastAPI and Scrapling",
+    "updated": "March 2026",
     "tags": ["Python", "SQLite"],
-    "status": "v1",
+    "status": "V1",
     "github_url": "https://github.com/ponchione/scrapeyard"
-  },
-  {
-    "id": 3,
-    "name": "simpli",
-    "description": "Little toy programming language that I'm making for my kids.",
-    "tags": ["Go"],
-    "status": "In Progress",
-    "github_url": "https://github.com/ponchione/simpli"
   }
 ]

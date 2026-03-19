@@ -43,18 +43,10 @@ export type PersonalProject = {
     id: number;
     name: string;
     description: string;
+    updated: string;
     tags: string[];
-    status: 'In Progress' | 'Planned' | 'Complete';
+    status: 'In Progress' | 'Planned' | 'Complete' | 'V1';
     github_url?: string;
-}
-
-export type SkillCategory = {
-    name: string;
-    skills: string[];
-}
-
-export type SkillsData = {
-    categories: SkillCategory[];
 }
 
 export type PostMeta = {
