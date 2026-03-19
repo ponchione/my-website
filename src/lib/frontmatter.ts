@@ -1,6 +1,13 @@
 /**
- * Browser-safe frontmatter parser. Splits markdown on `---` delimiters
- * and parses the YAML frontmatter into a plain object.
+ * Minimal frontmatter parser — handles only simple key: value pairs
+ * and flat arrays (- item). Does NOT support:
+ * - Values containing colons that need YAML-aware parsing
+ * - Multi-line strings or block scalars
+ * - Nested objects
+ * - Inline JSON/flow syntax
+ *
+ * Keep frontmatter fields simple. If richer YAML is ever needed,
+ * replace this with the `gray-matter` npm package.
  */
 export function parseFrontmatter(raw: string): { data: Record<string, unknown>; content: string } {
     const match = raw.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);

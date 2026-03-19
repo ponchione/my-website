@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Add new blog post URLs here when publishing. -->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://mitchellponchione.vercel.app/</loc></url>
+  <url><loc>https://mitchellponchione.vercel.app/work-history</loc></url>
+  <url><loc>https://mitchellponchione.vercel.app/projects</loc></url>
+  <url><loc>https://mitchellponchione.vercel.app/blog</loc></url>
+  <url><loc>https://mitchellponchione.vercel.app/blog/agency_in_an_AI_world</loc></url>
+  <url><loc>https://mitchellponchione.vercel.app/blog/micro_business_architecture</loc></url>
+</urlset>

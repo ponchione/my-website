@@ -1,6 +1,7 @@
 ---
 title: "Micro Business Architecture — The New MBA"
 date: "2026-03-04"
+excerpt: "Okay, it's partly a joke. But there's a real point in there."
 tags:
     - AI
     - Business

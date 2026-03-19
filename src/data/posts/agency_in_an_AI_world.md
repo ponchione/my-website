@@ -1,6 +1,7 @@
 ---
 title: "Agency in an AI World"
 date: "2026-02-25"
+excerpt: "There's a certain irony unfolding in the software community"
 tags:
     - AI
 ---

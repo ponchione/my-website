@@ -3,43 +3,17 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft } from 'lucide-react';
-import { parseFrontmatter } from '@/lib/frontmatter';
 import { useDocumentTitle } from '@/hooks/use-document-title';
+import { formatPostDate, getAllPosts, getPostBySlug } from '@/lib/posts';
 import './PostPage.css';
-
-const postFiles = import.meta.glob('/src/data/posts/*.md', {
-    query: '?raw',
-    import: 'default',
-    eager: true,
-}) as Record<string, string>;
-
-function formatDate(isoDate: string): string {
-    const date = new Date(isoDate);
-    return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-        timeZone: 'UTC',
-    });
-}
-
-function getPost(slug: string) {
-    const key = `/src/data/posts/${slug}.md`;
-    const raw = postFiles[key];
-    if (!raw) return null;
-
-    const { data, content } = parseFrontmatter(raw);
-    return {
-        title: data.title as string,
-        date: data.date as string,
-        tags: (data.tags ?? []) as string[],
-        content,
-    };
-}
 
 export function PostPage() {
     const { slug } = useParams<{ slug: string }>();
-    const post = slug ? getPost(slug) : null;
+    const allPosts = getAllPosts();
+    const post = slug ? getPostBySlug(slug) : null;
+    const currentIndex = post ? allPosts.findIndex((entry) => entry.slug === post.slug) : -1;
+    const previousPost = currentIndex >= 0 ? allPosts[currentIndex + 1] ?? null : null;
+    const nextPost = currentIndex > 0 ? allPosts[currentIndex - 1] : null;
     const title = post ? `${post.title} — Mitchell Ponchione` : 'Not Found — Mitchell Ponchione';
 
     useDocumentTitle(title);
@@ -80,7 +54,9 @@ export function PostPage() {
 
             <header className="space-y-3">
                 <h1 className="text-3xl font-bold tracking-tight">{post.title}</h1>
-                <p className="text-muted-foreground">{formatDate(post.date)}</p>
+                <p className="text-muted-foreground">
+                    {formatPostDate(post.date)} &middot; {post.readingTime}
+                </p>
                 <div className="flex flex-wrap gap-2">
                     {post.tags.map((tag, index) => (
                         <Badge key={index} variant="secondary">{tag}</Badge>
@@ -92,6 +68,31 @@ export function PostPage() {
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                     {post.content}
                 </ReactMarkdown>
+            </div>
+
+            <div className="flex justify-between gap-6 border-t pt-6">
+                <div className="min-w-0 flex-1">
+                    {previousPost ? (
+                        <Link
+                            to={`/blog/${previousPost.slug}`}
+                            className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <span className="block">← Previous Post</span>
+                            <span className="mt-1 block font-medium text-foreground">{previousPost.title}</span>
+                        </Link>
+                    ) : null}
+                </div>
+                <div className="min-w-0 flex-1 text-right">
+                    {nextPost ? (
+                        <Link
+                            to={`/blog/${nextPost.slug}`}
+                            className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                        >
+                            <span className="block">Next Post →</span>
+                            <span className="mt-1 block font-medium text-foreground">{nextPost.title}</span>
+                        </Link>
+                    ) : null}
+                </div>
             </div>
         </div>
     );

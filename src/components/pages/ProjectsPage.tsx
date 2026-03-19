@@ -10,9 +10,12 @@ export function ProjectsPage() {
 
     return (
         <div className="space-y-6 mt-6">
-            <p className="text-muted-foreground">
-                A collection of personal and side projects I'm currently working on or have planned.
-            </p>
+            <header className="space-y-2">
+                <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
+                <p className="text-muted-foreground">
+                    A collection of personal and side projects I'm currently working on or have planned.
+                </p>
+            </header>
             {typedProjectsData.map((project) => (
                 <ProjectListing key={project.id} project={project} />
             ))}

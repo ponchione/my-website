@@ -18,6 +18,10 @@ export function WorkHistoryPage() {
 
     return (
         <div className="space-y-6 mt-6">
+            <header className="space-y-2">
+                <h1 className="text-2xl font-bold tracking-tight">Work History</h1>
+            </header>
+
             {experience.map((job, index) => (
                 <WorkListing key={job.id} job={job} initialExpanded={index === 0} />
             ))}
