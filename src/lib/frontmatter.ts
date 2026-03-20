@@ -1,10 +1,16 @@
 /**
- * Minimal frontmatter parser — handles only simple key: value pairs
- * and flat arrays (- item). Does NOT support:
- * - Values containing colons that need YAML-aware parsing
- * - Multi-line strings or block scalars
+ * Browser-safe frontmatter parser. Splits markdown on `---` delimiters
+ * and parses the YAML frontmatter into a plain object.
+ *
+ * CONSTRAINTS — this parser handles only:
+ * - Simple key: value pairs (string values)
+ * - Flat arrays using `- item` syntax
+ *
+ * It does NOT support and will silently produce wrong results for:
+ * - Values containing colons (e.g., excerpt: "AI: A New Era")
+ * - Multi-line strings or YAML block scalars (| or >)
  * - Nested objects
- * - Inline JSON/flow syntax
+ * - Inline flow syntax (e.g., tags: [AI, Business])
  *
  * Keep frontmatter fields simple. If richer YAML is ever needed,
  * replace this with the `gray-matter` npm package.

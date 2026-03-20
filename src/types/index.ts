@@ -26,10 +26,6 @@ export type Project = {
     responsibilities: string[];
 }
 
-export type Skills = {
-    skills: string[];
-}
-
 export type Education = {
     id: number;
     school: string;

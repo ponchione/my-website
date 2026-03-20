@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Add new blog post URLs here when publishing. -->
+<!-- Remember to add new blog post URLs here when publishing -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://mitchellponchione.vercel.app/</loc></url>
   <url><loc>https://mitchellponchione.vercel.app/work-history</loc></url>

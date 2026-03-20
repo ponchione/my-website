@@ -1,8 +1,9 @@
 import { useParams, Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft } from 'lucide-react';
+import { Separator } from '@/components/ui/separator';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatPostDate, getAllPosts, getPostBySlug } from '@/lib/posts';
 import './PostPage.css';
@@ -70,29 +71,42 @@ export function PostPage() {
                 </ReactMarkdown>
             </div>
 
-            <div className="flex justify-between gap-6 border-t pt-6">
-                <div className="min-w-0 flex-1">
-                    {previousPost ? (
-                        <Link
-                            to={`/blog/${previousPost.slug}`}
-                            className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <span className="block">← Previous Post</span>
-                            <span className="mt-1 block font-medium text-foreground">{previousPost.title}</span>
-                        </Link>
-                    ) : null}
-                </div>
-                <div className="min-w-0 flex-1 text-right">
-                    {nextPost ? (
-                        <Link
-                            to={`/blog/${nextPost.slug}`}
-                            className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
-                        >
-                            <span className="block">Next Post →</span>
-                            <span className="mt-1 block font-medium text-foreground">{nextPost.title}</span>
-                        </Link>
-                    ) : null}
-                </div>
+            <div className="space-y-6">
+                <Separator />
+                <nav className="flex justify-between gap-6">
+                    <div className="min-w-0 flex-1">
+                        {previousPost ? (
+                            <div className="space-y-1">
+                                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                                    <ArrowLeft className="h-4 w-4" />
+                                    Previous Post
+                                </span>
+                                <Link
+                                    to={`/blog/${previousPost.slug}`}
+                                    className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    {previousPost.title}
+                                </Link>
+                            </div>
+                        ) : null}
+                    </div>
+                    <div className="min-w-0 flex-1 text-right">
+                        {nextPost ? (
+                            <div className="space-y-1">
+                                <span className="inline-flex items-center gap-1 text-sm text-muted-foreground">
+                                    Next Post
+                                    <ArrowRight className="h-4 w-4" />
+                                </span>
+                                <Link
+                                    to={`/blog/${nextPost.slug}`}
+                                    className="block text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                >
+                                    {nextPost.title}
+                                </Link>
+                            </div>
+                        ) : null}
+                    </div>
+                </nav>
             </div>
         </div>
     );

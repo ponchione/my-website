@@ -1,10 +1,10 @@
 ---
 title: "Micro Business Architecture — The New MBA"
 date: "2026-03-04"
-excerpt: "Okay, it's partly a joke. But there's a real point in there."
 tags:
     - AI
     - Business
+excerpt: "Okay, it's partly a joke. But there's a real point in there."
 ---
 
 I've been kicking around an idea that I can't quite shake, so I'm going to try to put it into words even though it's not fully baked yet.

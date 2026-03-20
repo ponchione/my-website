@@ -1,12 +1,15 @@
-import { useState, useEffect } from 'react';
+import { Suspense, lazy, useEffect, useState } from 'react';
 import { useLocation, Routes, Route } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
-import { AboutPage } from './pages/AboutPage';
-import { WorkHistoryPage } from './pages/WorkHistoryPage';
-import { ProjectsPage } from './pages/ProjectsPage';
-import { BlogPage } from './pages/BlogPage';
-import { PostPage } from './pages/PostPage';
-import { NotFoundPage } from './pages/NotFoundPage';
+
+const AboutPage = lazy(() => import('./pages/AboutPage').then((module) => ({ default: module.AboutPage })));
+const WorkHistoryPage = lazy(() =>
+    import('./pages/WorkHistoryPage').then((module) => ({ default: module.WorkHistoryPage })),
+);
+const ProjectsPage = lazy(() => import('./pages/ProjectsPage').then((module) => ({ default: module.ProjectsPage })));
+const BlogPage = lazy(() => import('./pages/BlogPage').then((module) => ({ default: module.BlogPage })));
+const PostPage = lazy(() => import('./pages/PostPage').then((module) => ({ default: module.PostPage })));
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage').then((module) => ({ default: module.NotFoundPage })));
 
 const pageVariants = {
     initial: {
@@ -47,6 +50,10 @@ const reducedMotionTransition = {
     duration: 0,
 };
 
+function RouteFallback() {
+    return <div className="mt-6 text-sm text-muted-foreground">Loading...</div>;
+}
+
 export function AnimatedOutlet() {
     const location = useLocation();
     const [prefersReducedMotion, setPrefersReducedMotion] = useState<boolean | undefined>(undefined);
@@ -74,14 +81,16 @@ export function AnimatedOutlet() {
                 exit="exit"
                 transition={transition}
             >
-                <Routes location={location}>
-                    <Route path="/" element={<AboutPage />} />
-                    <Route path="/work-history" element={<WorkHistoryPage />} />
-                    <Route path="/projects" element={<ProjectsPage />} />
-                    <Route path="/blog" element={<BlogPage />} />
-                    <Route path="/blog/:slug" element={<PostPage />} />
-                    <Route path="*" element={<NotFoundPage />} />
-                </Routes>
+                <Suspense fallback={<RouteFallback />}>
+                    <Routes location={location}>
+                        <Route path="/" element={<AboutPage />} />
+                        <Route path="/work-history" element={<WorkHistoryPage />} />
+                        <Route path="/projects" element={<ProjectsPage />} />
+                        <Route path="/blog" element={<BlogPage />} />
+                        <Route path="/blog/:slug" element={<PostPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
+                    </Routes>
+                </Suspense>
             </motion.div>
         </AnimatePresence>
     );

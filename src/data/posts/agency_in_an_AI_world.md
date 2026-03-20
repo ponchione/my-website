@@ -1,9 +1,9 @@
 ---
 title: "Agency in an AI World"
 date: "2026-02-25"
-excerpt: "There's a certain irony unfolding in the software community"
 tags:
     - AI
+excerpt: "There's a certain irony unfolding in the software community"
 ---
 
 There's a certain irony unfolding in the software community: as AI systems become more capable, the human value in the system is shifting towards the ability to _want things clearly_ and _acting on that want deliberately_.  This is to say, having agency inside the system itself.

@@ -1,5 +1,6 @@
 import type { Post } from '@/types';
 import { parseFrontmatter } from '@/lib/frontmatter';
+import { getReadingTime } from '@/lib/reading-time';
 
 const postFiles = import.meta.glob('/src/data/posts/*.md', {
     query: '?raw',
@@ -19,12 +20,6 @@ export function formatPostDate(isoDate: string): string {
         day: 'numeric',
         timeZone: 'UTC',
     });
-}
-
-export function getReadingTime(content: string): string {
-    const words = content.trim().split(/\s+/).filter(Boolean).length;
-    const minutes = Math.max(1, Math.ceil(words / 225));
-    return `${minutes} min read`;
 }
 
 function getSlugFromPath(path: string): string {
