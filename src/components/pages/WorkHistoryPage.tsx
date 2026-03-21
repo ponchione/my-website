@@ -17,16 +17,18 @@ export function WorkHistoryPage() {
     const { experience, education } = typedResumeData;
 
     return (
-        <div className="space-y-6 mt-6">
-            <header className="space-y-2">
+        <div className="mt-6">
+            <header className="space-y-2 mb-8">
                 <h1 className="text-2xl font-bold tracking-tight">Work History</h1>
             </header>
 
-            {experience.map((job, index) => (
-                <WorkListing key={job.id} job={job} initialExpanded={index === 0} />
-            ))}
+            <div className="space-y-4">
+                {experience.map((job, index) => (
+                    <WorkListing key={job.id} job={job} initialExpanded={index === 0} />
+                ))}
+            </div>
 
-            <div className="space-y-3 pt-2">
+            <div className="space-y-3 pt-8">
                 <p className="text-sm font-medium text-muted-foreground">Education</p>
                 <Card>
                     <CardHeader>

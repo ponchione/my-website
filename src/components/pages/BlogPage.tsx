@@ -51,16 +51,18 @@ export function BlogPage() {
     const sortedPosts = getAllPosts();
 
     return (
-        <div className="space-y-6 mt-6">
-            <header className="space-y-2">
+        <div className="mt-6">
+            <header className="space-y-2 mb-8">
                 <h1 className="text-2xl font-bold tracking-tight">Blog</h1>
                 <p className="text-muted-foreground">
                     Thoughts and reflections on software engineering and technology.
                 </p>
             </header>
-            {sortedPosts.map((post) => (
-                <BlogCard key={post.slug} post={post} />
-            ))}
+            <div className="space-y-4">
+                {sortedPosts.map((post) => (
+                    <BlogCard key={post.slug} post={post} />
+                ))}
+            </div>
         </div>
     );
 }

@@ -5,7 +5,7 @@ export function AboutPage() {
 
     return (
         <section className={"mt-8"}>
-            <div className="space-y-6 text-muted-foreground">
+            <div className="space-y-8 text-muted-foreground">
                 <p>
                     I'm Mitchell, a senior software engineer who loves the craft of building. For over eight years, I've applied that passion to modernizing critical systems in the insurance, banking, and government sectors — untangling legacy code, architecting data platforms, and most recently, building AI-augmented development systems that change how engineering work actually gets done.
                 </p>
