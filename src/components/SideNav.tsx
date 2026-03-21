@@ -33,22 +33,22 @@ function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
 
     return (
         <div className="flex flex-col gap-2">
-            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/') && activeClasses)}>
+            <Button variant="ghost" asChild className={cn("w-full justify-start motion-safe:transition-colors motion-safe:duration-150", isActive('/') && activeClasses)}>
                 <NavLink to="/" onClick={onNavigate}>
                     About
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/work-history') && activeClasses)}>
+            <Button variant="ghost" asChild className={cn("w-full justify-start motion-safe:transition-colors motion-safe:duration-150", isActive('/work-history') && activeClasses)}>
                 <NavLink to="/work-history" onClick={onNavigate}>
                     Work History
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/projects') && activeClasses)}>
+            <Button variant="ghost" asChild className={cn("w-full justify-start motion-safe:transition-colors motion-safe:duration-150", isActive('/projects') && activeClasses)}>
                 <NavLink to="/projects" onClick={onNavigate}>
                     Projects
                 </NavLink>
             </Button>
-            <Button variant="ghost" asChild className={cn("w-full justify-start", isActive('/blog') && activeClasses)}>
+            <Button variant="ghost" asChild className={cn("w-full justify-start motion-safe:transition-colors motion-safe:duration-150", isActive('/blog') && activeClasses)}>
                 <NavLink to="/blog" onClick={onNavigate}>
                     Blog
                 </NavLink>
@@ -66,7 +66,7 @@ function SocialLinks() {
                 rel="noopener noreferrer"
                 aria-label="GitHub"
             >
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="motion-safe:transition-transform motion-safe:duration-150 hover:scale-105">
                     <GithubIcon className="h-5 w-5" />
                 </Button>
             </a>
@@ -76,12 +76,12 @@ function SocialLinks() {
                 rel="noopener noreferrer"
                 aria-label="LinkedIn"
             >
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="motion-safe:transition-transform motion-safe:duration-150 hover:scale-105">
                     <LinkedInIcon className="h-5 w-5" />
                 </Button>
             </a>
             <a href="mailto:mitchell.ponchione@gmail.com" aria-label="Email">
-                <Button variant="ghost" size="icon">
+                <Button variant="ghost" size="icon" className="motion-safe:transition-transform motion-safe:duration-150 hover:scale-105">
                     <MailIcon className="h-5 w-5" />
                 </Button>
             </a>

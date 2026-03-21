@@ -29,7 +29,7 @@ function StatusBadge({ status }: { status: PersonalProject["status"] }) {
 
 export function ProjectListing({ project }: ProjectListingProps) {
     return (
-        <Card>
+        <Card className="motion-safe:transition-all motion-safe:duration-200 hover:shadow-sm hover:border-foreground/10">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                     {project.github_url ? (

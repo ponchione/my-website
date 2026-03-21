@@ -46,7 +46,7 @@ export function WorkListing({ job, initialExpanded = false }: WorkListingProps) 
                 aria-expanded={isExpanded}
                 onClick={toggleExpanded}
                 onKeyDown={handleKeyDown}
-                className="cursor-pointer rounded-none px-6 py-6 transition-colors hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                className="cursor-pointer rounded-none px-6 py-6 motion-safe:transition-all motion-safe:duration-200 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
             >
                 <CardTitle className="hover:underline">
                     <a

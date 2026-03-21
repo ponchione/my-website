@@ -14,7 +14,7 @@ import { formatPostDate, getAllPosts, type BlogPost } from '@/lib/posts';
 function BlogCard({ post }: { post: BlogPost }) {
     return (
         <Link to={`/blog/${post.slug}`} className="block group">
-            <Card className="transition-colors hover:bg-accent/50">
+            <Card className="motion-safe:transition-all motion-safe:duration-200 hover:shadow-sm hover:border-foreground/10">
                 <CardHeader>
                     <CardTitle>{post.title}</CardTitle>
                     <CardDescription className="flex flex-wrap items-center gap-x-2 gap-y-1">
@@ -36,7 +36,7 @@ function BlogCard({ post }: { post: BlogPost }) {
                     <div className="flex justify-end text-sm text-muted-foreground transition-colors group-hover:text-foreground">
                         <span className="inline-flex items-center gap-1">
                             Read
-                            <ArrowRight className="h-4 w-4" />
+                            <ArrowRight className="h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:translate-x-1" />
                         </span>
                     </div>
                 </CardContent>
