@@ -19,7 +19,7 @@ export function WorkHistoryPage() {
     return (
         <div className="mt-6">
             <header className="space-y-2 mb-8">
-                <h1 className="text-2xl font-bold tracking-tight">Work History</h1>
+                <h1 className="text-3xl font-bold tracking-[-0.025em]">Work History</h1>
             </header>
 
             <div className="space-y-4">

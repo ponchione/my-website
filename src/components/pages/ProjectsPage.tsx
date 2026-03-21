@@ -11,7 +11,7 @@ export function ProjectsPage() {
     return (
         <div className="mt-6">
             <header className="space-y-2 mb-8">
-                <h1 className="text-2xl font-bold tracking-tight">Projects</h1>
+                <h1 className="text-3xl font-bold tracking-[-0.025em]">Projects</h1>
                 <p className="text-muted-foreground">
                     A collection of personal and side projects I'm currently working on or have planned.
                 </p>

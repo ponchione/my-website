@@ -53,7 +53,7 @@ export function BlogPage() {
     return (
         <div className="mt-6">
             <header className="space-y-2 mb-8">
-                <h1 className="text-2xl font-bold tracking-tight">Blog</h1>
+                <h1 className="text-3xl font-bold tracking-[-0.025em]">Blog</h1>
                 <p className="text-muted-foreground">
                     Thoughts and reflections on software engineering and technology.
                 </p>
