@@ -30,7 +30,7 @@ export function WorkHistoryPage() {
 
             <div className="space-y-3 pt-8">
                 <p className="text-sm font-medium text-muted-foreground">Education</p>
-                <Card>
+                <Card className="border-t-2 border-t-foreground/5">
                     <CardHeader>
                         <CardTitle>
                             <a

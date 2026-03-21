@@ -39,7 +39,7 @@ export function WorkListing({ job, initialExpanded = false }: WorkListingProps) 
     };
 
     return (
-        <Card className="overflow-hidden gap-0 py-0">
+        <Card className="overflow-hidden gap-0 py-0 border-t-2 border-t-foreground/5">
             <CardHeader
                 role="button"
                 tabIndex={0}
