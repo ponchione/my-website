@@ -208,7 +208,7 @@ export function SideNav() {
                         Mitchell Ponchione
                     </h1>
                     <p className="text-sm text-muted-foreground">
-                        Senior Full-Stack Engineer
+                        Software Engineer · AI Systems
                     </p>
                 </div>
 
