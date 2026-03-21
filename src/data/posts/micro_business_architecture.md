@@ -7,7 +7,7 @@ tags:
 excerpt: "Okay, it's partly a joke. But there's a real point in there."
 ---
 
-I've been kicking around an idea that I can't quite shake, so I'm going to try to put it into words even though it's not fully baked yet.
+I've been kicking around an idea, so I'm going to try to put it into words even though it's not fully baked yet.
 
 Here's the setup: AI has made it absurdly cheap to build things. Not cheap like "save a few hours" cheap — cheap like "one person can do what used to take a small team" cheap. Code, design, copy, data analysis, even basic ops stuff. The execution side of building a product is collapsing in cost so fast that it's hard to keep up with what's possible quarter to quarter.
 
@@ -15,7 +15,7 @@ And that's got me thinking about what happens next. Not to jobs — everyone's a
 
 ## The thing I keep noticing
 
-Most people I know who are building stuff with AI right now are stuck in one of two mental models. Either they're using it to be more productive at their day job, or they're trying to build the next big startup. Job or startup. Employee or founder. Those are the two options people seem to see.
+Most people I know who are building stuff with AI right now are stuck in one of two mental models. Either they're using it to be more productive at their day job, or they're trying to build the next big thing. Job or startup. Employee or founder. Those are the two options people seem to see.
 
 But there's something in between that I think might be more interesting — and more realistic for most builders. Something like: a small, focused, self-sustaining business that one person can operate because AI handles the execution layer. Not a side hustle — those are unfocused by nature, just chasing whatever pays. And not a startup — I don't need venture money and I don't need to "scale" in the way VCs mean it. Something more deliberate than either of those.
 

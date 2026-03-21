@@ -1,46 +1,30 @@
 import { Link } from 'react-router-dom';
-import {
-    Card,
-    CardContent,
-    CardDescription,
-    CardHeader,
-    CardTitle
-} from "@/components/ui/card.tsx";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/use-document-title';
 import { formatPostDate, getAllPosts, type BlogPost } from '@/lib/posts';
 
-function BlogCard({ post }: { post: BlogPost }) {
+function BlogListItem({ post }: { post: BlogPost }) {
     return (
-        <Link to={`/blog/${post.slug}`} className="block group">
-            <Card className="border-t-2 border-t-foreground/5 motion-safe:transition-all motion-safe:duration-200 hover:shadow-sm hover:border-foreground/10">
-                <CardHeader>
-                    <CardTitle>{post.title}</CardTitle>
-                    <CardDescription className="flex flex-wrap items-center gap-x-2 gap-y-1">
+        <Link to={`/blog/${post.slug}`} className="group block">
+            <div className="flex items-start justify-between gap-4 py-4 motion-safe:transition-colors motion-safe:duration-150">
+                <div className="min-w-0 space-y-1">
+                    <div className="font-semibold leading-snug group-hover:underline">
+                        {post.title}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                         <span>{formatPostDate(post.date)}</span>
-                        <span className="hidden sm:inline">&middot;</span>
+                        <span>&middot;</span>
                         <span>{post.readingTime}</span>
-                    </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-4">
-                    <p>{post.excerpt}</p>
-
-                    <div className="flex flex-wrap gap-2">
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 pt-1">
                         {post.tags.map((tag, index) => (
                             <Badge key={index} variant="secondary">{tag}</Badge>
                         ))}
                     </div>
-
-                    <div className="flex justify-end text-sm text-muted-foreground motion-safe:transition-colors group-hover:text-foreground">
-                        <span className="inline-flex items-center gap-1">
-                            Read
-                            <ArrowRight className="h-4 w-4 motion-safe:transition-transform motion-safe:duration-200 group-hover:translate-x-1" />
-                        </span>
-                    </div>
-                </CardContent>
-            </Card>
+                </div>
+                <ArrowRight className="mt-1 h-4 w-4 flex-shrink-0 text-muted-foreground motion-safe:transition-all motion-safe:duration-200 group-hover:translate-x-1 group-hover:text-foreground" />
+            </div>
         </Link>
     );
 }
@@ -55,12 +39,12 @@ export function BlogPage() {
             <header className="space-y-2 mb-8">
                 <h1 className="text-3xl font-bold tracking-[-0.025em]">Blog</h1>
                 <p className="text-muted-foreground">
-                    Thoughts and reflections on software engineering and technology.
+                    I don't expect anyone to ever read these.
                 </p>
             </header>
-            <div className="space-y-4">
+            <div className="divide-y divide-border">
                 {sortedPosts.map((post) => (
-                    <BlogCard key={post.slug} post={post} />
+                    <BlogListItem key={post.slug} post={post} />
                 ))}
             </div>
         </div>
