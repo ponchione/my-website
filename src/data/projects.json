@@ -1,6 +1,15 @@
 [
   {
     "id": 1,
+    "name": "SirTopham",
+    "description": "My personal take on an agent harness",
+    "updated": "March 2026",
+    "tags": ["Go", "Python", "React", "SQLite", "LanceDB", "llama.cpp"],
+    "status": "In Progress",
+    "github_url": "https://github.com/ponchione/sirtopham"
+  },
+  {
+    "id": 2,
     "name": "AI Agent Conductor",
     "description": "A lightweight conductor layer for coordinating multiple AI agents.",
     "updated": "March 2026",
@@ -9,7 +18,7 @@
     "github_url": "https://github.com/ponchione/agent-conductor"
   },
   {
-    "id": 2,
+    "id": 3,
     "name": "Scrapeyard",
     "description": "Scrapeyard is a config-driven web scraping service built with FastAPI and Scrapling",
     "updated": "March 2026",
