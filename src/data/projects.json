@@ -3,7 +3,7 @@
     "id": 1,
     "name": "sodoryard",
     "description": "My personal take on an agent harness/orchestration",
-    "updated": "March 2026",
+    "updated": "April 2026",
     "tags": ["Go", "Python", "React", "SQLite", "LanceDB", "llama.cpp"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/sodoryard"
@@ -12,7 +12,7 @@
     "id": 2,
     "name": "Shunter",
     "description": "Code as a database idea project",
-    "updated": "March 2026",
+    "updated": "April 2026",
     "tags": ["Go"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/shunter"
@@ -21,7 +21,7 @@
     "id": 3,
     "name": "Scrapeyard",
     "description": "Scrapeyard is a config-driven web scraping service built with FastAPI and Scrapling",
-    "updated": "March 2026",
+    "updated": "April 2026",
     "tags": ["Python", "SQLite"],
     "status": "V1",
     "github_url": "https://github.com/ponchione/scrapeyard"
