@@ -1,0 +1,50 @@
+project_root: /home/gernsback/source/my-website
+log_level: info
+log_format: text
+
+server:
+  host: localhost
+  port: 8091
+  dev_mode: false
+  open_browser: false
+
+routing:
+  default:
+    provider: codex
+    model: gpt-5.4-mini
+
+providers:
+  codex:
+    type: codex
+    model: gpt-5.4-mini
+
+index:
+  include:
+    - "**/*.ts"
+    - "**/*.tsx"
+    - "**/*.js"
+    - "**/*.jsx"
+    - "**/*.md"
+    - "**/*.json"
+    - "**/*.yaml"
+    - "**/*.yml"
+    - "**/*.css"
+    - "**/*.html"
+  exclude:
+    - "**/.git/**"
+    - "**/.my-website/**"
+    - "**/.brain/**"
+    - "**/node_modules/**"
+    - "**/dist/**"
+    - "**/build/**"
+    - "**/coverage/**"
+    - "**/.next/**"
+    - "**/.turbo/**"
+    - "**/*.min.js"
+    - "**/package-lock.json"
+
+brain:
+  enabled: true
+  vault_path: .brain
+  reindex_on_startup: true
+  log_brain_queries: true
