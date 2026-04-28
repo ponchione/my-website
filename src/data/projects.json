@@ -1,12 +1,12 @@
 [
   {
     "id": 1,
-    "name": "SirTopham",
-    "description": "My personal take on an agent harness",
+    "name": "sodoryard",
+    "description": "My personal take on an agent harness/orchestration",
     "updated": "March 2026",
     "tags": ["Go", "Python", "React", "SQLite", "LanceDB", "llama.cpp"],
     "status": "In Progress",
-    "github_url": "https://github.com/ponchione/sirtopham"
+    "github_url": "https://github.com/ponchione/sodoryard"
   },
   {
     "id": 2,
@@ -14,7 +14,7 @@
     "description": "A lightweight conductor layer for coordinating multiple AI agents.",
     "updated": "March 2026",
     "tags": ["Go", "SQLite", "llama.cpp"],
-    "status": "In Progress",
+    "status": "Deprecated",
     "github_url": "https://github.com/ponchione/agent-conductor"
   },
   {
