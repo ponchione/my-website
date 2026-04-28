@@ -10,12 +10,12 @@
   },
   {
     "id": 2,
-    "name": "AI Agent Conductor",
-    "description": "A lightweight conductor layer for coordinating multiple AI agents.",
+    "name": "Shunter",
+    "description": "Code as a database idea project",
     "updated": "March 2026",
-    "tags": ["Go", "SQLite", "llama.cpp"],
-    "status": "Deprecated",
-    "github_url": "https://github.com/ponchione/agent-conductor"
+    "tags": ["Go"],
+    "status": "In Progress",
+    "github_url": "https://github.com/ponchione/shunter"
   },
   {
     "id": 3,
@@ -25,5 +25,14 @@
     "tags": ["Python", "SQLite"],
     "status": "V1",
     "github_url": "https://github.com/ponchione/scrapeyard"
+  },
+  {
+    "id": 4,
+    "name": "AI Agent Conductor",
+    "description": "A lightweight conductor layer for coordinating multiple AI agents.",
+    "updated": "March 2026",
+    "tags": ["Go", "SQLite", "llama.cpp"],
+    "status": "Deprecated",
+    "github_url": "https://github.com/ponchione/agent-conductor"
   }
 ]
