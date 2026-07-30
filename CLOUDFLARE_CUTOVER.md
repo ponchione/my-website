@@ -1,112 +1,138 @@
-# Cloudflare Pages Cutover
+# Cloudflare Workers Cutover
 
-This runbook separates the account-bound dashboard work from the automated
-validation gates. Do not change DNS until Stage 2 passes.
+This runbook records the validated Workers Static Assets deployment and the
+remaining account-bound domain work. The custom domain must not be changed
+until the preview gate below passes after every hosting-configuration change.
 
-## Stage 1 — Create the Git-integrated Pages project
+## Stage 1 — Workers deployment
 
-This stage must be completed by a user who can authorize both Cloudflare and
-GitHub:
+The site is deployed at:
 
-1. In Cloudflare, open **Workers & Pages**, select **Create application**, open
-   the **Pages** tab, and select **Import an existing Git repository**.
-2. Authorize the Cloudflare GitHub application for
-   `ponchione/my-website`, then select that repository.
-3. Use these build settings:
+`https://my-website.mitchell-ponchione.workers.dev`
 
-   | Setting | Value |
-   | --- | --- |
-   | Production branch | `main` |
-   | Build command | `npm run generate` |
-   | Build output directory | `.output/public` |
-   | Root directory | Repository root / blank |
-   | Environment variable | `NODE_VERSION=24.11.0` |
+The repository now owns the deployment behavior in `wrangler.jsonc`:
 
-4. Save and deploy the project.
-5. Record the resulting `https://<project>.pages.dev` URL and provide it for
-   Stage 2 validation.
+- Worker name: `my-website`
+- Static assets: `.output/public`
+- HTML handling: `drop-trailing-slash`
+- Not-found handling: `404-page`
 
-Do not use `wrangler pages project create` for the initial project. Wrangler
-creates a Direct Upload project, and Cloudflare does not allow an existing
-Direct Upload project to be converted to Git integration later.
+Cloudflare automatically deployed commit `5f8c456` after it was pushed to
+`main`. The resulting change from redirecting `/projects` to serving it directly
+proves that the Worker is connected to the repository and production branch.
 
-## Stage 2 — Validate before DNS
+The Cloudflare build must retain:
 
-No DNS record changes are permitted until the Pages URL passes:
+| Setting | Value |
+| --- | --- |
+| Production branch | `main` |
+| Build command | `npm run generate` |
+| Deploy command | `npm run deploy` |
+| Root directory | Repository root / blank |
+| Environment variable | `NODE_VERSION=24.11.0` |
+
+## Stage 2 — Preview acceptance
+
+The strengthened remote verifier passes against the Workers URL:
 
 ```sh
-PREVIEW_URL=https://<project>.pages.dev npm run verify:preview
+PREVIEW_URL=https://my-website.mitchell-ponchione.workers.dev npm run verify:preview
 ```
 
-The verifier covers all public routes and exact post slugs, client navigation,
-titles, canonical metadata, useful generated content, 404 status and content,
-theme hydration, mobile-sheet focus behavior, keyboard work-history expansion,
-reduced motion, and the full 34-image parity matrix.
+Validated behavior includes:
 
-Also inspect the Pages build log and confirm that the deployment is built from
-commit `0fa5d722e6aa01b0334d5bc5fc066d9841741f40` or a later validated commit.
+- Every public route and exact post slug returns 200 without redirecting to a
+  different trailing-slash shape.
+- Unknown navigation requests return the generated error page with status 404.
+- Titles, canonical metadata, generated content, `robots.txt`, and
+  `sitemap.xml` are correct.
+- Direct loading, client navigation, theme hydration, mobile-sheet focus,
+  keyboard work-history expansion, and reduced motion pass.
+- All 34 desktop/mobile and light/dark parity captures match the baseline page
+  dimensions.
 
-## Stage 3 — Custom domain and DNS
+This stage passed on 2026-07-30. The custom-domain cutover may proceed.
 
-Only begin this stage after Stage 2 is recorded as passing in `NUXT_PORT.md`.
+## Stage 3 — Cloudflare DNS and custom domain
 
-### `www` cutover
+Workers Custom Domains require an active Cloudflare zone. Do not point an
+external CNAME directly at the `workers.dev` hostname.
 
-1. In the Pages project, open **Custom domains**, choose **Set up a domain**,
-   and add `www.mitchellponchione.com` before changing its DNS record.
-2. Cloudflare will show the exact `*.pages.dev` target. At GoDaddy, replace the
-   current `www` CNAME target
-   `037ce92a12b675d1.vercel-dns-017.com` with that target.
-3. Wait for the Pages custom-domain and TLS statuses to become active.
-4. Re-run the Stage 2 verifier with
-   `PREVIEW_URL=https://www.mitchellponchione.com` and independently confirm
-   HTTPS, `robots.txt`, `sitemap.xml`, all deep links, and the 404 response.
+### Onboard the zone
 
-Cloudflare requires the Pages custom domain to be associated in the dashboard
-before the external CNAME is changed; creating only the CNAME can produce a
-`522` response.
+1. In Cloudflare, select **Domains → Onboard a domain** and add
+   `mitchellponchione.com`.
+2. Let Cloudflare scan the existing zone, then compare every imported record
+   against GoDaddy before changing nameservers. Preserve non-site records,
+   including the existing `_dmarc` TXT record.
+3. Confirm the registrar has no active DNSSEC/DS record. A public lookup showed
+   no DS record before this cutover, but the registrar remains authoritative.
+4. At GoDaddy, replace the current nameservers with the exact pair assigned by
+   Cloudflare.
+5. Wait until Cloudflare reports the zone as **Active**.
 
-### Apex behavior
-
-The authoritative nameservers are currently GoDaddy:
+The previous authoritative nameservers are:
 
 - `ns55.domaincontrol.com`
 - `ns56.domaincontrol.com`
 
-Cloudflare Pages requires an apex custom domain to be a zone on the same
-Cloudflare account with nameservers delegated to Cloudflare. For a complete
-cutover:
+The imported site records should continue pointing at Vercel during zone
+activation, keeping the rollback deployment live.
 
-1. Add `mitchellponchione.com` as a Cloudflare zone.
-2. Export or otherwise inventory every GoDaddy DNS record and compare it with
-   Cloudflare's imported records before delegation. Preserve non-site records,
-   including the existing `_dmarc` TXT record.
-3. Change the registrar nameservers to the pair assigned by Cloudflare and wait
-   until the zone is active.
-4. Add `mitchellponchione.com` to the Pages project's custom domains.
-5. Add a permanent redirect for the exact apex hostname to
-   `https://www.mitchellponchione.com`, preserving the request path and query.
-6. Confirm that the apex redirects once, `www` returns the Cloudflare Pages
-   deployment over HTTPS, and canonical links still use `www`.
+### Attach `www` to the Worker
 
-Keep the Vercel project and its historical deployments intact throughout this
-process. Removing that project is explicitly outside this migration.
+1. In Cloudflare DNS, remove the imported `www` CNAME that currently targets
+   `037ce92a12b675d1.vercel-dns-017.com`.
+2. Open **Workers & Pages → my-website → Settings → Domains & Routes**.
+3. Select **Add → Custom Domain**, enter `www.mitchellponchione.com`, and confirm.
+   Cloudflare creates the proxied DNS record and certificate.
+4. Wait until the custom domain and TLS certificate are active.
+5. Run:
 
-## Rollback references
+   ```sh
+   PREVIEW_URL=https://www.mitchellponchione.com npm run verify:preview
+   ```
 
-- Previous `www` CNAME target:
+6. Independently confirm HTTPS, `robots.txt`, `sitemap.xml`, every deep link,
+   and the 404 response before changing apex behavior.
+
+### Redirect the apex to `www`
+
+The canonical hostname is `www`, so the apex should redirect rather than serve
+a duplicate site:
+
+1. Replace the imported apex Vercel record with a proxied `A` record whose
+   value is the reserved placeholder `192.0.2.0`.
+2. Create a Cloudflare **Single Redirect** using:
+   - Request URL: `https://mitchellponchione.com/*`
+   - Target URL: `https://www.mitchellponchione.com/${1}`
+   - Status: `301`
+   - Preserve query string: enabled
+3. Confirm the apex redirects exactly once while preserving paths and query
+   strings, and that the destination canonical link uses `www`.
+
+## Final verification and rollback
+
+Keep the Vercel project and its historical deployments intact. Removing that
+project is explicitly outside this migration.
+
+Rollback references:
+
+- Previous `www` CNAME:
   `037ce92a12b675d1.vercel-dns-017.com`
 - Previous GoDaddy nameservers: `ns55.domaincontrol.com` and
   `ns56.domaincontrol.com`
-- Validated migration commit:
-  `0fa5d722e6aa01b0334d5bc5fc066d9841741f40`
+- Last fully validated pre-domain Worker URL:
+  `https://my-website.mitchell-ponchione.workers.dev`
 
-Do not perform a nameserver rollback without confirming that the original
-GoDaddy zone still contains the complete record set.
+Do not roll nameservers back without confirming that the original GoDaddy zone
+still contains the complete record set.
 
 ## Official references
 
-- [Cloudflare Pages Git integration](https://developers.cloudflare.com/pages/configuration/git-integration/)
-- [Cloudflare Pages Direct Upload](https://developers.cloudflare.com/pages/get-started/direct-upload/)
-- [Cloudflare Pages custom domains](https://developers.cloudflare.com/pages/configuration/custom-domains/)
+- [Cloudflare Workers Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+- [Static-site and custom-404 routing](https://developers.cloudflare.com/workers/static-assets/routing/static-site-generation/)
+- [Workers Custom Domains](https://developers.cloudflare.com/workers/configuration/routing/custom-domains/)
+- [Cloudflare full-zone setup](https://developers.cloudflare.com/dns/zone-setups/full-setup/setup/)
+- [Cloudflare Single Redirects](https://developers.cloudflare.com/rules/url-forwarding/single-redirects/settings/)
 - [Nuxt static hosting](https://nuxt.com/docs/4.x/getting-started/deployment#static-hosting)

@@ -2,15 +2,15 @@
 
 > Canonical implementation guide for porting `mitchellponchione.com` from
 > Vite/React to Nuxt/Vue and moving production hosting from Vercel to
-> Cloudflare Pages.
+> Cloudflare Workers Static Assets.
 
 ## Document control
 
-- Status: Nuxt implementation complete; Cloudflare access blocked
+- Status: Cloudflare preview accepted; custom-domain cutover pending
 - Last updated: 2026-07-30
-- Current phase: Phase 4, awaiting Cloudflare authentication
-- Next milestone: Connect the GitHub repository in Cloudflare Pages and validate
-  its preview deployment
+- Current phase: Phase 4, domain and DNS cutover
+- Next milestone: Onboard the Cloudflare DNS zone and attach the validated
+  Worker to `www.mitchellponchione.com`
 
 This file is the source of truth for the port. When an implementation decision
 changes, update this document in the same change. Completed work should be
@@ -19,8 +19,8 @@ checked off here only after it has been validated.
 ## Objective
 
 Rebuild the existing website in Nuxt 4 and Vue 3 with functional and visual
-parity, then deploy the port to Cloudflare Pages. Preserve the current site as
-the reference implementation until the Nuxt version passes the acceptance
+parity, then deploy the static output to Cloudflare. Preserve the current site
+as the reference implementation until the Nuxt version passes the acceptance
 checks in this document.
 
 This is a framework and hosting port, not the redesign. The port should leave a
@@ -34,7 +34,7 @@ the site's new information architecture or presentation.
 - Keep Tailwind CSS v4.
 - Use Nuxt file-based routing.
 - Generate a static site for the initial production release.
-- Deploy the generated site to Cloudflare Pages.
+- Deploy the generated site with Cloudflare Workers Static Assets.
 - Preserve all current public URLs during the port.
 - Preserve light/dark theme support, responsive navigation, keyboard behavior,
   and reduced-motion behavior.
@@ -290,6 +290,7 @@ All four commands must pass.
 | `npm test` | Pass | Four files and six focused tests pass. |
 | `npm run generate` | Pass | All known pages, exact post slugs, payloads, and static fallbacks generate successfully. |
 | `npm run verify:preview` | Pass | Direct routes, client navigation, metadata, 404, themes, focus, keyboard, sheet, work expansion, and reduced motion pass in Chromium. |
+| Remote Workers preview | Pass | The strengthened browser suite passes against `my-website.mitchell-ponchione.workers.dev`, including exact no-trailing-slash route shapes and 34 parity captures. |
 | Visual comparison | Pass | The 34 Nuxt captures match every baseline page dimension at the fixed desktop/mobile viewports in both themes. |
 | Content comparison | Pass | Résumé/project JSON and all Markdown sources are byte-identical to the React source in Git history. |
 
@@ -299,23 +300,23 @@ ignored by Git.
 
 ### External deployment status on 2026-07-30
 
-Local Cloudflare access is not configured: `wrangler whoami` reports that the
-session is unauthenticated and no `CLOUDFLARE_API_TOKEN` is present. Cloudflare
-Pages Git integration also requires the repository to be authorized through
-the Cloudflare dashboard. No Pages project or DNS record has been created or
-changed while those gates are unavailable.
+The generated site is deployed with Workers Static Assets at
+`https://my-website.mitchell-ponchione.workers.dev`. The repository owns its
+asset directory, custom-404 behavior, and clean-URL handling in
+`wrangler.jsonc`. Pushing commit `5f8c456` to `main` automatically changed the
+live Worker routing, proving the repository/production-branch integration.
 
-The account-bound steps, exact build settings, preview gate, custom-domain
-ordering, apex delegation requirements, and rollback references are recorded
-in `CLOUDFLARE_CUTOVER.md`. A Wrangler-created project was intentionally not
-used because it would be a Direct Upload project that cannot later be converted
-to the required Git integration.
+The account-bound DNS steps, custom-domain ordering, final verification, and
+rollback references are recorded in `CLOUDFLARE_CUTOVER.md`. Local Wrangler
+authentication is not needed for preview validation, but the zone and domain
+changes must be completed by an authenticated account owner.
 
 The current nameservers are GoDaddy (`ns55.domaincontrol.com` and
 `ns56.domaincontrol.com`), and the live `www` record still targets Vercel. The
 pushed migration commit has a successful Vercel deployment status, and every
 valid public route returns HTTP 200 there. This preserves a working rollback
-deployment until the Cloudflare preview and custom-domain checks pass.
+deployment until the Cloudflare custom-domain checks pass. No production DNS
+record has changed yet.
 
 ## Port sequence
 
@@ -366,13 +367,13 @@ deployment until the Cloudflare preview and custom-domain checks pass.
       after parity is confirmed.
 - [x] Update `AGENTS.md` to describe the Nuxt/Vue layout and commands.
 
-### Phase 4 — Cloudflare Pages
+### Phase 4 — Cloudflare Workers Static Assets
 
-- [ ] Create a Cloudflare Pages project connected to the repository.
+- [x] Create a Cloudflare Worker connected to the repository.
 - [ ] Configure the production branch and Node version.
-- [ ] Use `npm run generate` as the build command.
-- [ ] Publish `.output/public`.
-- [ ] Validate the Cloudflare preview URL before changing DNS.
+- [x] Use `npm run generate` as the build command.
+- [x] Publish `.output/public` through the repository-owned Wrangler config.
+- [x] Validate the Cloudflare preview URL before changing DNS.
 - [ ] Add `www.mitchellponchione.com` and the apex-domain redirect/canonical
       behavior.
 - [ ] Confirm HTTPS, redirects, sitemap, robots, 404 handling, and all deep links.
@@ -405,7 +406,7 @@ The port is complete when all of the following are true:
 - [x] The skip link works and targets `main#main-content`.
 - [x] Generated pages contain useful HTML and route-specific metadata.
 - [x] Typecheck, lint, tests, and static generation pass.
-- [ ] Cloudflare preview passes the route and behavior checks.
+- [x] Cloudflare preview passes the route and behavior checks.
 - [ ] The custom domain serves the Cloudflare deployment over HTTPS.
 - [x] Vercel-specific code and configuration are absent from the final Nuxt
       source.
@@ -416,13 +417,14 @@ The port is complete when all of the following are true:
 | --- | --- | --- |
 | 2026-07-30 | Separate port from redesign. | Establish the preferred Nuxt/Vue foundation and new host before changing the site's direction. |
 | 2026-07-30 | Target Nuxt 4, Vue 3, TypeScript, and Tailwind v4. | Align with the preferred stack and existing Eyebox experience. |
-| 2026-07-30 | Target static generation on Cloudflare Pages. | The current site does not need an always-running application server. |
+| 2026-07-30 | Target static generation on Cloudflare. | The current site does not need an always-running application server. |
 | 2026-07-30 | Preserve current URLs and exact post slugs. | Avoid broken links and search-index churn during a framework-only port. |
 | 2026-07-30 | Treat the missing skip link as a baseline defect to resolve. | The existing test expresses the intended accessibility behavior even though the React shell currently fails it. |
 | 2026-07-30 | Use Reka UI's `Dialog` primitive behind a local `UiSheet.vue` wrapper. | Preserve tested dialog accessibility behavior while avoiding a broader shadcn-vue scaffold for one component. |
 | 2026-07-30 | Use `@nuxtjs/color-mode` with an explicit dark default and fallback. | Preserve the current class-based theme contract and stored selection while preventing an incorrect-theme flash during Nuxt hydration. |
 | 2026-07-30 | Use Nuxt Content with a typed `blog` page collection. | Gain build-time Markdown parsing, schema validation, SSR rendering, and typed queries while preserving exact filename-derived slugs through explicit assertions. |
 | 2026-07-30 | Capture a 34-image React baseline at fixed desktop/mobile viewports in both themes. | Give the Nuxt parity review durable route, theme, breakpoint, 404, and open-mobile-menu visual references without expanding the port into a redesign. |
+| 2026-07-30 | Use Workers Static Assets for the Cloudflare deployment. | The account's current Git flow produced a Worker rather than a Pages project; the repository-owned asset configuration preserves the same static architecture, exact routes, and real 404 behavior. |
 
 ## Deferred decisions
 
