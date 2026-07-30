@@ -10,6 +10,7 @@
     "dev": "nuxt dev",
     "build": "nuxt build",
     "generate": "nuxt generate",
+    "deploy": "wrangler deploy",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "test": "vitest run",
@@ -39,6 +40,7 @@
     "happy-dom": "^20.11.1",
     "typescript": "~5.8.3",
     "vitest": "^4.1.10",
-    "vue-tsc": "^3.3.8"
+    "vue-tsc": "^3.3.8",
+    "wrangler": "^4.115.0"
   }
 }

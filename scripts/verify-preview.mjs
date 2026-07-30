@@ -29,6 +29,8 @@ async function verifyDirectRoutes(browser) {
   page.on('pageerror', error => errors.push(error.message))
 
   for (const route of routes) {
+    const directResponse = await context.request.get(`${baseUrl}${route.path}`, { maxRedirects: 0 })
+    assert.equal(directResponse.status(), 200, `${route.path} should not redirect to a different URL shape`)
     const response = await page.goto(`${baseUrl}${route.path}`)
     await waitForSettledPage(page)
     assert.equal(response?.status(), 200, `${route.path} should load directly with status 200`)
