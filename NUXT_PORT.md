@@ -305,10 +305,17 @@ Pages Git integration also requires the repository to be authorized through
 the Cloudflare dashboard. No Pages project or DNS record has been created or
 changed while those gates are unavailable.
 
+The account-bound steps, exact build settings, preview gate, custom-domain
+ordering, apex delegation requirements, and rollback references are recorded
+in `CLOUDFLARE_CUTOVER.md`. A Wrangler-created project was intentionally not
+used because it would be a Direct Upload project that cannot later be converted
+to the required Git integration.
+
 The current nameservers are GoDaddy (`ns55.domaincontrol.com` and
-`ns56.domaincontrol.com`), and the live `www` record still targets Vercel. This
-preserves the required rollback deployment until the Cloudflare preview and
-custom-domain checks pass.
+`ns56.domaincontrol.com`), and the live `www` record still targets Vercel. The
+pushed migration commit has a successful Vercel deployment status, and every
+valid public route returns HTTP 200 there. This preserves a working rollback
+deployment until the Cloudflare preview and custom-domain checks pass.
 
 ## Port sequence
 
