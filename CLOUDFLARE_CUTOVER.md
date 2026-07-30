@@ -1,8 +1,8 @@
 # Cloudflare Workers Cutover
 
-This runbook records the validated Workers Static Assets deployment and the
-remaining account-bound domain work. The custom domain must not be changed
-until the preview gate below passes after every hosting-configuration change.
+This runbook records the completed Workers Static Assets deployment and
+custom-domain cutover. The preview gate passed before DNS changed, and the
+production hostname and apex redirect were independently verified afterward.
 
 ## Stage 1 — Workers deployment
 
@@ -26,10 +26,10 @@ The Cloudflare build must retain:
 | Setting | Value |
 | --- | --- |
 | Production branch | `main` |
-| Build command | `npm run generate` |
+| Build command | `npm run build` |
 | Deploy command | `npm run deploy` |
 | Root directory | Repository root / blank |
-| Environment variable | `NODE_VERSION=24.11.0` |
+| Node version | `24.11.0` via `.nvmrc` and `package.json` |
 
 ## Stage 2 — Preview acceptance
 
@@ -51,65 +51,35 @@ Validated behavior includes:
 - All 34 desktop/mobile and light/dark parity captures match the baseline page
   dimensions.
 
-This stage passed on 2026-07-30. The custom-domain cutover may proceed.
+This stage passed on 2026-07-30 before the custom-domain cutover proceeded.
 
 ## Stage 3 — Cloudflare DNS and custom domain
 
-Workers Custom Domains require an active Cloudflare zone. Do not point an
-external CNAME directly at the `workers.dev` hostname.
+The zone is active on Cloudflare with authoritative nameservers
+`jocelyn.ns.cloudflare.com` and `owen.ns.cloudflare.com`. The registrar exposed
+no DS record during cutover, and non-site DNS records, including `_dmarc`, were
+preserved.
 
-### Onboard the zone
+`www.mitchellponchione.com` is attached by the `custom_domain` route in
+`wrangler.jsonc`; Cloudflare manages its DNS integration and TLS certificate.
+The strengthened verifier passed against the production hostname on 2026-07-30:
 
-1. In Cloudflare, select **Domains → Onboard a domain** and add
-   `mitchellponchione.com`.
-2. Let Cloudflare scan the existing zone, then compare every imported record
-   against GoDaddy before changing nameservers. Preserve non-site records,
-   including the existing `_dmarc` TXT record.
-3. Confirm the registrar has no active DNSSEC/DS record. A public lookup showed
-   no DS record before this cutover, but the registrar remains authoritative.
-4. At GoDaddy, replace the current nameservers with the exact pair assigned by
-   Cloudflare.
-5. Wait until Cloudflare reports the zone as **Active**.
+```sh
+PREVIEW_URL=https://www.mitchellponchione.com npm run verify:preview
+```
 
-The previous authoritative nameservers are:
+The canonical hostname is `www`. The apex now has a proxied `A` placeholder of
+`192.0.2.0` and an active Cloudflare **Redirect from root to WWW** rule:
 
-- `ns55.domaincontrol.com`
-- `ns56.domaincontrol.com`
+- Request URL: `https://mitchellponchione.com/*`
+- Target URL: `https://www.mitchellponchione.com/${1}`
+- Status: `301`
+- Preserve query string: enabled
 
-The imported site records should continue pointing at Vercel during zone
-activation, keeping the rollback deployment live.
-
-### Attach `www` to the Worker
-
-1. In Cloudflare DNS, remove the imported `www` CNAME that currently targets
-   `037ce92a12b675d1.vercel-dns-017.com`.
-2. Open **Workers & Pages → my-website → Settings → Domains & Routes**.
-3. Select **Add → Custom Domain**, enter `www.mitchellponchione.com`, and confirm.
-   Cloudflare creates the proxied DNS record and certificate.
-4. Wait until the custom domain and TLS certificate are active.
-5. Run:
-
-   ```sh
-   PREVIEW_URL=https://www.mitchellponchione.com npm run verify:preview
-   ```
-
-6. Independently confirm HTTPS, `robots.txt`, `sitemap.xml`, every deep link,
-   and the 404 response before changing apex behavior.
-
-### Redirect the apex to `www`
-
-The canonical hostname is `www`, so the apex should redirect rather than serve
-a duplicate site:
-
-1. Replace the imported apex Vercel record with a proxied `A` record whose
-   value is the reserved placeholder `192.0.2.0`.
-2. Create a Cloudflare **Single Redirect** using:
-   - Request URL: `https://mitchellponchione.com/*`
-   - Target URL: `https://www.mitchellponchione.com/${1}`
-   - Status: `301`
-   - Preserve query string: enabled
-3. Confirm the apex redirects exactly once while preserving paths and query
-   strings, and that the destination canonical link uses `www`.
+Final checks confirmed that HTTP upgrades to HTTPS, the apex HTTPS redirect
+preserves paths and query strings, valid deep links return 200, unknown paths
+return the custom page with status 404, and production responses no longer
+contain Vercel headers.
 
 ## Final verification and rollback
 

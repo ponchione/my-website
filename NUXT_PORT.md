@@ -6,11 +6,10 @@
 
 ## Document control
 
-- Status: Cloudflare preview accepted; custom-domain cutover pending
+- Status: Complete; Nuxt port and Cloudflare production cutover verified
 - Last updated: 2026-07-30
-- Current phase: Phase 4, domain and DNS cutover
-- Next milestone: Onboard the Cloudflare DNS zone and attach the validated
-  Worker to `www.mitchellponchione.com`
+- Current phase: Phase 5, stable production handoff
+- Next milestone: Begin the separately scoped redesign only when authorized
 
 This file is the source of truth for the port. When an implementation decision
 changes, update this document in the same change. Completed work should be
@@ -291,6 +290,8 @@ All four commands must pass.
 | `npm run generate` | Pass | All known pages, exact post slugs, payloads, and static fallbacks generate successfully. |
 | `npm run verify:preview` | Pass | Direct routes, client navigation, metadata, 404, themes, focus, keyboard, sheet, work expansion, and reduced motion pass in Chromium. |
 | Remote Workers preview | Pass | The strengthened browser suite passes against `my-website.mitchell-ponchione.workers.dev`, including exact no-trailing-slash route shapes and 34 parity captures. |
+| Production custom domain | Pass | The same strengthened suite passes against `https://www.mitchellponchione.com`, including all 34 parity captures. |
+| Apex redirect | Pass | HTTP upgrades to HTTPS; HTTPS redirects once to `www` with paths and query strings preserved and no Vercel response headers. |
 | Visual comparison | Pass | The 34 Nuxt captures match every baseline page dimension at the fixed desktop/mobile viewports in both themes. |
 | Content comparison | Pass | Résumé/project JSON and all Markdown sources are byte-identical to the React source in Git history. |
 
@@ -300,23 +301,24 @@ ignored by Git.
 
 ### External deployment status on 2026-07-30
 
-The generated site is deployed with Workers Static Assets at
-`https://my-website.mitchell-ponchione.workers.dev`. The repository owns its
-asset directory, custom-404 behavior, and clean-URL handling in
-`wrangler.jsonc`. Pushing commit `5f8c456` to `main` automatically changed the
-live Worker routing, proving the repository/production-branch integration.
+The generated site is deployed with Workers Static Assets at both
+`https://my-website.mitchell-ponchione.workers.dev` and the canonical production
+hostname `https://www.mitchellponchione.com`. The repository owns the asset
+directory, custom-404 behavior, clean-URL handling, Workers preview URLs, and
+custom-domain attachment in `wrangler.jsonc`.
 
-The account-bound DNS steps, custom-domain ordering, final verification, and
-rollback references are recorded in `CLOUDFLARE_CUTOVER.md`. Local Wrangler
-authentication is not needed for preview validation, but the zone and domain
-changes must be completed by an authenticated account owner.
+Cloudflare Workers Builds deploys `main` with `npm run build` and
+`npm run deploy`. The build script creates the full static artifact, while the
+deploy script explicitly selects the repository Wrangler configuration so
+framework-generated redirect metadata cannot replace it. Node 24.11.0 is pinned
+in `.nvmrc` and `package.json`.
 
-The current nameservers are GoDaddy (`ns55.domaincontrol.com` and
-`ns56.domaincontrol.com`), and the live `www` record still targets Vercel. The
-pushed migration commit has a successful Vercel deployment status, and every
-valid public route returns HTTP 200 there. This preserves a working rollback
-deployment until the Cloudflare custom-domain checks pass. No production DNS
-record has changed yet.
+Cloudflare is authoritative for the zone. The apex uses a proxied placeholder
+record and a Cloudflare redirect rule to send traffic to `www`; verified HTTPS
+requests preserve paths and query strings without reaching Vercel. The previous
+Vercel project remains available as an intentionally retained rollback
+deployment. Detailed evidence and rollback references are recorded in
+`CLOUDFLARE_CUTOVER.md`.
 
 ## Port sequence
 
@@ -370,21 +372,22 @@ record has changed yet.
 ### Phase 4 — Cloudflare Workers Static Assets
 
 - [x] Create a Cloudflare Worker connected to the repository.
-- [ ] Configure the production branch and Node version.
-- [x] Use `npm run generate` as the build command.
+- [x] Configure the `main` production branch and Node 24.11.0.
+- [x] Use `npm run build` to generate the static production artifact.
 - [x] Publish `.output/public` through the repository-owned Wrangler config.
 - [x] Validate the Cloudflare preview URL before changing DNS.
-- [ ] Add `www.mitchellponchione.com` and the apex-domain redirect/canonical
+- [x] Add `www.mitchellponchione.com` and the apex-domain redirect/canonical
       behavior.
-- [ ] Confirm HTTPS, redirects, sitemap, robots, 404 handling, and all deep links.
-- [ ] Cut DNS over only after preview acceptance.
-- [ ] Keep the previous Vercel deployment available until the Cloudflare domain
+- [x] Confirm HTTPS, redirects, sitemap, robots, 404 handling, and all deep links.
+- [x] Cut DNS over only after preview acceptance.
+- [x] Keep the previous Vercel deployment available until the Cloudflare domain
       has been verified.
-- [ ] Remove the Vercel project only as a separate, deliberate cleanup action.
+- [x] Retain the Vercel project; any removal is a separate, deliberate cleanup
+      action outside this migration.
 
 ### Phase 5 — Redesign handoff
 
-- [ ] Confirm the Nuxt/Cloudflare port is stable in production.
+- [x] Confirm the Nuxt/Cloudflare port is stable in production.
 - [x] Open a separate redesign document or section with its own goals.
 - [x] Revisit navigation prominence, content hierarchy, layout, typography, and
       the Eyebox/KickBrass-derived palette.
@@ -407,7 +410,7 @@ The port is complete when all of the following are true:
 - [x] Generated pages contain useful HTML and route-specific metadata.
 - [x] Typecheck, lint, tests, and static generation pass.
 - [x] Cloudflare preview passes the route and behavior checks.
-- [ ] The custom domain serves the Cloudflare deployment over HTTPS.
+- [x] The custom domain serves the Cloudflare deployment over HTTPS.
 - [x] Vercel-specific code and configuration are absent from the final Nuxt
       source.
 
@@ -425,6 +428,8 @@ The port is complete when all of the following are true:
 | 2026-07-30 | Use Nuxt Content with a typed `blog` page collection. | Gain build-time Markdown parsing, schema validation, SSR rendering, and typed queries while preserving exact filename-derived slugs through explicit assertions. |
 | 2026-07-30 | Capture a 34-image React baseline at fixed desktop/mobile viewports in both themes. | Give the Nuxt parity review durable route, theme, breakpoint, 404, and open-mobile-menu visual references without expanding the port into a redesign. |
 | 2026-07-30 | Use Workers Static Assets for the Cloudflare deployment. | The account's current Git flow produced a Worker rather than a Pages project; the repository-owned asset configuration preserves the same static architecture, exact routes, and real 404 behavior. |
+| 2026-07-30 | Pin the Workers build and deploy scripts to static generation and the root Wrangler config. | Workers autoconfiguration generated a server redirect config that was incompatible with the static artifact; the explicit scripts keep repository configuration authoritative. |
+| 2026-07-30 | Serve `www` from a Workers Custom Domain and redirect the apex at Cloudflare. | Preserve the canonical hostname and path/query behavior while removing Vercel from the production request path. |
 
 ## Deferred decisions
 
