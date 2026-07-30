@@ -2,6 +2,8 @@
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "my-website",
   "compatibility_date": "2026-07-30",
+  "workers_dev": true,
+  "preview_urls": true,
   "routes": [
     {
       "pattern": "www.mitchellponchione.com",
