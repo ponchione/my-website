@@ -15,7 +15,7 @@ dist
 .nuxtrc
 *.local
 
-# Local migration evidence and Cloudflare tooling state
+# Local verification artifacts and Cloudflare tooling state
 artifacts/nuxt-port/
 .wrangler/
 

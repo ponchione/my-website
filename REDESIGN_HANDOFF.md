@@ -1,6 +1,7 @@
 # Redesign Handoff
 
-Status: Deferred until the Nuxt/Cloudflare migration is stable in production.
+Status: Ready for redesign discovery; the Nuxt/Cloudflare migration is stable
+in production.
 
 This is the separate brief for the site's future redesign. It deliberately
 does not change the parity-port implementation.
