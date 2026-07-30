@@ -10,7 +10,7 @@
     "dev": "nuxt dev",
     "build": "nuxt generate",
     "generate": "nuxt generate",
-    "deploy": "wrangler deploy",
+    "deploy": "wrangler deploy --config wrangler.jsonc",
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "test": "vitest run",
