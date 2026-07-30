@@ -9,8 +9,15 @@ lerna-debug.log*
 
 node_modules
 dist
-dist-ssr
+.nuxt
+.output
+.data
+.nuxtrc
 *.local
+
+# Local migration evidence and Cloudflare tooling state
+artifacts/nuxt-port/
+.wrangler/
 
 # Editor directories and files
 .vscode/*

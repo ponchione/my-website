@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://mitchellponchione.vercel.app/sitemap.xml
+Sitemap: https://www.mitchellponchione.com/sitemap.xml

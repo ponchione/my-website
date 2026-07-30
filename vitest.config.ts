@@ -1,14 +1,13 @@
-import path from 'path';
-import { defineConfig } from 'vitest/config';
+import { defineVitestConfig } from '@nuxt/test-utils/config'
 
-export default defineConfig({
-  resolve: {
-    alias: {
-      '@': path.resolve(__dirname, './src'),
-    },
-  },
+export default defineVitestConfig({
   test: {
-    environment: 'jsdom',
-    setupFiles: ['./src/test/setup.ts'],
+    environment: 'nuxt',
+    environmentOptions: {
+      nuxt: {
+        domEnvironment: 'happy-dom',
+      },
+    },
+    include: ['tests/**/*.test.ts'],
   },
-});
+})
