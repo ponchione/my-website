@@ -23,6 +23,7 @@ function isActive(path: string) {
       v-for="link in links"
       :key="link.to"
       :to="link.to"
+      prefetch-on="interaction"
       class="ui-button ui-button-ghost w-full justify-start motion-safe:transition-colors motion-safe:duration-150"
       :class="{ 'bg-accent text-accent-foreground dark:bg-accent/50': isActive(link.to) }"
       @click="emit('navigate')"

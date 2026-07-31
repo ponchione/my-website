@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { PersonalProject } from '~/types'
+import { formatGitHubTimestamp } from '~/utils/github-projects'
 
 defineProps<{
   project: PersonalProject
@@ -19,13 +20,11 @@ const statusClasses: Record<PersonalProject['status'], string> = {
     <header class="ui-card-header">
       <h2 class="ui-card-title flex items-center gap-2">
         <a
-          v-if="project.github_url"
           :href="project.github_url"
           target="_blank"
           rel="noopener noreferrer"
           class="hover:underline"
         >{{ project.name }}</a>
-        <template v-else>{{ project.name }}</template>
         <UiBadge
           :variant="project.status === 'Deprecated' ? 'default' : 'status'"
           :class="statusClasses[project.status]"
@@ -35,11 +34,13 @@ const statusClasses: Record<PersonalProject['status'], string> = {
     </header>
 
     <div class="px-6">
-      <p class="mb-4 text-sm text-muted-foreground">Last updated: {{ project.updated }}</p>
+      <p class="mb-4 text-sm text-muted-foreground">
+        Last pushed: <time :datetime="project.last_pushed_at">{{ formatGitHubTimestamp(project.last_pushed_at) }}</time>
+      </p>
       <div class="flex flex-wrap gap-2">
         <UiBadge v-for="tag in project.tags" :key="tag" variant="secondary">{{ tag }}</UiBadge>
       </div>
-      <div v-if="project.github_url" class="mt-4">
+      <div class="mt-4">
         <a
           :href="project.github_url"
           target="_blank"

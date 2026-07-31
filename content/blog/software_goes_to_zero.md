@@ -5,6 +5,7 @@ tags:
     - AI
     - Software
 excerpt: "Software is becoming water."
+readingTime: "5 min read"
 ---
 
 Here's a thought experiment I've been running in my head. It starts with something I keep seeing and ends somewhere pretty uncomfortable.

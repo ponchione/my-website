@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { ArrowRight } from '@lucide/vue'
-import { formatPostDate, getPostSlug, getReadingTime, sortPostsNewestFirst } from '~/utils/posts'
+import { formatPostDate } from '~/utils/posts'
 
 useSiteSeo('Blog — Mitchell Ponchione', '/blog')
 
-const { data } = await useAsyncData('blog-posts', () => queryCollection('blog').all())
-const posts = computed(() => sortPostsNewestFirst(data.value ?? []))
+const { data } = await useAsyncData('blog-posts', () => queryCollection('blog')
+  .select('path', 'title', 'date', 'tags', 'readingTime')
+  .order('date', 'DESC')
+  .all())
+const posts = computed(() => data.value ?? [])
 </script>
 
 <template>
@@ -17,8 +20,8 @@ const posts = computed(() => sortPostsNewestFirst(data.value ?? []))
     <div class="divide-y divide-border">
       <NuxtLink
         v-for="post in posts"
-        :key="post.stem"
-        :to="`/blog/${getPostSlug(post)}`"
+        :key="post.path"
+        :to="post.path"
         class="group block"
       >
         <article class="flex items-start justify-between gap-4 py-4 motion-safe:transition-colors motion-safe:duration-150">
@@ -27,7 +30,7 @@ const posts = computed(() => sortPostsNewestFirst(data.value ?? []))
             <div class="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
               <span>{{ formatPostDate(post.date) }}</span>
               <span>&middot;</span>
-              <span>{{ getReadingTime(post.body) }}</span>
+              <span>{{ post.readingTime }}</span>
             </div>
             <div class="flex flex-wrap gap-1.5 pt-1">
               <UiBadge v-for="tag in post.tags" :key="tag" variant="secondary">{{ tag }}</UiBadge>

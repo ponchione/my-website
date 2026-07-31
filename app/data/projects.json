@@ -3,7 +3,7 @@
     "id": 1,
     "name": "sodoryard",
     "description": "My personal take on an agent harness/orchestration",
-    "updated": "April 2026",
+    "last_pushed_at": "2026-05-16T22:00:01Z",
     "tags": ["Go", "Python", "React", "SQLite", "LanceDB", "llama.cpp"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/sodoryard"
@@ -12,7 +12,7 @@
     "id": 2,
     "name": "Shunter",
     "description": "Code as a database idea project",
-    "updated": "April 2026",
+    "last_pushed_at": "2026-07-31T14:47:24Z",
     "tags": ["Go"],
     "status": "In Progress",
     "github_url": "https://github.com/ponchione/shunter"
@@ -21,7 +21,7 @@
     "id": 3,
     "name": "Scrapeyard",
     "description": "Scrapeyard is a config-driven web scraping service built with FastAPI and Scrapling",
-    "updated": "April 2026",
+    "last_pushed_at": "2026-07-25T16:56:07Z",
     "tags": ["Python", "SQLite"],
     "status": "V1",
     "github_url": "https://github.com/ponchione/scrapeyard"
@@ -30,7 +30,7 @@
     "id": 4,
     "name": "AI Agent Conductor",
     "description": "A lightweight conductor layer for coordinating multiple AI agents.",
-    "updated": "March 2026",
+    "last_pushed_at": "2026-03-27T16:49:31Z",
     "tags": ["Go", "SQLite", "llama.cpp"],
     "status": "Deprecated",
     "github_url": "https://github.com/ponchione/agent-conductor"

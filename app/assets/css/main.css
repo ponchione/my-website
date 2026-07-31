@@ -137,9 +137,7 @@
 
 @media (prefers-reduced-motion: reduce) {
   .page-enter-active,
-  .page-leave-active,
-  .work-expand-enter-active,
-  .work-expand-leave-active {
+  .page-leave-active {
     transition-duration: 0s !important;
   }
 

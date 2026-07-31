@@ -5,6 +5,7 @@ tags:
     - AI
     - Business
 excerpt: "Okay, it's partly a joke. But there's a real point in there."
+readingTime: "4 min read"
 ---
 
 I've been kicking around an idea, so I'm going to try to put it into words even though it's not fully baked yet.

@@ -16,20 +16,21 @@ const job: WorkExperience = {
 }
 
 describe('WorkListing', () => {
-  it('expands with Enter and collapses with Space', async () => {
+  it('uses a native button with no nested interactive controls', async () => {
     const wrapper = await mountSuspended(WorkListing, {
       props: { job },
       global: { stubs: { UiBadge: true } },
     })
-    const trigger = wrapper.get('[role="button"]')
+    const trigger = wrapper.get('button[aria-controls="work-details-1"]')
 
+    expect(trigger.element.querySelector('a, button, input, select, textarea')).toBeNull()
     expect(trigger.attributes('aria-expanded')).toBe('false')
 
-    await trigger.trigger('keydown', { key: 'Enter' })
+    await trigger.trigger('click')
     expect(trigger.attributes('aria-expanded')).toBe('true')
     expect(wrapper.text()).toContain('Built useful things.')
 
-    await trigger.trigger('keydown', { key: ' ' })
+    await trigger.trigger('click')
     expect(trigger.attributes('aria-expanded')).toBe('false')
   })
 })

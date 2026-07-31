@@ -5,6 +5,7 @@ import type { PersonalProject } from '~/types'
 useSiteSeo('Projects — Mitchell Ponchione', '/projects')
 
 const projects = projectsData as PersonalProject[]
+const { projects: resolvedProjects } = useGithubProjects(projects)
 </script>
 
 <template>
@@ -16,7 +17,7 @@ const projects = projectsData as PersonalProject[]
       </p>
     </header>
     <div class="space-y-4">
-      <ProjectListing v-for="project in projects" :key="project.id" :project="project" />
+      <ProjectListing v-for="project in resolvedProjects" :key="project.id" :project="project" />
     </div>
   </div>
 </template>

@@ -1,18 +1,24 @@
 <script setup lang="ts">
 import { ArrowLeft, ArrowRight } from '@lucide/vue'
-import { formatPostDate, getPostNeighbors, getPostSlug, getReadingTime, sortPostsNewestFirst } from '~/utils/posts'
+import { formatPostDate, getReadingTime } from '~/utils/posts'
 
 const route = useRoute()
 const slug = String(route.params.slug)
-const { data } = await useAsyncData(`blog-post-${slug}`, () => queryCollection('blog').all())
-const posts = sortPostsNewestFirst(data.value ?? [])
-const post = posts.find(entry => getPostSlug(entry) === slug)
+const { data } = await useAsyncData(`blog-post-${slug}`, () => queryCollection('blog').path(route.path).first())
 
-if (!post) {
+if (!data.value) {
   throw createError({ statusCode: 404, statusMessage: 'Post not found' })
 }
 
-const neighbors = getPostNeighbors(posts, slug)
+const post = data.value
+const { data: surroundingPosts } = await useAsyncData(`blog-post-surroundings-${slug}`, () => queryCollectionItemSurroundings(
+  'blog',
+  route.path,
+  { fields: ['date'] },
+).order('date', 'DESC'))
+const nextPost = computed(() => surroundingPosts.value?.[0] ?? null)
+const previousPost = computed(() => surroundingPosts.value?.[1] ?? null)
+
 useSiteSeo(`${post.title} — Mitchell Ponchione`, route.path, post.excerpt)
 </script>
 
@@ -37,27 +43,27 @@ useSiteSeo(`${post.title} — Mitchell Ponchione`, route.path, post.excerpt)
       <UiSeparator />
       <nav class="flex justify-between gap-6" aria-label="Blog post pagination">
         <div class="min-w-0 flex-1">
-          <div v-if="neighbors.previous" class="space-y-1">
+          <div v-if="previousPost" class="space-y-1">
             <span class="inline-flex items-center gap-1 text-sm text-muted-foreground">
               <ArrowLeft class="h-4 w-4" aria-hidden="true" />
               Previous Post
             </span>
             <NuxtLink
-              :to="`/blog/${getPostSlug(neighbors.previous)}`"
+              :to="previousPost.path"
               class="block text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >{{ neighbors.previous.title }}</NuxtLink>
+            >{{ previousPost.title }}</NuxtLink>
           </div>
         </div>
         <div class="min-w-0 flex-1 text-right">
-          <div v-if="neighbors.next" class="space-y-1">
+          <div v-if="nextPost" class="space-y-1">
             <span class="inline-flex items-center gap-1 text-sm text-muted-foreground">
               Next Post
               <ArrowRight class="h-4 w-4" aria-hidden="true" />
             </span>
             <NuxtLink
-              :to="`/blog/${getPostSlug(neighbors.next)}`"
+              :to="nextPost.path"
               class="block text-sm text-muted-foreground transition-colors hover:text-foreground"
-            >{{ neighbors.next.title }}</NuxtLink>
+            >{{ nextPost.title }}</NuxtLink>
           </div>
         </div>
       </nav>

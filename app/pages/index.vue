@@ -4,9 +4,10 @@ useSiteSeo('Mitchell Ponchione', '/')
 
 <template>
   <section class="mt-8">
+    <h1 class="sr-only">About Mitchell Ponchione</h1>
     <div class="space-y-8 text-muted-foreground">
       <p>
-        I'm Mitchell. A software engineer who likes to build things. For the last eight years I've applied that love to modernizing critical systems in the insurance, banking, and government sectors. Untangling legacy code, architecting data platforms, and most recently, building AI-augmented development systems for myself that changes how I get work done.
+        I'm Mitchell, a software engineer who likes to build things. Since 2017, I've applied that love to modernizing critical systems in the insurance, banking, and government sectors: untangling legacy code, architecting data platforms, and, most recently, building AI-augmented development systems for myself that change how I get work done.
       </p>
       <p>
         These days I spend most of my time at the intersection of software architecture and AI tooling. I build systems that orchestrate AI agents, design RAG pipelines, and figure out how to take a small concept and ship it like a big one. The craft has evolved, but the core is the same. I want to build things that work well and matter to the people using them.

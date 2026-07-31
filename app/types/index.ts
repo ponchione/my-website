@@ -35,8 +35,19 @@ export type PersonalProject = {
   id: number
   name: string
   description: string
-  updated: string
+  last_pushed_at: string
   tags: string[]
   status: 'In Progress' | 'Planned' | 'Complete' | 'V1' | 'Deprecated'
-  github_url?: string
+  github_url: string
+}
+
+export type GitHubRepository = {
+  name: string
+  full_name: string
+  html_url: string
+  description: string | null
+  pushed_at: string | null
+  language: string | null
+  topics: string[]
+  archived: boolean
 }

@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ArrowLeft } from '@lucide/vue'
 import type { NuxtError } from '#app'
-import { SITE_URL } from '~/utils/site'
 
 const props = defineProps<{
   error: NuxtError
@@ -13,7 +12,6 @@ const title = computed(() => props.error.statusCode === 404
 
 useHead({
   title,
-  link: [{ rel: 'canonical', href: SITE_URL }],
 })
 useSeoMeta({ robots: 'noindex, follow' })
 </script>

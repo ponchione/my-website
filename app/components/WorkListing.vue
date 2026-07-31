@@ -14,45 +14,36 @@ const isExpanded = ref(props.initialExpanded)
 function toggleExpanded() {
   isExpanded.value = !isExpanded.value
 }
-
-function handleKeydown(event: KeyboardEvent) {
-  if (event.key === 'Enter' || event.key === ' ') {
-    event.preventDefault()
-    toggleExpanded()
-  }
-}
 </script>
 
 <template>
   <article class="ui-card gap-0 overflow-hidden border-t-2 border-t-foreground/5 py-0">
-    <div
-      role="button"
-      tabindex="0"
-      :aria-expanded="isExpanded"
-      :aria-controls="`work-details-${job.id}`"
-      class="ui-card-header cursor-pointer grid-cols-[1fr_auto] rounded-none px-6 py-6 motion-safe:transition-all motion-safe:duration-200 hover:bg-accent/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-      @click="toggleExpanded"
-      @keydown="handleKeydown"
-    >
+    <div class="ui-card-header grid-cols-[1fr_auto] px-6 py-6">
       <h2 class="ui-card-title hover:underline">
         <a
           :href="job.url"
           target="_blank"
           rel="noopener noreferrer"
-          @click.stop
         >{{ job.company }}</a>
       </h2>
       <p class="ui-card-description col-start-1">{{ job.title }}</p>
       <p class="ui-card-description col-start-1">
         {{ job.startDate }} - {{ job.endDate }} &middot; {{ job.location }}
       </p>
-      <span class="col-start-2 row-span-2 row-start-1 self-start justify-self-end text-muted-foreground">
+      <button
+        type="button"
+        :aria-expanded="isExpanded"
+        :aria-controls="`work-details-${job.id}`"
+        :aria-label="`${isExpanded ? 'Collapse' : 'Expand'} work details for ${job.company}`"
+        class="ui-button ui-button-ghost ui-button-icon col-start-2 row-span-3 row-start-1 self-start justify-self-end text-muted-foreground motion-reduce:transition-none"
+        @click="toggleExpanded"
+      >
         <ChevronDown
           class="motion-transform h-4 w-4 motion-safe:transition-transform motion-safe:duration-200"
           :class="{ 'rotate-180': isExpanded }"
           aria-hidden="true"
         />
-      </span>
+      </button>
     </div>
 
     <Transition name="work-expand">

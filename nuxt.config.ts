@@ -31,6 +31,13 @@ export default defineNuxtConfig({
     storageKey: 'nuxt-color-mode',
   },
   content: {
+    build: {
+      pathMeta: {
+        slugifyOptions: {
+          lower: false,
+        },
+      },
+    },
     renderer: {
       anchorLinks: false,
     },
@@ -60,7 +67,7 @@ export default defineNuxtConfig({
     prerender: {
       crawlLinks: true,
       failOnError: true,
-      routes: postRoutes,
+      routes: [...postRoutes, '/404'],
     },
   },
 })

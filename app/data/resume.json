@@ -13,7 +13,7 @@
           "id": 1,
           "project": "GeoRMS Platform - Army Corps of Engineers",
           "responsibilities": [
-            "Designed and architected a geospatial analytics platform from scratch for the Army Corps of Engineers, creating a \"Google Maps for waterway dredging\" thats helping to transform national dredging project analysis and decision-making.",
+            "Designed and architected a geospatial analytics platform from scratch for the Army Corps of Engineers, creating a \"Google Maps for waterway dredging\" that's helping to transform national dredging project analysis and decision-making.",
             "Leveraged LLMs throughout the full development lifecycle — from domain learning and data science fundamentals to architecture planning and implementation — compressing months of ramp-up across unfamiliar domains (dredging operations, Python/Pandas, React/Electron) into rapid, high-quality delivery.",
             "Engineered a scalable ETL data pipeline in Python/Pandas to ingest, cleanse, and classify multifaceted operational data, including an ML-based classification algorithm, creating a unified queryable dataset for U.S. dredging operations.",
             "Built a dynamic client-side aggregation engine within the Electron app that performs real-time statistical calculations, replacing days of manual analysis with immediate insights.",
@@ -133,7 +133,7 @@
     "id": 1,
     "school": "Indiana University of Pennsylvania",
     "url": "https://www.iup.edu/index.html",
-    "level": "Bachelors of Science",
+    "level": "Bachelor of Science",
     "degree": "Mathematics",
     "year": 2016
   }

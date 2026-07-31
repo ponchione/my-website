@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict'
 import { mkdir } from 'node:fs/promises'
+import AxeBuilder from '@axe-core/playwright'
 import { chromium } from '@playwright/test'
 
 const baseUrl = process.env.PREVIEW_URL ?? 'http://localhost:4173'
@@ -22,6 +23,12 @@ async function waitForSettledPage(page) {
   await page.waitForTimeout(550)
 }
 
+async function verifyAccessibility(page, path) {
+  const results = await new AxeBuilder({ page }).analyze()
+  const violations = results.violations.map(violation => `${violation.id}: ${violation.help}`)
+  assert.deepEqual(violations, [], `${path} accessibility violations: ${violations.join('; ')}`)
+}
+
 async function verifyDirectRoutes(browser) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
   const page = await context.newPage()
@@ -41,14 +48,71 @@ async function verifyDirectRoutes(browser) {
       `${route.path} canonical URL`,
     )
     assert.ok((await page.locator('main').innerText()).trim().length > 30, `${route.path} should render useful content`)
+    await verifyAccessibility(page, route.path)
   }
 
-  const response = await page.goto(`${baseUrl}/definitely-not-a-route`)
+  const missingUrl = `${baseUrl}/definitely-not-a-route`
+  const rawResponse = await context.request.get(missingUrl)
+  const rawHtml = await rawResponse.text()
+  assert.equal(rawResponse.status(), 404, 'unknown raw requests should return 404')
+  assert.match(rawHtml, /<title>Not Found — Mitchell Ponchione<\/title>/)
+  assert.match(rawHtml, /<meta[^>]+name="robots"[^>]+content="noindex, follow"/i)
+  assert.match(rawHtml, /This page doesn&#39;t exist — but the rest of the site does\./)
+  assert.doesNotMatch(rawHtml, /<link[^>]+rel="canonical"/i)
+
+  const response = await page.goto(missingUrl)
   await waitForSettledPage(page)
   assert.equal(response?.status(), 404, 'unknown direct routes should return 404')
   assert.equal(await page.title(), 'Not Found — Mitchell Ponchione')
   await page.getByText("This page doesn't exist — but the rest of the site does.").waitFor()
+  await verifyAccessibility(page, '/definitely-not-a-route')
   assert.deepEqual(errors, [], `browser page errors: ${errors.join('; ')}`)
+  await context.close()
+}
+
+async function verifyJavaScriptDisabledFallback(browser) {
+  const context = await browser.newContext({
+    viewport: { width: 1440, height: 900 },
+    javaScriptEnabled: false,
+  })
+  const page = await context.newPage()
+  const response = await page.goto(`${baseUrl}/javascript-disabled-missing-route`)
+
+  assert.equal(response?.status(), 404)
+  assert.equal(await page.title(), 'Not Found — Mitchell Ponchione')
+  await page.getByText("This page doesn't exist — but the rest of the site does.").waitFor()
+  assert.equal(await page.locator('meta[name="robots"]').getAttribute('content'), 'noindex, follow')
+  await context.close()
+}
+
+async function verifyNavigationPrefetch(browser) {
+  const context = await browser.newContext({ viewport: { width: 1440, height: 900 } })
+  const page = await context.newPage()
+  const navigationPayloads = []
+  const navigationPayloadPaths = new Set([
+    '/work-history/_payload.json',
+    '/projects/_payload.json',
+    '/blog/_payload.json',
+  ])
+
+  page.on('request', (request) => {
+    const requestUrl = new URL(request.url())
+    if (navigationPayloadPaths.has(requestUrl.pathname)) {
+      navigationPayloads.push(requestUrl.pathname)
+    }
+  })
+
+  await page.goto(baseUrl)
+  await waitForSettledPage(page)
+  assert.deepEqual(navigationPayloads, [], 'persistent navigation should not prefetch route payloads without interaction')
+
+  const blogPayload = page.waitForResponse((response) => {
+    const responseUrl = new URL(response.url())
+    return responseUrl.pathname === '/blog/_payload.json'
+  })
+  await page.locator('aside').getByRole('link', { name: 'Blog', exact: true }).hover()
+  await blogPayload
+  assert.deepEqual(navigationPayloads, ['/blog/_payload.json'])
   await context.close()
 }
 
@@ -146,7 +210,7 @@ async function verifyInteractions(browser) {
 
   await page.goto(`${baseUrl}/work-history`)
   await waitForSettledPage(page)
-  const workTriggers = page.locator('[role="button"][aria-controls^="work-details-"]')
+  const workTriggers = page.locator('button[aria-controls^="work-details-"]')
   assert.equal(await workTriggers.first().getAttribute('aria-expanded'), 'true', 'first work entry should start expanded')
   const secondTrigger = workTriggers.nth(1)
   await secondTrigger.focus()
@@ -174,7 +238,7 @@ async function verifyReducedMotion(browser) {
   const transitionDuration = await page.locator('.motion-transform').first().evaluate(element => getComputedStyle(element).transitionDuration)
   assert.equal(transitionDuration, '0s', 'work expansion transform should have zero duration')
 
-  const secondTrigger = page.locator('[role="button"][aria-controls^="work-details-"]').nth(1)
+  const secondTrigger = page.locator('button[aria-controls^="work-details-"]').nth(1)
   await secondTrigger.click()
   const runningAnimations = await page.evaluate(() => document.getAnimations()
     .filter(animation => Number(animation.effect?.getTiming().duration) > 0)
@@ -224,6 +288,8 @@ async function captureScreenshots(browser) {
 const browser = await chromium.launch({ executablePath, headless: true })
 try {
   await verifyDirectRoutes(browser)
+  await verifyJavaScriptDisabledFallback(browser)
+  await verifyNavigationPrefetch(browser)
   await verifyClientNavigation(browser)
   await verifyTheme(browser)
   await verifyInteractions(browser)
