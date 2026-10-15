@@ -5,7 +5,8 @@ const emit = defineEmits<{
 
 const route = useRoute()
 const links = [
-  { label: 'About', to: '/' },
+  { label: 'The Map', to: '/' },
+  { label: 'About', to: '/about' },
   { label: 'Work History', to: '/work-history' },
   { label: 'Projects', to: '/projects' },
   { label: 'Blog', to: '/blog' },

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-useSiteSeo('Mitchell Ponchione', '/')
+useSiteSeo('About — Mitchell Ponchione', '/about')
 </script>
 
 <template>

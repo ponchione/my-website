@@ -19,6 +19,7 @@ describe('public route contract', () => {
     expect(slugs).toEqual(expectedSlugs)
     expect(buildKnownRoutePaths(slugs)).toEqual([
       '/',
+      '/about',
       '/work-history',
       '/projects',
       '/blog',

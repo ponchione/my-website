@@ -38,3 +38,6 @@ prescription.md
 .claude
 .superpowers
 .worktrees/
+
+# Downloaded map source data
+.cache/

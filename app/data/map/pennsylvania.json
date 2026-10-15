@@ -1,0 +1,863 @@
+{
+  "sources": [
+    "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_county_500k.zip",
+    "https://www2.census.gov/geo/tiger/GENZ2024/shp/cb_2024_us_state_500k.zip",
+    "https://naciscdn.org/naturalearth/10m/cultural/ne_10m_admin_0_countries_lakes.zip",
+    "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip",
+    "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip",
+    "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
+  ],
+  "bounds": {
+    "west": -81.9,
+    "east": -73.75,
+    "south": 39,
+    "north": 43.05
+  },
+  "map": {
+    "width": 4096,
+    "height": 2699
+  },
+  "terrain": {
+    "width": 2400,
+    "height": 1582,
+    "minElevation": -6.1,
+    "maxElevation": 1319.5,
+    "groundWidthKm": 684.5
+  },
+  "ranges": {
+    "countyBorder": 8,
+    "realmBorder": 16,
+    "water": 16
+  },
+  "realms": [
+    {
+      "id": 1,
+      "code": "PA",
+      "name": "Pennsylvania",
+      "label": [
+        0.50311,
+        0.54253
+      ],
+      "labelRadius": 0.18506
+    },
+    {
+      "id": 2,
+      "code": "DE",
+      "name": "Delaware",
+      "label": [
+        0.77551,
+        0.94906
+      ],
+      "labelRadius": 0.02133
+    },
+    {
+      "id": 3,
+      "code": "MD",
+      "name": "Maryland",
+      "label": [
+        0.59753,
+        0.91275
+      ],
+      "labelRadius": 0.05688
+    },
+    {
+      "id": 4,
+      "code": "NJ",
+      "name": "New Jersey",
+      "label": [
+        0.87292,
+        0.84828
+      ],
+      "labelRadius": 0.05976
+    },
+    {
+      "id": 5,
+      "code": "NY",
+      "name": "New York",
+      "label": [
+        0.89099,
+        0.16506
+      ],
+      "labelRadius": 0.10876
+    },
+    {
+      "id": 6,
+      "code": "OH",
+      "name": "Ohio",
+      "label": [
+        0.08484,
+        0.48147
+      ],
+      "labelRadius": 0.08472
+    },
+    {
+      "id": 7,
+      "code": "ON",
+      "name": "Ontario",
+      "label": [
+        0.03845,
+        0.05835
+      ],
+      "labelRadius": 0.03845
+    },
+    {
+      "id": 8,
+      "code": "VA",
+      "name": "Virginia",
+      "label": [
+        0.45422,
+        0.96128
+      ],
+      "labelRadius": 0.02541
+    },
+    {
+      "id": 9,
+      "code": "WV",
+      "name": "West Virginia",
+      "label": [
+        0.16516,
+        0.91275
+      ],
+      "labelRadius": 0.0573
+    }
+  ],
+  "counties": [
+    {
+      "id": 1,
+      "fips": "42001",
+      "name": "Adams",
+      "areaKm2": 1351,
+      "label": [
+        0.57765,
+        0.78933
+      ],
+      "labelRadius": 0.02457
+    },
+    {
+      "id": 2,
+      "fips": "42003",
+      "name": "Allegheny",
+      "areaKm2": 1928,
+      "label": [
+        0.23478,
+        0.64334
+      ],
+      "labelRadius": 0.02981
+    },
+    {
+      "id": 3,
+      "fips": "42005",
+      "name": "Armstrong",
+      "areaKm2": 1720,
+      "label": [
+        0.29872,
+        0.56134
+      ],
+      "labelRadius": 0.02783
+    },
+    {
+      "id": 4,
+      "fips": "42007",
+      "name": "Beaver",
+      "areaKm2": 1150,
+      "label": [
+        0.19211,
+        0.58969
+      ],
+      "labelRadius": 0.02262
+    },
+    {
+      "id": 5,
+      "fips": "42009",
+      "name": "Bedford",
+      "areaKm2": 2633,
+      "label": [
+        0.4201,
+        0.74862
+      ],
+      "labelRadius": 0.03207
+    },
+    {
+      "id": 6,
+      "fips": "42011",
+      "name": "Berks",
+      "areaKm2": 2242,
+      "label": [
+        0.73918,
+        0.66022
+      ],
+      "labelRadius": 0.03244
+    },
+    {
+      "id": 7,
+      "fips": "42013",
+      "name": "Blair",
+      "areaKm2": 1363,
+      "label": [
+        0.43365,
+        0.65204
+      ],
+      "labelRadius": 0.02224
+    },
+    {
+      "id": 8,
+      "fips": "42015",
+      "name": "Bradford",
+      "areaKm2": 3007,
+      "label": [
+        0.67076,
+        0.32039
+      ],
+      "labelRadius": 0.03609
+    },
+    {
+      "id": 9,
+      "fips": "42017",
+      "name": "Bucks",
+      "areaKm2": 1611,
+      "label": [
+        0.81769,
+        0.65325
+      ],
+      "labelRadius": 0.0206
+    },
+    {
+      "id": 10,
+      "fips": "42019",
+      "name": "Butler",
+      "areaKm2": 2061,
+      "label": [
+        0.24212,
+        0.52721
+      ],
+      "labelRadius": 0.02902
+    },
+    {
+      "id": 11,
+      "fips": "42021",
+      "name": "Cambria",
+      "areaKm2": 1795,
+      "label": [
+        0.3874,
+        0.65009
+      ],
+      "labelRadius": 0.0227
+    },
+    {
+      "id": 12,
+      "fips": "42023",
+      "name": "Cameron",
+      "areaKm2": 1032,
+      "label": [
+        0.44524,
+        0.38728
+      ],
+      "labelRadius": 0.01741
+    },
+    {
+      "id": 13,
+      "fips": "42025",
+      "name": "Carbon",
+      "areaKm2": 1004,
+      "label": [
+        0.7599,
+        0.54122
+      ],
+      "labelRadius": 0.01882
+    },
+    {
+      "id": 14,
+      "fips": "42027",
+      "name": "Centre",
+      "areaKm2": 2879,
+      "label": [
+        0.49955,
+        0.531
+      ],
+      "labelRadius": 0.0303
+    },
+    {
+      "id": 15,
+      "fips": "42029",
+      "name": "Chester",
+      "areaKm2": 1966,
+      "label": [
+        0.75807,
+        0.75395
+      ],
+      "labelRadius": 0.02639
+    },
+    {
+      "id": 16,
+      "fips": "42031",
+      "name": "Clarion",
+      "areaKm2": 1579,
+      "label": [
+        0.3028,
+        0.47095
+      ],
+      "labelRadius": 0.02701
+    },
+    {
+      "id": 17,
+      "fips": "42033",
+      "name": "Clearfield",
+      "areaKm2": 2990,
+      "label": [
+        0.41714,
+        0.51019
+      ],
+      "labelRadius": 0.03728
+    },
+    {
+      "id": 18,
+      "fips": "42035",
+      "name": "Clinton",
+      "areaKm2": 2327,
+      "label": [
+        0.51167,
+        0.43264
+      ],
+      "labelRadius": 0.02408
+    },
+    {
+      "id": 19,
+      "fips": "42037",
+      "name": "Columbia",
+      "areaKm2": 1270,
+      "label": [
+        0.67487,
+        0.50155
+      ],
+      "labelRadius": 0.02008
+    },
+    {
+      "id": 20,
+      "fips": "42039",
+      "name": "Crawford",
+      "areaKm2": 2687,
+      "label": [
+        0.20969,
+        0.34876
+      ],
+      "labelRadius": 0.03013
+    },
+    {
+      "id": 21,
+      "fips": "42041",
+      "name": "Cumberland",
+      "areaKm2": 1425,
+      "label": [
+        0.56038,
+        0.72476
+      ],
+      "labelRadius": 0.02065
+    },
+    {
+      "id": 22,
+      "fips": "42043",
+      "name": "Dauphin",
+      "areaKm2": 1445,
+      "label": [
+        0.62426,
+        0.656
+      ],
+      "labelRadius": 0.01821
+    },
+    {
+      "id": 23,
+      "fips": "42045",
+      "name": "Delaware",
+      "areaKm2": 494,
+      "label": [
+        0.8018,
+        0.77683
+      ],
+      "labelRadius": 0.01289
+    },
+    {
+      "id": 24,
+      "fips": "42047",
+      "name": "Elk",
+      "areaKm2": 2154,
+      "label": [
+        0.39722,
+        0.4043
+      ],
+      "labelRadius": 0.02981
+    },
+    {
+      "id": 25,
+      "fips": "42049",
+      "name": "Erie",
+      "areaKm2": 4035,
+      "label": [
+        0.23683,
+        0.26378
+      ],
+      "labelRadius": 0.02554
+    },
+    {
+      "id": 26,
+      "fips": "42051",
+      "name": "Fayette",
+      "areaKm2": 2069,
+      "label": [
+        0.27271,
+        0.78212
+      ],
+      "labelRadius": 0.0291
+    },
+    {
+      "id": 27,
+      "fips": "42053",
+      "name": "Forest",
+      "areaKm2": 1115,
+      "label": [
+        0.33638,
+        0.38374
+      ],
+      "labelRadius": 0.01657
+    },
+    {
+      "id": 28,
+      "fips": "42055",
+      "name": "Franklin",
+      "areaKm2": 2002,
+      "label": [
+        0.51451,
+        0.78207
+      ],
+      "labelRadius": 0.02916
+    },
+    {
+      "id": 29,
+      "fips": "42057",
+      "name": "Fulton",
+      "areaKm2": 1135,
+      "label": [
+        0.46362,
+        0.78554
+      ],
+      "labelRadius": 0.0174
+    },
+    {
+      "id": 30,
+      "fips": "42059",
+      "name": "Greene",
+      "areaKm2": 1497,
+      "label": [
+        0.20439,
+        0.79204
+      ],
+      "labelRadius": 0.02254
+    },
+    {
+      "id": 31,
+      "fips": "42061",
+      "name": "Huntingdon",
+      "areaKm2": 2303,
+      "label": [
+        0.47848,
+        0.69305
+      ],
+      "labelRadius": 0.02329
+    },
+    {
+      "id": 32,
+      "fips": "42063",
+      "name": "Indiana",
+      "areaKm2": 2161,
+      "label": [
+        0.3416,
+        0.61631
+      ],
+      "labelRadius": 0.02803
+    },
+    {
+      "id": 33,
+      "fips": "42065",
+      "name": "Jefferson",
+      "areaKm2": 1701,
+      "label": [
+        0.35584,
+        0.46695
+      ],
+      "labelRadius": 0.02575
+    },
+    {
+      "id": 34,
+      "fips": "42067",
+      "name": "Juniata",
+      "areaKm2": 1019,
+      "label": [
+        0.55303,
+        0.62083
+      ],
+      "labelRadius": 0.01309
+    },
+    {
+      "id": 35,
+      "fips": "42069",
+      "name": "Lackawanna",
+      "areaKm2": 1204,
+      "label": [
+        0.77063,
+        0.40144
+      ],
+      "labelRadius": 0.02051
+    },
+    {
+      "id": 36,
+      "fips": "42071",
+      "name": "Lancaster",
+      "areaKm2": 2548,
+      "label": [
+        0.6972,
+        0.74294
+      ],
+      "labelRadius": 0.03238
+    },
+    {
+      "id": 37,
+      "fips": "42073",
+      "name": "Lawrence",
+      "areaKm2": 937,
+      "label": [
+        0.19108,
+        0.51723
+      ],
+      "labelRadius": 0.02164
+    },
+    {
+      "id": 38,
+      "fips": "42075",
+      "name": "Lebanon",
+      "areaKm2": 939,
+      "label": [
+        0.66669,
+        0.67172
+      ],
+      "labelRadius": 0.0194
+    },
+    {
+      "id": 39,
+      "fips": "42077",
+      "name": "Lehigh",
+      "areaKm2": 902,
+      "label": [
+        0.7713,
+        0.6048
+      ],
+      "labelRadius": 0.01614
+    },
+    {
+      "id": 40,
+      "fips": "42079",
+      "name": "Luzerne",
+      "areaKm2": 2347,
+      "label": [
+        0.7258,
+        0.46609
+      ],
+      "labelRadius": 0.03127
+    },
+    {
+      "id": 41,
+      "fips": "42081",
+      "name": "Lycoming",
+      "areaKm2": 3222,
+      "label": [
+        0.59096,
+        0.43027
+      ],
+      "labelRadius": 0.03438
+    },
+    {
+      "id": 42,
+      "fips": "42083",
+      "name": "McKean",
+      "areaKm2": 2550,
+      "label": [
+        0.39658,
+        0.31218
+      ],
+      "labelRadius": 0.03074
+    },
+    {
+      "id": 43,
+      "fips": "42085",
+      "name": "Mercer",
+      "areaKm2": 1768,
+      "label": [
+        0.19863,
+        0.43821
+      ],
+      "labelRadius": 0.02904
+    },
+    {
+      "id": 44,
+      "fips": "42087",
+      "name": "Mifflin",
+      "areaKm2": 1074,
+      "label": [
+        0.53132,
+        0.59358
+      ],
+      "labelRadius": 0.01388
+    },
+    {
+      "id": 45,
+      "fips": "42089",
+      "name": "Monroe",
+      "areaKm2": 1598,
+      "label": [
+        0.8048,
+        0.49256
+      ],
+      "labelRadius": 0.02491
+    },
+    {
+      "id": 46,
+      "fips": "42091",
+      "name": "Montgomery",
+      "areaKm2": 1262,
+      "label": [
+        0.80443,
+        0.71181
+      ],
+      "labelRadius": 0.01793
+    },
+    {
+      "id": 47,
+      "fips": "42093",
+      "name": "Montour",
+      "areaKm2": 343,
+      "label": [
+        0.64022,
+        0.50748
+      ],
+      "labelRadius": 0.00973
+    },
+    {
+      "id": 48,
+      "fips": "42095",
+      "name": "Northampton",
+      "areaKm2": 977,
+      "label": [
+        0.80628,
+        0.57821
+      ],
+      "labelRadius": 0.01625
+    },
+    {
+      "id": 49,
+      "fips": "42097",
+      "name": "Northumberland",
+      "areaKm2": 1236,
+      "label": [
+        0.64202,
+        0.5622
+      ],
+      "labelRadius": 0.01916
+    },
+    {
+      "id": 50,
+      "fips": "42099",
+      "name": "Perry",
+      "areaKm2": 1439,
+      "label": [
+        0.57753,
+        0.65788
+      ],
+      "labelRadius": 0.02025
+    },
+    {
+      "id": 51,
+      "fips": "42101",
+      "name": "Philadelphia",
+      "areaKm2": 369,
+      "label": [
+        0.8288,
+        0.75688
+      ],
+      "labelRadius": 0.00745
+    },
+    {
+      "id": 52,
+      "fips": "42103",
+      "name": "Pike",
+      "areaKm2": 1468,
+      "label": [
+        0.84725,
+        0.43135
+      ],
+      "labelRadius": 0.02121
+    },
+    {
+      "id": 53,
+      "fips": "42105",
+      "name": "Potter",
+      "areaKm2": 2801,
+      "label": [
+        0.49037,
+        0.33972
+      ],
+      "labelRadius": 0.03688
+    },
+    {
+      "id": 54,
+      "fips": "42107",
+      "name": "Schuylkill",
+      "areaKm2": 2027,
+      "label": [
+        0.71016,
+        0.57214
+      ],
+      "labelRadius": 0.02467
+    },
+    {
+      "id": 55,
+      "fips": "42109",
+      "name": "Snyder",
+      "areaKm2": 859,
+      "label": [
+        0.60315,
+        0.57142
+      ],
+      "labelRadius": 0.01544
+    },
+    {
+      "id": 56,
+      "fips": "42111",
+      "name": "Somerset",
+      "areaKm2": 2801,
+      "label": [
+        0.35161,
+        0.77474
+      ],
+      "labelRadius": 0.0337
+    },
+    {
+      "id": 57,
+      "fips": "42113",
+      "name": "Sullivan",
+      "areaKm2": 1172,
+      "label": [
+        0.66287,
+        0.40821
+      ],
+      "labelRadius": 0.02227
+    },
+    {
+      "id": 58,
+      "fips": "42115",
+      "name": "Susquehanna",
+      "areaKm2": 2155,
+      "label": [
+        0.75928,
+        0.31024
+      ],
+      "labelRadius": 0.02926
+    },
+    {
+      "id": 59,
+      "fips": "42117",
+      "name": "Tioga",
+      "areaKm2": 2945,
+      "label": [
+        0.57003,
+        0.32214
+      ],
+      "labelRadius": 0.0374
+    },
+    {
+      "id": 60,
+      "fips": "42119",
+      "name": "Union",
+      "areaKm2": 823,
+      "label": [
+        0.59762,
+        0.51905
+      ],
+      "labelRadius": 0.01742
+    },
+    {
+      "id": 61,
+      "fips": "42121",
+      "name": "Venango",
+      "areaKm2": 1768,
+      "label": [
+        0.25974,
+        0.41154
+      ],
+      "labelRadius": 0.02658
+    },
+    {
+      "id": 62,
+      "fips": "42123",
+      "name": "Warren",
+      "areaKm2": 2328,
+      "label": [
+        0.33114,
+        0.31201
+      ],
+      "labelRadius": 0.03068
+    },
+    {
+      "id": 63,
+      "fips": "42125",
+      "name": "Washington",
+      "areaKm2": 2230,
+      "label": [
+        0.19664,
+        0.71269
+      ],
+      "labelRadius": 0.02697
+    },
+    {
+      "id": 64,
+      "fips": "42127",
+      "name": "Wayne",
+      "areaKm2": 1945,
+      "label": [
+        0.81448,
+        0.34909
+      ],
+      "labelRadius": 0.02473
+    },
+    {
+      "id": 65,
+      "fips": "42129",
+      "name": "Westmoreland",
+      "areaKm2": 2683,
+      "label": [
+        0.29126,
+        0.68205
+      ],
+      "labelRadius": 0.02791
+    },
+    {
+      "id": 66,
+      "fips": "42131",
+      "name": "Wyoming",
+      "areaKm2": 1049,
+      "label": [
+        0.71844,
+        0.38659
+      ],
+      "labelRadius": 0.02139
+    },
+    {
+      "id": 67,
+      "fips": "42133",
+      "name": "York",
+      "areaKm2": 2359,
+      "label": [
+        0.63402,
+        0.78401
+      ],
+      "labelRadius": 0.02791
+    }
+  ]
+}
