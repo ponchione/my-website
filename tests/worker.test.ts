@@ -27,4 +27,20 @@ describe('production edge worker', () => {
     expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000')
     expect(assetsFetch).toHaveBeenCalledWith(request)
   })
+
+  it('caches fingerprinted build files for good and map textures for a day', async () => {
+    const serve = (path: string, status = 200) => worker.fetch(
+      new Request(`https://www.mitchellponchione.com${path}`),
+      { ASSETS: { fetch: vi.fn().mockResolvedValue(new Response('asset', { status, headers: { 'Cache-Control': 'public, max-age=0, must-revalidate' } })) } },
+    )
+    const cacheOf = async (path: string, status?: number) => (await serve(path, status)).headers.get('cache-control')
+
+    expect(await cacheOf('/_nuxt/entry.BVKGSWc-.js')).toBe('public, max-age=31536000, immutable')
+    expect(await cacheOf('/realm/height.webp')).toBe('public, max-age=86400, stale-while-revalidate=604800')
+    // The build manifest changes with every deploy, pages may change at any time, and a
+    // missing file may be published later.
+    expect(await cacheOf('/_nuxt/builds/latest.json')).toBe('public, max-age=0, must-revalidate')
+    expect(await cacheOf('/about')).toBe('public, max-age=0, must-revalidate')
+    expect(await cacheOf('/_nuxt/missing.js', 404)).toBe('public, max-age=0, must-revalidate')
+  })
 })
