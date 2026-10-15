@@ -1,9 +1,8 @@
 # Redesign Handoff: the Realm Map
 
-Status (2026-10-15): the map is the home page (`/`) on the `realm-map` branch, committed
-and pushed but not merged or deployed; ask Mitchell before either. The old home page is
-now `/about`; `/work-history`, `/projects` and `/blog` are unchanged. The live site
-still serves `main`.
+Status (2026-10-15): the map is the home page (`/`), merged to `main` and live. The old
+home page is now `/about`; `/work-history`, `/projects` and `/blog` are unchanged.
+Pushing `main` deploys (Cloudflare Workers Builds), so ask Mitchell before pushing it.
 
 ## Direction
 
