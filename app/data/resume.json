@@ -1,6 +1,29 @@
 {
   "experience": [
     {
+      "id": 6,
+      "company": "New Enterprise Stone & Lime Co., Inc.",
+      "location": "New Enterprise, PA",
+      "url": "https://www.nesl.com/",
+      "title": "IT Solutions Architect",
+      "startDate": "July 2026",
+      "endDate": "Present",
+      "responsibilities": [
+        "Work across business and IT to shape the company's next generation of technology architecture, focused on solution architecture, cloud modernization, enterprise integration, and data platforms.",
+        "Design an AWS-based integration and data architecture that serves as the foundation for analytics, automation, system interoperability, and future application modernization.",
+        "Partner directly with teams across the business to understand operational processes, existing systems, data flows, and pain points, then translate those needs into practical technical architectures and implementation strategies.",
+        "Apply AI-assisted engineering, research, and development workflows where they provide practical leverage, accelerating technical discovery, architecture analysis, implementation, and validation."
+      ],
+      "skills": [
+        "AWS",
+        "Solution Architecture",
+        "Cloud Modernization",
+        "Enterprise Integration",
+        "Data Platforms",
+        "AI-Assisted Engineering"
+      ]
+    },
+    {
       "id": 1,
       "company": "Applied Research Associates Inc.",
       "location": "Remote",
