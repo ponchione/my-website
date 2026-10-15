@@ -9,7 +9,8 @@ export default defineContentConfig({
         title: z.string(),
         date: z.string(),
         tags: z.array(z.string()),
-        excerpt: z.string(),
+        // Not `excerpt`: Nuxt Content overwrites that with the `<!--more-->` excerpt.
+        summary: z.string(),
         readingTime: z.string(),
       }),
     }),

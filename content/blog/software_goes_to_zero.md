@@ -4,7 +4,7 @@ date: "2026-03-21"
 tags:
     - AI
     - Software
-excerpt: "Software is becoming water."
+summary: "Software is becoming water."
 readingTime: "5 min read"
 ---
 

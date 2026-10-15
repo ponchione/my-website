@@ -19,7 +19,7 @@ const { data: surroundingPosts } = await useAsyncData(`blog-post-surroundings-${
 const nextPost = computed(() => surroundingPosts.value?.[0] ?? null)
 const previousPost = computed(() => surroundingPosts.value?.[1] ?? null)
 
-useSiteSeo(`${post.title} — Mitchell Ponchione`, route.path, post.excerpt)
+useSiteSeo(`${post.title} — Mitchell Ponchione`, route.path, post.summary)
 </script>
 
 <template>

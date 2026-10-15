@@ -4,7 +4,7 @@ date: "2026-03-04"
 tags:
     - AI
     - Business
-excerpt: "Okay, it's partly a joke. But there's a real point in there."
+summary: "Okay, it's partly a joke. But there's a real point in there."
 readingTime: "4 min read"
 ---
 
