@@ -31,6 +31,11 @@ const { data: posts } = await useAsyncData('realm-dispatches', () => queryCollec
   .order('date', 'DESC')
   .all())
 const dispatches = computed<Dispatch[]>(() => posts.value ?? [])
+const route = useRoute()
+const letters = useLetterRoutes()
+// Anywhere but the bare map, a letter or the letter case is open over it.
+const overLetters = computed(() => route.path !== '/')
+const openLetter = computed(() => dispatches.value.find(dispatch => dispatch.path === route.path) ?? null)
 const homeRealm: MapPick = { kind: 'realm', id: mapData.realms.find(realm => realm.code === HOME_REALM_CODE)!.id }
 
 const base = ref<BaseMapId>('political')
@@ -141,7 +146,7 @@ async function travel(town: HeldTown, holding = town.holdings[0]!) {
   await nextTick()
   const landed = await map.value?.flyTo(locate(town.at))
   const still = selected.value?.kind === 'county' && selected.value.id === county?.id
-  if (landed && still && !sheetOpen.value && !activeDispatch.value) openRecord(holding)
+  if (landed && still && !sheetOpen.value && !activeDispatch.value && !overLetters.value) openRecord(holding)
 }
 
 // The counties each lens lights up.
@@ -193,30 +198,42 @@ function clearMap() {
   map.value?.resetView()
 }
 
+// A letter counts as read once its seal is broken and it's open, not when its dispatch
+// merely arrives.
 function markRead(dispatch: Dispatch | null) {
   if (!dispatch || read.value.has(dispatch.path)) return
   read.value = new Set([...read.value, dispatch.path])
   saveReadDispatches(read.value)
 }
 
+watch(openLetter, markRead)
+
 function openDispatches() {
   eventQueue.value = dispatchQueue(dispatches.value, read.value)
   eventIndex.value = 0
-  markRead(activeDispatch.value)
 }
 
 function nextDispatch() {
   eventIndex.value = (eventIndex.value + 1) % eventQueue.value.length
-  markRead(activeDispatch.value)
 }
 
 function closeDispatches() {
   eventQueue.value = []
 }
 
+// Whatever was open gives way to a letter or the letter case, however it was reached
+// (a dispatch, the browser's Forward button).
+watch(overLetters, (open) => {
+  if (!open) return
+  closeDispatches()
+  closeRecord()
+  sheetOpen.value = false
+})
+
 function onKeydown(event: KeyboardEvent) {
   if (event.key !== 'Escape') return
-  if (activeDispatch.value) closeDispatches()
+  if (overLetters.value) letters.close()
+  else if (activeDispatch.value) closeDispatches()
   else if (activeRecord.value) closeRecord()
   else if (sheetOpen.value) sheetOpen.value = false
   else selected.value = null
@@ -224,6 +241,8 @@ function onKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   read.value = loadReadDispatches()
+  // Someone who arrived on a letter has just read it.
+  markRead(openLetter.value)
   window.addEventListener('keydown', onKeydown)
 })
 onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
@@ -241,7 +260,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     <!-- First stop for the keyboard and screen readers, and a way in for crawlers: the
          map itself is a canvas. -->
     <NuxtLink to="/about" class="realm-skip">Skip the map for the plain pages</NuxtLink>
-    <h1 class="sr-only">Mitchell Ponchione — a map of the realm</h1>
+    <!-- An open letter has its own title. -->
+    <h1 v-if="!openLetter" class="sr-only">Mitchell Ponchione — a map of the realm</h1>
 
     <RealmMap
       ref="map"
@@ -321,7 +341,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     <RealmCharacterSheet v-if="sheetOpen" @close="sheetOpen = false" @visit="visit" />
 
     <div
-      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord"
+      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters"
       class="realm-tooltip"
       :style="tooltipStyle"
       aria-hidden="true"
@@ -392,6 +412,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       :paint-plate="(canvas) => map?.paintPlate(canvas, homeRealm)"
       @next="nextDispatch"
       @close="closeDispatches"
+      @open="letters.open"
     />
 
     <RealmRecord
@@ -404,6 +425,9 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       @next="nextRecord"
       @close="closeRecord"
     />
+
+    <!-- A letter (/blog/<slug>) or the letter case (/blog), over the map. -->
+    <NuxtPage :transition="{ name: 'letter', mode: 'out-in' }" :dispatches="dispatches" :read="read" />
   </div>
 </template>
 

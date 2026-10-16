@@ -5,6 +5,7 @@ const notFoundPath = new URL('../.output/public/404.html', import.meta.url)
 const html = await readFile(notFoundPath, 'utf8')
 const blogIndexPayload = await readFile(new URL('../.output/public/blog/_payload.json', import.meta.url), 'utf8')
 const agencyPayload = await readFile(new URL('../.output/public/blog/agency_in_an_AI_world/_payload.json', import.meta.url), 'utf8')
+const letterHtml = await readFile(new URL('../.output/public/blog/software_goes_to_zero/index.html', import.meta.url), 'utf8')
 
 assert.match(html, /<title>Not Found — Mitchell Ponchione<\/title>/, '404.html should have a useful title')
 assert.match(html, /<meta[^>]+name="robots"[^>]+content="noindex, follow"/i, '404.html should tell crawlers not to index it')
@@ -14,5 +15,10 @@ assert.doesNotMatch(html, /<link[^>]+rel="canonical"/i, '404.html should not cla
 assert.doesNotMatch(blogIndexPayload, /Open your LinkedIn feed right now/, 'the blog index payload should not include post bodies')
 assert.doesNotMatch(agencyPayload, /I&#39;ve been kicking around an idea|I've been kicking around an idea/, 'article payloads should not include neighboring post bodies')
 assert.doesNotMatch(agencyPayload, /Open your LinkedIn feed right now/, 'article payloads should not include neighboring post bodies')
+// A shared post link lands on the map with the letter open, and its text is in the page.
+assert.match(letterHtml, /<title>Software Goes to Zero — Mitchell Ponchione<\/title>/, 'a letter should have its post\'s title')
+assert.match(letterHtml, /<link rel="canonical" href="https:\/\/www\.mitchellponchione\.com\/blog\/software_goes_to_zero">/, 'a letter should be canonical at its own path, not the map\'s')
+assert.match(letterHtml, /class="realm"/, 'a letter should open over the map')
+assert.match(letterHtml, /Open your LinkedIn feed right now/, 'a letter\'s text should be in the prerendered HTML')
 
 console.log('Generated output verification passed.')

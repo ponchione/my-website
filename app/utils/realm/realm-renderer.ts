@@ -1058,7 +1058,9 @@ export class RealmRenderer {
 
   private onKeyDown = (event: KeyboardEvent) => {
     if (event.metaKey || event.ctrlKey || event.altKey) return
-    if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable]')) return
+    // Keys typed into a field or pressed in a pop-up over the map (where arrows scroll a
+    // letter) aren't for the camera.
+    if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable], [aria-modal="true"]')) return
     const key = event.key.toLowerCase()
     if (['w', 'a', 's', 'd', 'arrowup', 'arrowdown', 'arrowleft', 'arrowright', '=', '+', '-', '_'].includes(key)) {
       this.keys.add(key)

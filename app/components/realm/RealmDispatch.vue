@@ -14,11 +14,14 @@ defineProps<{
 const emit = defineEmits<{
   close: []
   next: []
+  // Read the letter: its seal has finished breaking.
+  open: [path: string]
 }>()
 
-const primary = useTemplateRef<{ $el: HTMLElement }>('primary')
+const primary = useTemplateRef<HTMLElement>('primary')
+const { breaking, breakSeal } = useSealBreak(path => emit('open', path))
 
-onMounted(() => primary.value?.$el.focus())
+onMounted(() => primary.value?.focus())
 </script>
 
 <template>
@@ -30,6 +33,9 @@ onMounted(() => primary.value?.$el.focus())
     described-by="realm-dispatch-flavor"
     @close="emit('close')"
   >
+    <template #plate>
+      <RealmSeal class="dispatch-seal" :broken="breaking === dispatch.path" />
+    </template>
     <p class="dispatch-meta">
       {{ formatDispatchDate(dispatch.date) }} · {{ dispatch.readingTime }}<template v-if="dispatch.tags.length"> · {{ dispatch.tags.join(', ') }}</template>
     </p>
@@ -38,12 +44,15 @@ onMounted(() => primary.value?.$el.focus())
       <blockquote>“{{ dispatch.summary }}”</blockquote>
     </div>
     <template #options>
-      <NuxtLink ref="primary" :to="dispatch.path" class="realm-event-option realm-event-option-primary">
+      <a ref="primary" :href="dispatch.path" class="realm-event-option realm-event-option-primary" @click="breakSeal($event, dispatch.path)">
         Break the seal and read it
-      </NuxtLink>
+      </a>
       <button v-if="total > 1" type="button" class="realm-event-option" @click="emit('next')">
         Open the next letter
       </button>
+      <NuxtLink to="/blog" class="realm-event-option">
+        Look through the letter case
+      </NuxtLink>
       <button type="button" class="realm-event-option" @click="emit('close')">
         Leave them for later
       </button>
@@ -52,6 +61,15 @@ onMounted(() => primary.value?.$el.focus())
 </template>
 
 <style scoped>
+/* Pressed into the plate's corner. */
+.dispatch-seal {
+  position: absolute;
+  right: 12px;
+  bottom: 10px;
+  z-index: 1;
+  width: 64px;
+}
+
 .dispatch-meta {
   margin-top: 4px;
   font-size: 15px;
@@ -75,5 +93,11 @@ onMounted(() => primary.value?.$el.focus())
   padding-left: 14px;
   border-left: 2px solid var(--gold-dim);
   color: var(--ink);
+}
+
+@media (max-width: 640px) {
+  .dispatch-seal {
+    width: 50px;
+  }
 }
 </style>

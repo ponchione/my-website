@@ -6,8 +6,9 @@ const props = defineProps<{
   kicker: string
   title: string
   // Named in the plate's corner.
-  plateCaption: string
-  paintPlate: (canvas: HTMLCanvasElement) => void
+  plateCaption?: string
+  // Events without a plate (the letter case) leave this out.
+  paintPlate?: (canvas: HTMLCanvasElement) => void
   // The id of the element (in the default slot) that describes the event, if any.
   describedBy?: string
   // Events with a lot to read get more room, a shallower plate, and a close button.
@@ -18,52 +19,19 @@ const emit = defineEmits<{ close: [] }>()
 
 const dialog = useTemplateRef<HTMLElement>('dialog')
 const plate = useTemplateRef<HTMLCanvasElement>('plate')
-// Whatever opened the event gets the focus back when it closes.
-let opener: Element | null = null
 
-const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-
-// The event is modal, so Tab and Shift+Tab cycle through its own controls and never
-// wander off to the map behind it.
-function holdFocus(event: KeyboardEvent) {
-  const frame = dialog.value
-  if (event.key !== 'Tab' || !frame) return
-  const controls = [...frame.querySelectorAll<HTMLElement>(FOCUSABLE)]
-  const first = controls[0]
-  const last = controls[controls.length - 1]
-  const active = document.activeElement
-  const inside = active instanceof Node && frame.contains(active)
-  if (!first || !last) {
-    event.preventDefault()
-    frame.focus({ preventScroll: true })
-  }
-  else if (event.shiftKey ? !inside || active === first || active === frame : !inside || active === last) {
-    event.preventDefault()
-    ;(event.shiftKey ? last : first).focus()
-  }
-}
+useModalFocus(dialog)
 
 function paint() {
   const canvas = plate.value
-  if (!canvas) return
+  if (!canvas || !props.paintPlate) return
   const ratio = Math.min(window.devicePixelRatio, 2)
   canvas.width = Math.round(canvas.clientWidth * ratio)
   canvas.height = Math.round(canvas.clientHeight * ratio)
   props.paintPlate(canvas)
 }
 
-onMounted(() => {
-  paint()
-  opener = document.activeElement
-  // Somewhere for the keyboard to start; an event may then focus an option of its own.
-  dialog.value?.focus({ preventScroll: true })
-  document.addEventListener('keydown', holdFocus)
-})
-
-onBeforeUnmount(() => {
-  document.removeEventListener('keydown', holdFocus)
-  if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
-})
+onMounted(paint)
 </script>
 
 <template>
@@ -80,9 +48,11 @@ onBeforeUnmount(() => {
     >
       <button v-if="wide" type="button" class="realm-event-close" aria-label="Close" @click="emit('close')">×</button>
       <p class="realm-event-kicker">{{ kicker }}</p>
-      <div class="realm-event-plate">
+      <div v-if="paintPlate" class="realm-event-plate">
         <canvas ref="plate" aria-hidden="true" />
         <span class="realm-event-plate-caption" aria-hidden="true">{{ plateCaption }}</span>
+        <!-- Anything pressed onto the plate, like a letter's seal. -->
+        <slot name="plate" />
       </div>
       <h2 id="realm-event-title" class="realm-event-title">{{ title }}</h2>
       <slot />
@@ -191,6 +161,11 @@ onBeforeUnmount(() => {
   color: rgb(58 42 26 / 0.85);
   /* A wash of bare parchment behind the letters, so the engraving doesn't swallow them. */
   text-shadow: 0 0 3px #e6d9b6, 0 0 6px #e6d9b6, 0 0 10px #e6d9b6, 0 0 14px #e6d9b6;
+}
+
+/* Without a plate between them. */
+.realm-event-kicker + .realm-event-title {
+  margin-top: 10px;
 }
 
 .realm-event-title {

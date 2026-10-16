@@ -1,7 +1,9 @@
 # Redesign Handoff: the Realm Map
 
 Status (2026-10-15): the map is the home page (`/`), merged to `main` and live. The old
-home page is now `/about`; `/work-history`, `/projects` and `/blog` are unchanged.
+home page is now `/about`; `/work-history` and `/projects` are unchanged. The blog now
+lives in the realm: `/blog` is the letter case and `/blog/<slug>` a letter, both over the
+map (see "Letters" below).
 Pushing `main` deploys (Cloudflare Workers Builds), so ask Mitchell before pushing it.
 
 ## Direction
@@ -44,6 +46,13 @@ Decided (don't relitigate):
 - ARA was the **Mechanicsburg office (Cumberland County)**, though mostly remote.
 - Blog posts open as Paradox-style **event pop-ups** from the Dispatches button. They are
   *not* placed on counties: no map markers for posts.
+- **Reading a post never leaves the map.** "Break the seal and read it" cracks the wax
+  seal on the event's plate, then opens the post as a **letter**: a parchment sheet over
+  the dimmed, still-live map, at the post's own URL. Headings are rules through the page,
+  the first letter is a red drop cap, and it's signed with the name and house arms. The
+  letter case (`/blog`) lists every letter with its seal intact or broken. Mitchell chose
+  parchment and left out the extras (a plain-text toggle, option effect tooltips,
+  swapping the dispatch plate for a seal).
 - **Jobs and the degree do get map markers**: a drawn town icon at the real town
   (Pittsburgh, New Holland, New Enterprise, Mechanicsburg, Indiana), a keep for posts
   and a columned hall for schooling, in its lens's color. This isn't the blog-post
@@ -113,6 +122,9 @@ node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
 | `app/components/realm/RealmCharacterBanner.vue`, `RealmCharacterSheet.vue` | Top-left banner and full sheet |
 | `app/components/realm/RealmEvent.vue` | The frame every event pop-up shares (kicker, plate, title, options) |
 | `app/components/realm/RealmDispatch.vue`, `RealmRecord.vue` | A blog post as a sealed letter; the full record of a post or degree |
+| `app/components/realm/RealmLetter.vue`, `RealmLetterCase.vue`, `RealmSeal.vue` | An opened letter on parchment; the letter case; the wax seal and its break |
+| `app/pages/index/blog/` | The letter and letter case routes, nested in the map page |
+| `app/composables/useLetters.ts`, `useModalFocus.ts` | Letter routing and the seal-break delay; the focus trap every pop-up shares |
 | `app/components/realm/RealmTown.vue` | A town's map marker: icon, nameplate, lens states |
 | `app/components/realm/RealmHeraldicShield.vue` | SVG coats of arms (house arms or seeded per title) |
 | `scripts/map/build-map.mjs`, `scripts/portrait/build-portrait.mjs` | Asset pipelines |
@@ -121,6 +133,23 @@ A new job in a new place needs a town in `TOWNS` (name, county FIPS, longitude/l
 and its location mapped in `LOCATION_TOWN` (or `OFFICE_TOWN` for a remote role) in
 `career.ts`. `tests/realm-career.test.ts` fails until it has one, so a job can't silently
 drop off the map.
+
+## Letters
+
+- `/blog` and `/blog/<slug>` are child routes of the map page (`app/pages/index/blog/`),
+  rendered by a `<NuxtPage>` at the end of `index.vue`. The map page stays mounted, so
+  opening and closing letters never reloads the map. A shared link prerenders as the map
+  with the letter open: its text, title and canonical are in the HTML
+  (`scripts/verify-generated.mjs` checks this on every build).
+- They behave like a stack (`useLetterRoutes` in `app/composables/useLetters.ts`): opening
+  pushes, paging (next letter, letter → letter case) replaces, and closing (Escape, ×,
+  the backdrop, the last option) goes Back to the map or letter case it came from. A
+  visitor who landed on a letter goes on to the map.
+- A letter is **read** once it's open, not when its dispatch pop-up shows; that drives
+  the unread badge and the seals in the letter case. The dispatch queue still opens
+  unread first.
+- Map keys (WASD, arrows) are ignored inside any `aria-modal` pop-up, so arrows scroll a
+  letter instead of moving the camera.
 
 ## Gotchas
 
@@ -154,8 +183,12 @@ drop off the map.
   px (the largest texture every WebGL device takes), so wider bounds cost detail per km.
 - Lake Erie's water level is applied by region (`LAKE_ERIE` in `build-map.mjs`); other
   water is sea level. Widening north to Lake Ontario would need its level added too.
-- The event pop-ups are modal: `RealmEvent.vue` keeps Tab inside them. The character
-  sheet isn't modal and doesn't.
+- The event pop-ups and letters are modal: `useModalFocus` keeps Tab inside them. The
+  character sheet isn't modal and doesn't.
+- Headless SwiftShader also slows the browser's smooth scrolling: a second key press
+  inside a letter can look ignored for seconds. It isn't; wait longer.
+- `scripts/verify-preview.mjs` still checks the pre-map site (the side nav on `/`, the
+  old blog pages), so it fails against the current site until it's rewritten.
 
 ## Verifying visually
 
