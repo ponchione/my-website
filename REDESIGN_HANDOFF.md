@@ -95,9 +95,10 @@ node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
   rivers, and AWS Terrain Tiles (terrarium, zoom 10) into `.cache/map` (gitignored,
   ~125 MB on first run), plus the Census county adjacency file and 2020 county
   populations for Keystone. It writes `public/realm/*.webp` (3.7 MB total) and
-  `app/data/map/pennsylvania.json`, which also holds each county's Keystone neighbors,
-  development and terrain (see `KEYSTONE_SPEC.md`). Terrain over PA is USGS 3DEP + SRTM
-  via those tiles, not Copernicus GLO-90.
+  `app/data/map/pennsylvania.json`, plus `app/data/map/keystone.json`: each county's
+  neighbors, development and terrain for Keystone (see `KEYSTONE_SPEC.md`), kept apart
+  so the home page doesn't load it. Terrain over PA is USGS 3DEP + SRTM via those tiles,
+  not Copernicus GLO-90.
 - The portrait's source photo is not in the repo (it lives on Mitchell's Windows
   Pictures folder: `/mnt/c/Users/mitch/Pictures/mitchell_ponchione_professional.jpg`).
 - Checks: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all passed at

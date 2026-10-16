@@ -9,18 +9,11 @@ export type MapLabel = {
   labelRadius: number
 }
 
-export type Terrain = 'flat' | 'hills' | 'mountains'
-
-// Keystone's board: neighbors share a border (corners don't count), development is
-// 1–5 from Census 2020 population on a log scale, and terrain comes from local relief.
 export type MapCounty = MapLabel & {
   id: number
   fips: string
   name: string
   areaKm2: number
-  neighbors: number[]
-  development: number
-  terrain: Terrain
 }
 
 export type MapRealm = MapLabel & {
@@ -38,8 +31,7 @@ export type RealmMapData = {
   counties: MapCounty[]
 }
 
-// JSON imports type every string as string; the build writes only Terrain values.
-export const mapData = pennsylvania as RealmMapData
+export const mapData: RealmMapData = pennsylvania
 
 export const HOME_REALM_CODE = 'PA'
 

@@ -1,10 +1,11 @@
 # Keystone: a campaign on the realm map
 
 Status (2026-10-16): phase 1 (the engine) is built on the `keystone` branch, not yet
-merged. The map build writes each county's neighbors, development and terrain; the engine
-is under `app/utils/keystone/`, with tests in `tests/keystone.test.ts` and the balance
-harness at `scripts/keystone/simulate.ts`, which meets every target (see Testing). The
-numbers below are the tuned ones. Nothing on the site has changed yet; phase 2 is next.
+merged; Mitchell wants it held off `main` for now. The map build writes each county's
+neighbors, development and terrain to `app/data/map/keystone.json`; the engine is under
+`app/utils/keystone/`, with tests in `tests/keystone.test.ts` and the balance harness at
+`scripts/keystone/simulate.ts`, which meets every target (see Testing). The numbers below
+are the tuned ones. Nothing on the site has changed yet; phase 2 is next.
 
 ## What it is
 
@@ -77,7 +78,8 @@ With reduced motion, every step is a crossfade.
 ## The board
 
 - The 67 Pennsylvania counties. Neighboring realms are scenery; armies can't enter them.
-- The map build computes, for each county:
+- The map build computes, for each county, and writes to `app/data/map/keystone.json`
+  (kept out of `pennsylvania.json`, which the home page loads):
   - **Neighbors**, from the Census county adjacency file, cross-checked against the
     province raster: a pair must also share at least 8 pixels of edge (about 1.3 km).
     Counties that touch only at a corner don't count. `NEIGHBOR_OVERRIDES` in
@@ -324,13 +326,17 @@ Each phase ends with something that works.
 - Sound.
 - Fog of war.
 
-## Open questions
+## Defaults (tweak later if needed)
 
-- The start year: 1200 is a placeholder, and any medieval year works since the history is
-  invented. It's `RULES.startYear` in `app/utils/keystone/rules.ts`.
-- House names: the seat county ("House of Westmoreland"), or generated family names
-  ("House Aldane")? Phase 1 uses the seat county, in `houseName` in
-  `app/utils/keystone/engine.ts`.
+Mitchell, 2026-10-16: use the best defaults for now. These were open questions:
+
+- The start year is **1200**. Any medieval year works since the history is invented; it's
+  `RULES.startYear` in `app/utils/keystone/rules.ts`.
+- Houses are named for their **seat county** ("House of Westmoreland"), not generated
+  family names: the name says where a house is on the map, and there's no name generator
+  to build. It's `houseName` in `app/utils/keystone/engine.ts`.
+- Keystone's county data lives in its own `keystone.json`, so the home page doesn't pay
+  for it (the build first put it in `pennsylvania.json`, which added 0.8 KB gzipped).
 
 ## Backlog: a second game
 

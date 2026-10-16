@@ -1,10 +1,10 @@
-// The 67 counties as scripts/map/build-map.mjs wrote them: who borders whom, how
-// developed each starts, and its terrain. Fixed for the whole campaign.
+// The 67 counties as scripts/map/build-map.mjs wrote them to keystone.json: who borders
+// whom, how developed each starts, and its terrain. Fixed for the whole campaign. It's a
+// file of its own so the home page, which loads pennsylvania.json, doesn't carry it.
 
-import map from '../../data/map/pennsylvania.json' with { type: 'json' }
-import type { MapCounty, Terrain } from '../realm/map-data.ts'
+import board from '../../data/map/keystone.json' with { type: 'json' }
 
-export type { Terrain }
+export type Terrain = 'flat' | 'hills' | 'mountains'
 
 // The map's county id, 1–67, in alphabetical order.
 export type CountyId = number
@@ -17,15 +17,14 @@ export type County = {
   terrain: Terrain
 }
 
-const counties = map.counties as MapCounty[]
+// JSON imports type every string as string; the build writes only Terrain values.
+const counties = board.counties as County[]
 
 export const COUNTY_IDS: CountyId[] = counties.map(c => c.id).sort((a, b) => a - b)
 
 // Indexed by id; slot 0 is empty.
 const COUNTIES: County[] = []
-for (const c of counties) {
-  COUNTIES[c.id] = { id: c.id, name: c.name, neighbors: c.neighbors, development: c.development, terrain: c.terrain }
-}
+for (const c of counties) COUNTIES[c.id] = c
 
 export function county(id: CountyId): County {
   const found = COUNTIES[id]

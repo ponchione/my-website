@@ -8,8 +8,9 @@
 //                                B = signed water distance (128 = shoreline). Lossless.
 //   public/realm/height.webp     8-bit elevation (for the mesh, coloring, and picking).
 //   public/realm/normals.webp    Precomputed lighting normals (lossy; smooth data).
-//   app/data/map/pennsylvania.json  ids, names, and label anchors for the above, plus each
-//                                county's neighbors, development and terrain for Keystone.
+//   app/data/map/pennsylvania.json  ids, names, and label anchors for the above.
+//   app/data/map/keystone.json   each county's neighbors, development and terrain for
+//                                Keystone, apart so the home page doesn't load them.
 //
 // Everything is in normalized Web Mercator so the terrain tiles line up for free.
 // Downloads are cached in .cache/map.
@@ -58,8 +59,6 @@ const SOURCES = {
   rivers: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip',
   riversNorthAmerica: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip',
   terrain: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium',
-  adjacency: 'https://www2.census.gov/geo/docs/reference/county_adjacency/county_adjacency2024.txt',
-  population: 'https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO42.txt',
 }
 
 // Keystone's board. Two counties are neighbors when they share a border. The Census
@@ -67,6 +66,10 @@ const SOURCES = {
 // share at least MIN_BORDER_PIXELS of edge on the province raster (about 1.3 km).
 // NEIGHBOR_OVERRIDES settles every pair where the two disagree; the build fails on any
 // it doesn't settle, and on overrides that no longer settle anything.
+const KEYSTONE_SOURCES = {
+  adjacency: 'https://www2.census.gov/geo/docs/reference/county_adjacency/county_adjacency2024.txt',
+  population: 'https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO42.txt',
+}
 const MIN_BORDER_PIXELS = 8
 const NEIGHBOR_OVERRIDES = {
   // The four-county corner at Freeport. Allegheny–Armstrong, the other diagonal, is in
@@ -435,7 +438,7 @@ async function readNeighbors(counties, countyIds) {
     if (!pairs.has(name)) pairs.set(name, { a, b, census: false, pixels: 0 })
     return pairs.get(name)
   }
-  const text = (await cached(SOURCES.adjacency.split('/').pop(), SOURCES.adjacency)).toString('utf8')
+  const text = (await cached(KEYSTONE_SOURCES.adjacency.split('/').pop(), KEYSTONE_SOURCES.adjacency)).toString('utf8')
   for (const line of text.split('\n').slice(1)) {
     const [, fipsA, , fipsB] = line.trim().split('|')
     const a = byFips.get(fipsA), b = byFips.get(fipsB)
@@ -474,7 +477,7 @@ async function readNeighbors(counties, countyIds) {
 
 // Census 2020 population on a log scale: 1 for the smallest county, 5 for the largest.
 async function readDevelopment(counties) {
-  const text = (await cached(SOURCES.population.split('/').pop(), SOURCES.population)).toString('utf8').replace(/^\uFEFF/, '')
+  const text = (await cached(KEYSTONE_SOURCES.population.split('/').pop(), KEYSTONE_SOURCES.population)).toString('utf8').replace(/^\uFEFF/, '')
   const population = new Map()
   for (const line of text.trim().split('\n').slice(1)) {
     const [state, county, , , people] = line.split(',')
@@ -645,8 +648,6 @@ async function main() {
       areaKm2: county.areaKm2,
       label: [round(anchor[0] / W), round(anchor[1] / H)],
       labelRadius: round(anchor.distance / W),
-      neighbors: countyNeighbors.get(county.id),
-      development: development.get(county.id),
     }
   })
   // Realms are clipped by the map edge, so find the pole of inaccessibility on the raster.
@@ -711,9 +712,15 @@ async function main() {
     maxElevation = Math.max(maxElevation, h)
   }
   const relief = countyRelief(heights, TW, TH, countyIds)
-  for (const county of countyData) county.terrain = terrainOf(relief.get(county.id))
+  const board = counties.map(county => ({
+    id: county.id,
+    name: county.name,
+    neighbors: countyNeighbors.get(county.id),
+    development: development.get(county.id),
+    terrain: terrainOf(relief.get(county.id)),
+  }))
   if (process.env.KEYSTONE_DEBUG) {
-    for (const county of countyData) console.log(`  ${county.name.padEnd(16)} relief ${relief.get(county.id).toFixed(0).padStart(4)} m  ${county.terrain.padEnd(9)} development ${county.development}  neighbors ${county.neighbors.length}`)
+    for (const county of board) console.log(`  ${county.name.padEnd(16)} relief ${relief.get(county.id).toFixed(0).padStart(4)} m  ${county.terrain.padEnd(9)} development ${county.development}  neighbors ${county.neighbors.length}`)
   }
 
   // Lighting normals from the full-precision heights, so the 8-bit height map doesn't band.
@@ -756,6 +763,7 @@ async function main() {
     counties: countyData,
   }
   await writeFile(join(OUT_DATA, 'pennsylvania.json'), `${JSON.stringify(data, null, 2)}\n`)
+  await writeFile(join(OUT_DATA, 'keystone.json'), `${JSON.stringify({ sources: Object.values(KEYSTONE_SOURCES), counties: board }, null, 2)}\n`)
   console.log(`done: ${counties.length} counties, ${realms.length} realms, elevation ${minElevation.toFixed(0)}-${maxElevation.toFixed(0)} m`)
 }
 
