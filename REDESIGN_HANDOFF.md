@@ -87,15 +87,17 @@ an accessible outliner.
 
 ```sh
 npm run dev                                   # http://localhost:3000/
-node scripts/map/build-map.mjs                # regenerate map assets (~15 s cached)
+node scripts/map/build-map.mjs                # regenerate map assets (~30 s cached)
 node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
 ```
 
 - `build-map.mjs` downloads Census cb_2024 counties/states, Natural Earth countries and
   rivers, and AWS Terrain Tiles (terrarium, zoom 10) into `.cache/map` (gitignored,
-  ~125 MB on first run). It writes `public/realm/*.webp` (3.7 MB total) and
-  `app/data/map/pennsylvania.json`. Terrain over PA is USGS 3DEP + SRTM via those tiles,
-  not Copernicus GLO-90.
+  ~125 MB on first run), plus the Census county adjacency file and 2020 county
+  populations for Keystone. It writes `public/realm/*.webp` (3.7 MB total) and
+  `app/data/map/pennsylvania.json`, which also holds each county's Keystone neighbors,
+  development and terrain (see `KEYSTONE_SPEC.md`). Terrain over PA is USGS 3DEP + SRTM
+  via those tiles, not Copernicus GLO-90.
 - The portrait's source photo is not in the repo (it lives on Mitchell's Windows
   Pictures folder: `/mnt/c/Users/mitch/Pictures/mitchell_ponchione_professional.jpg`).
 - Checks: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all passed at

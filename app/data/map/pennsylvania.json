@@ -5,7 +5,9 @@
     "https://naciscdn.org/naturalearth/10m/cultural/ne_10m_admin_0_countries_lakes.zip",
     "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_lake_centerlines.zip",
     "https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip",
-    "https://s3.amazonaws.com/elevation-tiles-prod/terrarium"
+    "https://s3.amazonaws.com/elevation-tiles-prod/terrarium",
+    "https://www2.census.gov/geo/docs/reference/county_adjacency/county_adjacency2024.txt",
+    "https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO42.txt"
   ],
   "bounds": {
     "west": -81.9,
@@ -131,7 +133,14 @@
         0.57765,
         0.78933
       ],
-      "labelRadius": 0.02457
+      "labelRadius": 0.02457,
+      "neighbors": [
+        21,
+        28,
+        67
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 2,
@@ -142,7 +151,15 @@
         0.23478,
         0.64334
       ],
-      "labelRadius": 0.02981
+      "labelRadius": 0.02981,
+      "neighbors": [
+        4,
+        10,
+        63,
+        65
+      ],
+      "development": 5,
+      "terrain": "flat"
     },
     {
       "id": 3,
@@ -153,7 +170,16 @@
         0.29872,
         0.56134
       ],
-      "labelRadius": 0.02783
+      "labelRadius": 0.02783,
+      "neighbors": [
+        10,
+        16,
+        32,
+        33,
+        65
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 4,
@@ -164,7 +190,15 @@
         0.19211,
         0.58969
       ],
-      "labelRadius": 0.02262
+      "labelRadius": 0.02262,
+      "neighbors": [
+        2,
+        10,
+        37,
+        63
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 5,
@@ -175,7 +209,16 @@
         0.4201,
         0.74862
       ],
-      "labelRadius": 0.03207
+      "labelRadius": 0.03207,
+      "neighbors": [
+        7,
+        11,
+        29,
+        31,
+        56
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 6,
@@ -186,7 +229,17 @@
         0.73918,
         0.66022
       ],
-      "labelRadius": 0.03244
+      "labelRadius": 0.03244,
+      "neighbors": [
+        15,
+        36,
+        38,
+        39,
+        46,
+        54
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 7,
@@ -197,7 +250,16 @@
         0.43365,
         0.65204
       ],
-      "labelRadius": 0.02224
+      "labelRadius": 0.02224,
+      "neighbors": [
+        5,
+        11,
+        14,
+        17,
+        31
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 8,
@@ -208,7 +270,16 @@
         0.67076,
         0.32039
       ],
-      "labelRadius": 0.03609
+      "labelRadius": 0.03609,
+      "neighbors": [
+        41,
+        57,
+        58,
+        59,
+        66
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 9,
@@ -219,7 +290,15 @@
         0.81769,
         0.65325
       ],
-      "labelRadius": 0.0206
+      "labelRadius": 0.0206,
+      "neighbors": [
+        39,
+        46,
+        48,
+        51
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 10,
@@ -230,7 +309,18 @@
         0.24212,
         0.52721
       ],
-      "labelRadius": 0.02902
+      "labelRadius": 0.02902,
+      "neighbors": [
+        2,
+        3,
+        4,
+        16,
+        37,
+        43,
+        61
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 11,
@@ -241,7 +331,17 @@
         0.3874,
         0.65009
       ],
-      "labelRadius": 0.0227
+      "labelRadius": 0.0227,
+      "neighbors": [
+        5,
+        7,
+        17,
+        32,
+        56,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 12,
@@ -252,7 +352,16 @@
         0.44524,
         0.38728
       ],
-      "labelRadius": 0.01741
+      "labelRadius": 0.01741,
+      "neighbors": [
+        17,
+        18,
+        24,
+        42,
+        53
+      ],
+      "development": 1,
+      "terrain": "mountains"
     },
     {
       "id": 13,
@@ -263,7 +372,16 @@
         0.7599,
         0.54122
       ],
-      "labelRadius": 0.01882
+      "labelRadius": 0.01882,
+      "neighbors": [
+        39,
+        40,
+        45,
+        48,
+        54
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 14,
@@ -274,7 +392,17 @@
         0.49955,
         0.531
       ],
-      "labelRadius": 0.0303
+      "labelRadius": 0.0303,
+      "neighbors": [
+        7,
+        17,
+        18,
+        31,
+        44,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 15,
@@ -285,7 +413,15 @@
         0.75807,
         0.75395
       ],
-      "labelRadius": 0.02639
+      "labelRadius": 0.02639,
+      "neighbors": [
+        6,
+        23,
+        36,
+        46
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 16,
@@ -296,7 +432,16 @@
         0.3028,
         0.47095
       ],
-      "labelRadius": 0.02701
+      "labelRadius": 0.02701,
+      "neighbors": [
+        3,
+        10,
+        27,
+        33,
+        61
+      ],
+      "development": 2,
+      "terrain": "flat"
     },
     {
       "id": 17,
@@ -307,7 +452,19 @@
         0.41714,
         0.51019
       ],
-      "labelRadius": 0.03728
+      "labelRadius": 0.03728,
+      "neighbors": [
+        7,
+        11,
+        12,
+        14,
+        18,
+        24,
+        32,
+        33
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 18,
@@ -318,7 +475,17 @@
         0.51167,
         0.43264
       ],
-      "labelRadius": 0.02408
+      "labelRadius": 0.02408,
+      "neighbors": [
+        12,
+        14,
+        17,
+        41,
+        53,
+        60
+      ],
+      "development": 2,
+      "terrain": "mountains"
     },
     {
       "id": 19,
@@ -329,7 +496,17 @@
         0.67487,
         0.50155
       ],
-      "labelRadius": 0.02008
+      "labelRadius": 0.02008,
+      "neighbors": [
+        40,
+        41,
+        47,
+        49,
+        54,
+        57
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 20,
@@ -340,7 +517,15 @@
         0.20969,
         0.34876
       ],
-      "labelRadius": 0.03013
+      "labelRadius": 0.03013,
+      "neighbors": [
+        25,
+        43,
+        61,
+        62
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 21,
@@ -351,7 +536,16 @@
         0.56038,
         0.72476
       ],
-      "labelRadius": 0.02065
+      "labelRadius": 0.02065,
+      "neighbors": [
+        1,
+        22,
+        28,
+        50,
+        67
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 22,
@@ -362,7 +556,18 @@
         0.62426,
         0.656
       ],
-      "labelRadius": 0.01821
+      "labelRadius": 0.01821,
+      "neighbors": [
+        21,
+        36,
+        38,
+        49,
+        50,
+        54,
+        67
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 23,
@@ -373,7 +578,14 @@
         0.8018,
         0.77683
       ],
-      "labelRadius": 0.01289
+      "labelRadius": 0.01289,
+      "neighbors": [
+        15,
+        46,
+        51
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 24,
@@ -384,7 +596,16 @@
         0.39722,
         0.4043
       ],
-      "labelRadius": 0.02981
+      "labelRadius": 0.02981,
+      "neighbors": [
+        12,
+        17,
+        27,
+        33,
+        42
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 25,
@@ -395,7 +616,13 @@
         0.23683,
         0.26378
       ],
-      "labelRadius": 0.02554
+      "labelRadius": 0.02554,
+      "neighbors": [
+        20,
+        62
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 26,
@@ -406,7 +633,15 @@
         0.27271,
         0.78212
       ],
-      "labelRadius": 0.0291
+      "labelRadius": 0.0291,
+      "neighbors": [
+        30,
+        56,
+        63,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 27,
@@ -417,7 +652,16 @@
         0.33638,
         0.38374
       ],
-      "labelRadius": 0.01657
+      "labelRadius": 0.01657,
+      "neighbors": [
+        16,
+        24,
+        33,
+        61,
+        62
+      ],
+      "development": 1,
+      "terrain": "hills"
     },
     {
       "id": 28,
@@ -428,7 +672,17 @@
         0.51451,
         0.78207
       ],
-      "labelRadius": 0.02916
+      "labelRadius": 0.02916,
+      "neighbors": [
+        1,
+        21,
+        29,
+        31,
+        34,
+        50
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 29,
@@ -439,7 +693,14 @@
         0.46362,
         0.78554
       ],
-      "labelRadius": 0.0174
+      "labelRadius": 0.0174,
+      "neighbors": [
+        5,
+        28,
+        31
+      ],
+      "development": 2,
+      "terrain": "mountains"
     },
     {
       "id": 30,
@@ -450,7 +711,13 @@
         0.20439,
         0.79204
       ],
-      "labelRadius": 0.02254
+      "labelRadius": 0.02254,
+      "neighbors": [
+        26,
+        63
+      ],
+      "development": 2,
+      "terrain": "flat"
     },
     {
       "id": 31,
@@ -461,7 +728,18 @@
         0.47848,
         0.69305
       ],
-      "labelRadius": 0.02329
+      "labelRadius": 0.02329,
+      "neighbors": [
+        5,
+        7,
+        14,
+        28,
+        29,
+        34,
+        44
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 32,
@@ -472,7 +750,16 @@
         0.3416,
         0.61631
       ],
-      "labelRadius": 0.02803
+      "labelRadius": 0.02803,
+      "neighbors": [
+        3,
+        11,
+        17,
+        33,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 33,
@@ -483,7 +770,17 @@
         0.35584,
         0.46695
       ],
-      "labelRadius": 0.02575
+      "labelRadius": 0.02575,
+      "neighbors": [
+        3,
+        16,
+        17,
+        24,
+        27,
+        32
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 34,
@@ -494,7 +791,17 @@
         0.55303,
         0.62083
       ],
-      "labelRadius": 0.01309
+      "labelRadius": 0.01309,
+      "neighbors": [
+        28,
+        31,
+        44,
+        49,
+        50,
+        55
+      ],
+      "development": 2,
+      "terrain": "mountains"
     },
     {
       "id": 35,
@@ -505,7 +812,16 @@
         0.77063,
         0.40144
       ],
-      "labelRadius": 0.02051
+      "labelRadius": 0.02051,
+      "neighbors": [
+        40,
+        45,
+        58,
+        64,
+        66
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 36,
@@ -516,7 +832,16 @@
         0.6972,
         0.74294
       ],
-      "labelRadius": 0.03238
+      "labelRadius": 0.03238,
+      "neighbors": [
+        6,
+        15,
+        22,
+        38,
+        67
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 37,
@@ -527,7 +852,14 @@
         0.19108,
         0.51723
       ],
-      "labelRadius": 0.02164
+      "labelRadius": 0.02164,
+      "neighbors": [
+        4,
+        10,
+        43
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 38,
@@ -538,7 +870,15 @@
         0.66669,
         0.67172
       ],
-      "labelRadius": 0.0194
+      "labelRadius": 0.0194,
+      "neighbors": [
+        6,
+        22,
+        36,
+        54
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 39,
@@ -549,7 +889,17 @@
         0.7713,
         0.6048
       ],
-      "labelRadius": 0.01614
+      "labelRadius": 0.01614,
+      "neighbors": [
+        6,
+        9,
+        13,
+        46,
+        48,
+        54
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 40,
@@ -560,7 +910,18 @@
         0.7258,
         0.46609
       ],
-      "labelRadius": 0.03127
+      "labelRadius": 0.03127,
+      "neighbors": [
+        13,
+        19,
+        35,
+        45,
+        54,
+        57,
+        66
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 41,
@@ -571,7 +932,20 @@
         0.59096,
         0.43027
       ],
-      "labelRadius": 0.03438
+      "labelRadius": 0.03438,
+      "neighbors": [
+        8,
+        18,
+        19,
+        47,
+        49,
+        53,
+        57,
+        59,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 42,
@@ -582,7 +956,15 @@
         0.39658,
         0.31218
       ],
-      "labelRadius": 0.03074
+      "labelRadius": 0.03074,
+      "neighbors": [
+        12,
+        24,
+        53,
+        62
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 43,
@@ -593,7 +975,15 @@
         0.19863,
         0.43821
       ],
-      "labelRadius": 0.02904
+      "labelRadius": 0.02904,
+      "neighbors": [
+        10,
+        20,
+        37,
+        61
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 44,
@@ -604,7 +994,16 @@
         0.53132,
         0.59358
       ],
-      "labelRadius": 0.01388
+      "labelRadius": 0.01388,
+      "neighbors": [
+        14,
+        31,
+        34,
+        55,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 45,
@@ -615,7 +1014,17 @@
         0.8048,
         0.49256
       ],
-      "labelRadius": 0.02491
+      "labelRadius": 0.02491,
+      "neighbors": [
+        13,
+        35,
+        40,
+        48,
+        52,
+        64
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 46,
@@ -626,7 +1035,17 @@
         0.80443,
         0.71181
       ],
-      "labelRadius": 0.01793
+      "labelRadius": 0.01793,
+      "neighbors": [
+        6,
+        9,
+        15,
+        23,
+        39,
+        51
+      ],
+      "development": 5,
+      "terrain": "flat"
     },
     {
       "id": 47,
@@ -637,7 +1056,14 @@
         0.64022,
         0.50748
       ],
-      "labelRadius": 0.00973
+      "labelRadius": 0.00973,
+      "neighbors": [
+        19,
+        41,
+        49
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 48,
@@ -648,7 +1074,15 @@
         0.80628,
         0.57821
       ],
-      "labelRadius": 0.01625
+      "labelRadius": 0.01625,
+      "neighbors": [
+        9,
+        13,
+        39,
+        45
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 49,
@@ -659,7 +1093,19 @@
         0.64202,
         0.5622
       ],
-      "labelRadius": 0.01916
+      "labelRadius": 0.01916,
+      "neighbors": [
+        19,
+        22,
+        34,
+        41,
+        47,
+        54,
+        55,
+        60
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 50,
@@ -670,7 +1116,15 @@
         0.57753,
         0.65788
       ],
-      "labelRadius": 0.02025
+      "labelRadius": 0.02025,
+      "neighbors": [
+        21,
+        22,
+        28,
+        34
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 51,
@@ -681,7 +1135,14 @@
         0.8288,
         0.75688
       ],
-      "labelRadius": 0.00745
+      "labelRadius": 0.00745,
+      "neighbors": [
+        9,
+        23,
+        46
+      ],
+      "development": 5,
+      "terrain": "flat"
     },
     {
       "id": 52,
@@ -692,7 +1153,13 @@
         0.84725,
         0.43135
       ],
-      "labelRadius": 0.02121
+      "labelRadius": 0.02121,
+      "neighbors": [
+        45,
+        64
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 53,
@@ -703,7 +1170,16 @@
         0.49037,
         0.33972
       ],
-      "labelRadius": 0.03688
+      "labelRadius": 0.03688,
+      "neighbors": [
+        12,
+        18,
+        41,
+        42,
+        59
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 54,
@@ -714,7 +1190,19 @@
         0.71016,
         0.57214
       ],
-      "labelRadius": 0.02467
+      "labelRadius": 0.02467,
+      "neighbors": [
+        6,
+        13,
+        19,
+        22,
+        38,
+        39,
+        40,
+        49
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 55,
@@ -725,7 +1213,15 @@
         0.60315,
         0.57142
       ],
-      "labelRadius": 0.01544
+      "labelRadius": 0.01544,
+      "neighbors": [
+        34,
+        44,
+        49,
+        60
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 56,
@@ -736,7 +1232,15 @@
         0.35161,
         0.77474
       ],
-      "labelRadius": 0.0337
+      "labelRadius": 0.0337,
+      "neighbors": [
+        5,
+        11,
+        26,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 57,
@@ -747,7 +1251,16 @@
         0.66287,
         0.40821
       ],
-      "labelRadius": 0.02227
+      "labelRadius": 0.02227,
+      "neighbors": [
+        8,
+        19,
+        40,
+        41,
+        66
+      ],
+      "development": 1,
+      "terrain": "hills"
     },
     {
       "id": 58,
@@ -758,7 +1271,15 @@
         0.75928,
         0.31024
       ],
-      "labelRadius": 0.02926
+      "labelRadius": 0.02926,
+      "neighbors": [
+        8,
+        35,
+        64,
+        66
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 59,
@@ -769,7 +1290,14 @@
         0.57003,
         0.32214
       ],
-      "labelRadius": 0.0374
+      "labelRadius": 0.0374,
+      "neighbors": [
+        8,
+        41,
+        53
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 60,
@@ -780,7 +1308,17 @@
         0.59762,
         0.51905
       ],
-      "labelRadius": 0.01742
+      "labelRadius": 0.01742,
+      "neighbors": [
+        14,
+        18,
+        41,
+        44,
+        49,
+        55
+      ],
+      "development": 3,
+      "terrain": "mountains"
     },
     {
       "id": 61,
@@ -791,7 +1329,17 @@
         0.25974,
         0.41154
       ],
-      "labelRadius": 0.02658
+      "labelRadius": 0.02658,
+      "neighbors": [
+        10,
+        16,
+        20,
+        27,
+        43,
+        62
+      ],
+      "development": 3,
+      "terrain": "flat"
     },
     {
       "id": 62,
@@ -802,7 +1350,16 @@
         0.33114,
         0.31201
       ],
-      "labelRadius": 0.03068
+      "labelRadius": 0.03068,
+      "neighbors": [
+        20,
+        25,
+        27,
+        42,
+        61
+      ],
+      "development": 2,
+      "terrain": "hills"
     },
     {
       "id": 63,
@@ -813,7 +1370,16 @@
         0.19664,
         0.71269
       ],
-      "labelRadius": 0.02697
+      "labelRadius": 0.02697,
+      "neighbors": [
+        2,
+        4,
+        26,
+        30,
+        65
+      ],
+      "development": 4,
+      "terrain": "flat"
     },
     {
       "id": 64,
@@ -824,7 +1390,15 @@
         0.81448,
         0.34909
       ],
-      "labelRadius": 0.02473
+      "labelRadius": 0.02473,
+      "neighbors": [
+        35,
+        45,
+        52,
+        58
+      ],
+      "development": 3,
+      "terrain": "hills"
     },
     {
       "id": 65,
@@ -835,7 +1409,18 @@
         0.29126,
         0.68205
       ],
-      "labelRadius": 0.02791
+      "labelRadius": 0.02791,
+      "neighbors": [
+        2,
+        3,
+        11,
+        26,
+        32,
+        56,
+        63
+      ],
+      "development": 4,
+      "terrain": "hills"
     },
     {
       "id": 66,
@@ -846,7 +1431,16 @@
         0.71844,
         0.38659
       ],
-      "labelRadius": 0.02139
+      "labelRadius": 0.02139,
+      "neighbors": [
+        8,
+        35,
+        40,
+        57,
+        58
+      ],
+      "development": 2,
+      "terrain": "mountains"
     },
     {
       "id": 67,
@@ -857,7 +1451,15 @@
         0.63402,
         0.78401
       ],
-      "labelRadius": 0.02791
+      "labelRadius": 0.02791,
+      "neighbors": [
+        1,
+        21,
+        22,
+        36
+      ],
+      "development": 4,
+      "terrain": "flat"
     }
   ]
 }
