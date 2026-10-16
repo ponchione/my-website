@@ -1,7 +1,10 @@
 # Keystone: a campaign on the realm map
 
-Status (2026-10-15): spec only, nothing built. Mitchell approved the direction and the
-decisions below. Phase 1 starts once he signs off on this file.
+Status (2026-10-16): phase 1 (the engine) is built on the `keystone` branch, not yet
+merged. The map build writes each county's neighbors, development and terrain; the engine
+is under `app/utils/keystone/`, with tests in `tests/keystone.test.ts` and the balance
+harness at `scripts/keystone/simulate.ts`, which meets every target (see Testing). The
+numbers below are the tuned ones. Nothing on the site has changed yet; phase 2 is next.
 
 ## What it is
 
@@ -76,15 +79,22 @@ With reduced motion, every step is a crossfade.
 - The 67 Pennsylvania counties. Neighboring realms are scenery; armies can't enter them.
 - The map build computes, for each county:
   - **Neighbors**, from the Census county adjacency file, cross-checked against the
-    province raster. Counties that touch only at a corner don't count. The raster flagged
-    three pairs: Allegheny–Armstrong is missing, and Butler–Clarion and Dauphin–Juniata
-    are thin and may only touch at a corner. Disagreements are settled in a short override
-    list in `build-map.mjs`.
-  - **Development** from Census 2020 population on a log scale, 1–5 at the start, so
-    Philadelphia and Allegheny are the prizes but small counties still count.
-  - **Terrain**: flat, hills or mountains, from the elevation relief inside the county.
-    The ridge-and-valley belt and the Allegheny Front should come out as hills and
-    mountains.
+    province raster: a pair must also share at least 8 pixels of edge (about 1.3 km).
+    Counties that touch only at a corner don't count. `NEIGHBOR_OVERRIDES` in
+    `build-map.mjs` settles the six pairs where the two disagree, and the build fails on
+    any it doesn't settle. Allegheny–Armstrong turned out to be a corner: the four
+    counties meet at Freeport, the Census file lists the other diagonal
+    (Butler–Westmoreland, which shares 20 m), and neither diagonal counts. Elk–Warren and
+    Forest–McKean (another four-county corner), Northumberland–Perry and Dauphin–Juniata
+    (one shared vertex) are dropped too. Butler–Clarion is kept: a real border, 0.6 km
+    long. That leaves 166 borders, and every county has 2–9 neighbors.
+  - **Development** from Census 2020 population on a log scale between the smallest
+    county and the largest, 1–5 at the start: Philadelphia, Allegheny and Montgomery are
+    5, Cameron, Forest and Sullivan are 1, and the 67 add up to 204.
+  - **Terrain** from local relief: the elevation range within about 2.3 km of each
+    point, averaged over the county. Under 150 m is flat (23 counties), under 250 m
+    hills (31) and the rest mountains (13). The ridge-and-valley belt and the Allegheny
+    Front come out as hills and mountains, the Piedmont and the north-west as flat.
 
 ## Rules
 
@@ -93,31 +103,34 @@ Time advances a month per tick, Paradox style, with pause and three speeds (2 s,
 about ten minutes at the middle speed. Gold and men are whole numbers, rounded down.
 
 **Houses.** There are nine: yours and eight generated ones. The generator spreads nine
-seats across the state, with yours at the county you picked. It then grows each house
-outward one county at a time, taking turns, until every county is held. Every house
-starts with about seven counties; what differs is their wealth and terrain. Starting in
-Philadelphia is the easy game and starting in Cameron is the hard one. A house is named
-for its seat county ("House of Westmoreland"). Each house shows a rank, which has no
-effect on play: Count (1–4 counties), Duke (5–14) or King (15+). Whoever holds all 67 is
-King of Pennsylvania.
+seats across the state, each as far as it can be from those before it, with yours at the
+county you picked. It then grows each house outward one county at a time, taking turns:
+each takes the free county nearest its seat that borders its land, until every county is
+held. Every house starts with about seven counties (6–9 for nine in ten), no gold and a
+full levy pool; what differs is their wealth and terrain. Starting in Philadelphia is the
+easy game (about 30 development against the others' 22) and starting in Cameron is the
+hard one (about 19 against 23). A house is named for its seat county ("House of
+Westmoreland"). Each house shows a rank, which has no effect on play: Count (1–4
+counties), Duke (5–14) or King (15+). Whoever holds all 67 is King of Pennsylvania.
 
 **Gold.** Each month a house earns 1 gold per point of development it holds and pays
 1 gold per 200 men in its army. If its gold would fall below zero, its army disbands.
 
 **Levies.** A house's levy pool holds at most 100 men per point of development it holds,
-and refills by 1/24 of that each month. **Raise levies** musters the whole pool as the
+and refills by 1/16 of that each month. **Raise levies** musters the whole pool as the
 house's one army, in any county the house holds. **Disband** returns the survivors to the
 pool.
 
-**Develop.** Spend 40 × a county's development in gold to raise its development by 1. The
-maximum is 10.
+**Develop.** Spend 100 × a county's development in gold to raise its development by 1.
+The maximum is 10.
 
 **War.** A house may **declare war** on a house it borders, as long as neither is already
 at war and the two have no truce. A house fights one war at a time. During a war, its army
 may enter its own counties and the enemy's, and nowhere else.
 
 **Movement.** You pick a destination county, and the army takes the quickest legal route.
-Each county takes one month to cross, or two if it's mountains.
+Each county takes one month to cross, or two if it's mountains. An army can't leave a
+county that holds a hostile army; they fight first.
 
 **Battles.** Hostile armies that share a county at a tick fight once. Each side's
 strength is its men × a roll between 0.8 and 1.2. The army whose house holds the county
@@ -126,20 +139,22 @@ loser's. The loser loses 30% × r of its men (all of them once r reaches 3.33) a
 retreats to its nearest other county. The winner loses 10% ÷ r. An army that drops below
 100 men, or has nowhere to retreat, is destroyed.
 
-**Taking counties.** An army alone in an enemy county takes it after 1 month on flat
-land, 2 in hills or 3 in mountains, with 1 more at a house's seat. The county changes
-hands at once. A house that loses its seat moves the seat to its most developed county. A
-house with no counties left is gone.
+**Taking counties.** An army that stands alone in an enemy county, neither marching nor
+fighting, takes it after 2 months on flat land, 3 in hills or 4 in mountains, with 1 more
+at a house's seat. The county changes hands at once. A house that loses its seat moves
+the seat to its most developed county. A house with no counties left is gone.
 
 **Peace.** Either side may **offer peace**, and counties stay with whoever holds them. A
 war's score for each side is the development it has taken from the other minus the
 development it has lost. A computer house accepts peace if its score is 0 or less, or once
-the war has lasted 5 years. It offers peace when its score is below 0 and its army is
-gone, or at 5 years. Peace starts a 5-year truce between the two houses.
+the war has lasted 2 years. It offers peace when its score is below 0 and its army is
+gone, or at 2 years. An offer that isn't taken stands, and the other side can take it
+later. Peace disbands both armies and starts a 5-year truce between the two houses.
 
 **The end.** Holding all 67 counties is victory, and losing your last county is defeat.
-If you reach 1250, the game ends and scores you by your share of Pennsylvania's
-development and your rank among the surviving houses. Every ending shows the chronicle.
+If you reach 1250, the game ends and scores you: your share of Pennsylvania's
+development in percent, plus 10 for every surviving house you outrank. Every ending shows
+the chronicle.
 
 **Your actions** are develop, raise levies (or disband), move your army, and declare war
 (or offer peace). Orders take effect at once, paused or not. Only the monthly tick rolls
@@ -163,19 +178,26 @@ latest lines during play, and the end screen shows all of them.
 ## The computer houses
 
 Every computer house works through the same short list each month and gives only legal
-orders:
+orders, through the same rules as yours:
 
-- **At peace:** disband. Develop its cheapest county when its gold covers the cost plus
-  six months of full-army upkeep. Each month there's a 1 in 12 chance it declares war on
-  the weakest house it borders. It only does so if its own maximum levy is at least the
-  target's and it can afford six months of upkeep.
-- **At war:** raise levies on the border if it hasn't already. Attack the enemy army if it
-  is at least 10% stronger. If it is at least 10% weaker, fall back to its best defensive
-  county near the enemy. Otherwise, march on the enemy county with the most development
-  per month of siege.
+- **Always:** develop its cheapest county when its gold covers the cost plus six months
+  of full-army upkeep.
+- **At peace:** disband. Each month there's a 1 in 12 chance it declares war on the
+  weakest house it borders (by maximum levy). It only does so if its own maximum levy is
+  at least the target's and it can afford six months of upkeep.
+- **At war:** once its pool is at least a quarter full, raise levies in its most developed
+  county on the enemy's border. Attack the enemy army if it is at least 10% stronger. If
+  it is at least 10% weaker, fall back to its best defensive county within two counties
+  of the enemy army. Otherwise keep besieging, or march on the enemy county with the most
+  development per month of marching and siege.
 - **Peace:** as in the rules.
 
-The exact weights live in code and get tuned with the balance harness, not by feel.
+The exact weights live in code (`RULES` in `rules.ts`, `AI` in `ai.ts`) and get tuned
+with the balance harness, not by feel. Two findings from tuning: a losing house that
+raised every trickle of 100 men kept the winner chasing it instead of besieging, so the
+computer waits for a quarter of its pool; and with the starting numbers (5-year wars,
+1/24 refill, sieges of 1–3 months, develop at 40 ×) one house united Pennsylvania in more
+than half of all games and every county reached development 10 by the 1220s.
 
 ## Screens
 
@@ -222,6 +244,7 @@ step(state: GameState): GameState // one month: computer houses, movement, battl
   state is part of `GameState`.
 - Only arithmetic and `floor`/`round`/`min`/`max`, so every browser gets the same result.
   Anything like `log`, such as the development scale, is precomputed by the map build.
+  The RNG is mulberry32, on 32-bit integer operations.
 - Houses and counties are processed in id order.
 - Only relative imports and erasable TypeScript (no enums), so Node 24 runs it directly
   for the harness.
@@ -258,6 +281,13 @@ step(state: GameState): GameState // one month: computer houses, movement, battl
   - At least three houses survive the median game.
   - Some war is going on most of the time.
   - 600 months run in under 200 ms.
+
+  Phase 1 result, seeds 1–500 (seeds 501–1000 match within a point): Pennsylvania was
+  never united. A median of 4 houses survive (3–5 from the 10th to the 90th percentile),
+  and the first falls around 1207. Some war is on in 88% of months. Each decade has 8.4
+  wars, 50 battles and 16 counties taken; the median war lasts its full 2 years and takes
+  1 county (4 at the 90th percentile). Development grows from 204 to about 560. A
+  campaign's 600 months run in 17 ms at the median and 70 ms at the slowest, in Node.
 - **Site:**
   - The existing checks still pass.
   - Headless screenshots of `/`, taken before and after as `REDESIGN_HANDOFF.md`
@@ -297,9 +327,10 @@ Each phase ends with something that works.
 ## Open questions
 
 - The start year: 1200 is a placeholder, and any medieval year works since the history is
-  invented.
+  invented. It's `RULES.startYear` in `app/utils/keystone/rules.ts`.
 - House names: the seat county ("House of Westmoreland"), or generated family names
-  ("House Aldane")?
+  ("House Aldane")? Phase 1 uses the seat county, in `houseName` in
+  `app/utils/keystone/engine.ts`.
 
 ## Backlog: a second game
 
