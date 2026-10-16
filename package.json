@@ -15,7 +15,7 @@
     "typecheck": "nuxt typecheck",
     "lint": "eslint .",
     "test": "vitest run",
-    "audit:production": "npm audit --omit=dev",
+    "audit:production": "node scripts/audit-production.mjs",
     "verify:deployment": "node scripts/verify-deployment.mjs",
     "verify:preview": "node scripts/verify-preview.mjs",
     "preview": "nuxt preview",
