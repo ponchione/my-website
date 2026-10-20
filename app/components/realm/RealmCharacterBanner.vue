@@ -3,8 +3,8 @@ import { Landmark, MapPin, ScrollText, Hourglass } from '@lucide/vue'
 import { character } from '~/data/character'
 import { careerHoldings, countiesHeld, currentPost } from '~/utils/realm/career'
 
-// The always-visible corner of the character sheet: portrait, name, a few traits, and
-// the counters. Clicking the portrait or name opens the full sheet.
+// The always-visible corner of the character sheet: monogram, name, a few traits, and
+// the counters. Clicking the monogram or name opens the full sheet.
 
 defineProps<{
   dispatchCount: number
@@ -24,7 +24,7 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
   <header class="banner">
     <div class="banner-top">
       <button type="button" class="banner-portrait" aria-label="Open the character sheet" @click="emit('open')">
-        <img src="/realm/portrait.webp" alt="" width="500" height="600">
+        <RealmMonogram />
         <RealmHeraldicShield class="banner-arms" :arms="character.house.arms" />
       </button>
       <div class="banner-body">
@@ -84,13 +84,6 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
   border-radius: 2px;
   box-shadow: 0 0 0 2px #1a1610, 0 0 0 3px rgb(184 149 90 / 0.55);
   cursor: pointer;
-}
-
-.banner-portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .banner-arms {
