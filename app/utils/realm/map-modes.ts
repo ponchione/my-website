@@ -14,7 +14,7 @@ export type MapModePalette = {
   overlay: number
 }
 
-type Rgb = [number, number, number]
+export type Rgb = [number, number, number]
 
 export const BASE_MAPS: { id: BaseMapId, label: string, hint: string }[] = [
   { id: 'political', label: 'Political', hint: 'Realms and their counties' },
@@ -38,9 +38,9 @@ const REALM_COLORS: Record<string, Rgb> = {
   ON: [192, 82, 70],
 }
 
-const NEUTRAL: Rgb = [150, 146, 136]
+export const NEUTRAL: Rgb = [150, 146, 136]
 
-function palette(fill: (id: number) => [...Rgb, number] | undefined) {
+export function palette(fill: (id: number) => [...Rgb, number] | undefined) {
   const data = new Uint8Array(256 * 4)
   for (let id = 1; id < 256; id++) {
     const color = fill(id)
@@ -50,7 +50,7 @@ function palette(fill: (id: number) => [...Rgb, number] | undefined) {
 }
 
 // A small, stable per-county shade so neighboring counties read as separate places.
-function shade([r, g, b]: Rgb, id: number, amount = 0.07): Rgb {
+export function shade([r, g, b]: Rgb, id: number, amount = 0.07): Rgb {
   const t = 1 + (((id * 2654435761) >>> 0) / 0xffffffff - 0.5) * 2 * amount
   return [Math.min(255, r * t), Math.min(255, g * t), Math.min(255, b * t)]
 }

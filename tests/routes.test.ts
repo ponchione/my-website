@@ -23,6 +23,7 @@ describe('public route contract', () => {
       '/work-history',
       '/projects',
       '/blog',
+      '/play',
       ...expectedSlugs.map(slug => `/blog/${slug}`),
     ])
   })

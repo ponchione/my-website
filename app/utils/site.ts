@@ -1,6 +1,6 @@
 export const SITE_URL = 'https://www.mitchellponchione.com'
 
-export const STATIC_ROUTE_PATHS = ['/', '/about', '/work-history', '/projects', '/blog'] as const
+export const STATIC_ROUTE_PATHS = ['/', '/about', '/work-history', '/projects', '/blog', '/play'] as const
 
 export const DEFAULT_DESCRIPTION = 'Mitchell Ponchione is a Software Engineer specializing in AI systems, agent orchestration, and building modern web applications.'
 

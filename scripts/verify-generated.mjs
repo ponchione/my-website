@@ -21,4 +21,16 @@ assert.match(letterHtml, /<link rel="canonical" href="https:\/\/www\.mitchellpon
 assert.match(letterHtml, /class="realm"/, 'a letter should open over the map')
 assert.match(letterHtml, /Open your LinkedIn feed right now/, 'a letter\'s text should be in the prerendered HTML')
 
+// Keystone is a page over the map, and the home page doesn't load its code.
+const playHtml = await readFile(new URL('../.output/public/play/index.html', import.meta.url), 'utf8')
+assert.match(playHtml, /<title>Keystone — Mitchell Ponchione<\/title>/, '/play should have the game\'s title')
+assert.match(playHtml, /class="realm"/, '/play should open over the map')
+const homeHtml = await readFile(new URL('../.output/public/index.html', import.meta.url), 'utf8')
+const homeScripts = [...new Set([...homeHtml.matchAll(/(?:src|href)="(\/_nuxt\/[^"]+\.js)"/g)].map(match => match[1]))]
+assert.ok(homeScripts.length, 'the home page should load scripts')
+for (const script of homeScripts) {
+  const code = await readFile(new URL(`../.output/public${script}`, import.meta.url), 'utf8')
+  assert.doesNotMatch(code, /The campaign is over/, `the home page should not load Keystone's engine (${script})`)
+}
+
 console.log('Generated output verification passed.')

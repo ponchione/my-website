@@ -4,8 +4,9 @@ import type { ComponentPublicInstance } from 'vue'
 import { heldTown, heldTowns, holdingsIn, type HeldTown, type Holding } from '~/utils/realm/career'
 import { dispatchQueue, loadReadDispatches, saveReadDispatches, type Dispatch } from '~/utils/realm/dispatches'
 import { HOME_REALM_CODE, countyByFips, countyById, locate, mapData, realmById, type MapPick } from '~/utils/realm/map-data'
-import { BASE_MAPS, LENSES, type BaseMapId, type LensId } from '~/utils/realm/map-modes'
+import { BASE_MAPS, LENSES, mapModePalette, type BaseMapId, type LensId, type MapModePalette } from '~/utils/realm/map-modes'
 import type { ViewPadding } from '~/utils/realm/realm-renderer'
+import { REALM_STAGE, type ArmyBanner } from '~/utils/realm/stage'
 
 definePageMeta({ layout: false })
 
@@ -33,8 +34,10 @@ const { data: posts } = await useAsyncData('realm-dispatches', () => queryCollec
 const dispatches = computed<Dispatch[]>(() => posts.value ?? [])
 const route = useRoute()
 const letters = useLetterRoutes()
-// Anywhere but the bare map, a letter or the letter case is open over it.
-const overLetters = computed(() => route.path !== '/')
+// Under /blog, a letter or the letter case is open over the map.
+const overLetters = computed(() => route.path.startsWith('/blog'))
+// At /play, Keystone is played on the map and the résumé steps aside.
+const playing = computed(() => route.path === '/play')
 const openLetter = computed(() => dispatches.value.find(dispatch => dispatch.path === route.path) ?? null)
 const homeRealm: MapPick = { kind: 'realm', id: mapData.realms.find(realm => realm.code === HOME_REALM_CODE)!.id }
 
@@ -65,6 +68,17 @@ const pristine = computed(() => !lens.value && base.value === 'political' && !se
 const banner = useTemplateRef<ComponentPublicInstance>('banner')
 const modes = useTemplateRef<HTMLElement>('modes')
 const panel = useTemplateRef<HTMLElement>('panel')
+
+// What a game on the map paints and pins over it, in place of the map modes and towns.
+const gamePalette = shallowRef<MapModePalette | null>(null)
+const armies = shallowRef<ArmyBanner[]>([])
+provide(REALM_STAGE, {
+  ready: computed(() => status.value === 'ready'),
+  palette: gamePalette,
+  armies,
+})
+const palette = computed(() => gamePalette.value ?? mapModePalette(base.value, lens.value))
+const markers = computed<((typeof townMarkers)[number] | ArmyBanner)[]>(() => (playing.value ? armies.value : townMarkers))
 
 const unreadCount = computed(() => dispatches.value.filter(dispatch => !read.value.has(dispatch.path)).length)
 
@@ -131,6 +145,7 @@ function onHover(pick: MapPick | null, x: number, y: number) {
 }
 
 async function onSelect(pick: MapPick | null) {
+  if (playing.value) return
   selected.value = pick
   if (pick?.kind !== 'county') return
   // Let the panel open first, so the flight lands clear of it.
@@ -230,8 +245,19 @@ watch(overLetters, (open) => {
   sheetOpen.value = false
 })
 
+// Entering the game clears the résumé off the map and flies back to the opening view.
+watch(playing, (entered) => {
+  if (!entered) return
+  closeDispatches()
+  closeRecord()
+  sheetOpen.value = false
+  lens.value = null
+  selected.value = null
+  map.value?.resetView()
+})
+
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return
+  if (event.key !== 'Escape' || playing.value) return
   if (overLetters.value) letters.close()
   else if (activeDispatch.value) closeDispatches()
   else if (activeRecord.value) closeRecord()
@@ -261,15 +287,14 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
          map itself is a canvas. -->
     <NuxtLink to="/about" class="realm-skip">Skip the map for the plain pages</NuxtLink>
     <!-- An open letter has its own title. -->
-    <h1 v-if="!openLetter" class="sr-only">Mitchell Ponchione — a map of the realm</h1>
+    <h1 v-if="!openLetter && !playing" class="sr-only">Mitchell Ponchione — a map of the realm</h1>
 
     <RealmMap
       ref="map"
-      :base="base"
-      :lens="lens"
+      :palette="palette"
       :selected="selected"
       :view-padding="viewPadding"
-      :markers="townMarkers"
+      :markers="markers"
       @hover="onHover"
       @select="onSelect"
       @away="(value) => away = value"
@@ -278,6 +303,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     >
       <template #marker="{ marker }">
         <RealmTown
+          v-if="'town' in marker"
           :town="marker.town"
           :color="marker.color"
           :lit="lens === marker.lens"
@@ -285,6 +311,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
           :active="selected?.kind === 'county' && selected.id === marker.county"
           @visit="travel(marker.town)"
         />
+        <!-- Only /play has armies, so the home page never loads their code. -->
+        <LazyKeystoneArmy v-else :banner="marker" />
       </template>
     </RealmMap>
 
@@ -298,7 +326,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       </div>
     </Transition>
 
-    <div class="realm-left">
+    <Transition name="slide-left">
+    <div v-if="!playing" class="realm-left">
       <RealmCharacterBanner
         ref="banner"
         :dispatch-count="dispatches.length"
@@ -337,11 +366,12 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
         </aside>
       </Transition>
     </div>
+    </Transition>
 
     <RealmCharacterSheet v-if="sheetOpen" @close="sheetOpen = false" @visit="visit" />
 
     <div
-      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters"
+      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters && !playing"
       class="realm-tooltip"
       :style="tooltipStyle"
       aria-hidden="true"
@@ -354,7 +384,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     </div>
 
     <!-- The lenses are the point of the map; the base map is a quieter setting beside them. -->
-    <div ref="modes" class="realm-dock">
+    <Transition name="slide-down">
+    <div v-if="!playing" ref="modes" class="realm-dock">
       <div class="realm-lenses" role="group" aria-label="Show on the map">
         <button
           v-for="option in LENSES"
@@ -401,8 +432,11 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
         </div>
       </div>
     </div>
+    </Transition>
 
-    <p class="realm-controls" aria-hidden="true">Drag or WASD to move · Scroll to zoom · Click a town or county</p>
+    <Transition name="fade">
+      <p v-if="!playing" class="realm-controls" aria-hidden="true">Drag or WASD to move · Scroll to zoom · Click a town or county</p>
+    </Transition>
 
     <RealmDispatch
       v-if="activeDispatch && map"
@@ -426,7 +460,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       @close="closeRecord"
     />
 
-    <!-- A letter (/blog/<slug>) or the letter case (/blog), over the map. -->
+    <!-- A letter (/blog/<slug>) or the letter case (/blog), or Keystone (/play), over the map. -->
     <NuxtPage :transition="{ name: 'letter', mode: 'out-in' }" :dispatches="dispatches" :read="read" />
   </div>
 </template>
@@ -896,6 +930,26 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   opacity: 0;
 }
 
+/* The résumé stepping aside for the game, off the edges it sits on, and back. */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
 @media (max-width: 640px) {
   .realm-left {
     top: 10px;
@@ -960,6 +1014,10 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
 @media (prefers-reduced-motion: reduce) {
   .fade-enter-active,
   .fade-leave-active,
+  .slide-left-enter-active,
+  .slide-left-leave-active,
+  .slide-down-enter-active,
+  .slide-down-leave-active,
   .realm-lens,
   .realm-lens-seal,
   .realm-base-tip,

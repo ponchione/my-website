@@ -1,12 +1,11 @@
 <script setup lang="ts" generic="Marker extends { id: string, at: readonly [number, number] }">
 import type { ComponentPublicInstance } from 'vue'
 import type { MapPick } from '~/utils/realm/map-data'
-import { mapModePalette, type BaseMapId, type LensId } from '~/utils/realm/map-modes'
+import type { MapModePalette } from '~/utils/realm/map-modes'
 import { RealmRenderer, type ViewPadding } from '~/utils/realm/realm-renderer'
 
 const props = defineProps<{
-  base: BaseMapId
-  lens: LensId | null
+  palette: MapModePalette
   selected: MapPick | null
   viewPadding: () => ViewPadding
   // Things to pin over spots on the map (normalized map coordinates). Each draws itself
@@ -54,7 +53,7 @@ onMounted(async () => {
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
       viewPadding: props.viewPadding,
     })
-    renderer.setPalette(mapModePalette(props.base, props.lens))
+    renderer.setPalette(props.palette)
     renderer.setSelected(props.selected)
     pinMarkers()
     await renderer.load('/realm')
@@ -67,7 +66,7 @@ onMounted(async () => {
   }
 })
 
-watch([() => props.base, () => props.lens], ([base, lens]) => renderer?.setPalette(mapModePalette(base, lens)))
+watch(() => props.palette, palette => renderer?.setPalette(palette))
 watch(() => props.selected, pick => renderer?.setSelected(pick))
 watch(() => props.markers, pinMarkers, { flush: 'post' })
 
