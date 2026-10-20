@@ -75,10 +75,14 @@ const tourCard = useTemplateRef<ComponentPublicInstance>('tourCard')
 // What a game on the map paints and pins over it, in place of the map modes and towns.
 const gamePalette = shallowRef<MapModePalette | null>(null)
 const armies = shallowRef<ArmyBanner[]>([])
+const gameSelected = shallowRef<MapPick | null>(null)
+const gamePick = shallowRef<((pick: MapPick | null) => void) | null>(null)
 provide(REALM_STAGE, {
   ready: computed(() => status.value === 'ready'),
   palette: gamePalette,
   armies,
+  selected: gameSelected,
+  onPick: gamePick,
 })
 const palette = computed(() => gamePalette.value ?? mapModePalette(base.value, lens.value))
 const markers = computed<((typeof townMarkers)[number] | ArmyBanner)[]>(() => (playing.value ? armies.value : townMarkers))
@@ -149,7 +153,7 @@ function onHover(pick: MapPick | null, x: number, y: number) {
 }
 
 async function onSelect(pick: MapPick | null) {
-  if (playing.value) return
+  if (playing.value) return gamePick.value?.(pick)
   // On the tour, a stray click keeps the stop; picking another place leaves the tour.
   if (tourStop.value !== null) {
     if (!pick || (pick.kind === selected.value?.kind && pick.id === selected.value.id)) return
@@ -326,7 +330,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     <RealmMap
       ref="map"
       :palette="palette"
-      :selected="selected"
+      :selected="playing ? gameSelected : selected"
       :view-padding="viewPadding"
       :markers="markers"
       @hover="onHover"
@@ -414,14 +418,14 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     <RealmCharacterSheet v-if="sheetOpen" @close="sheetOpen = false" @visit="visit" />
 
     <div
-      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters && !playing"
+      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters && (!playing || hovered?.kind === 'county')"
       class="realm-tooltip"
       :style="tooltipStyle"
       aria-hidden="true"
     >
       <p class="realm-tooltip-title">{{ hoveredPlace.name }}</p>
       <p class="realm-muted">{{ hoveredPlace.kind }}</p>
-      <p v-if="hoveredPlace.holdings.length" class="realm-tooltip-holdings">
+      <p v-if="hoveredPlace.holdings.length && !playing" class="realm-tooltip-holdings">
         {{ plural(hoveredPlace.holdings.length, 'holding', 'holdings') }}
       </p>
     </div>

@@ -12,7 +12,7 @@ import {
 
 export { COUNTY_IDS, county, type County, type CountyId, type Terrain } from './board.ts'
 export {
-  RULES, developmentOf, holdings, maxLevy, rank, warOf, warScore,
+  RULES, developmentOf, holdings, maxLevy, rank, siegeMonths, upkeep, warOf, warScore,
   type Army, type Ending, type Entry, type GameState, type House, type HouseId, type Order, type War,
 } from './rules.ts'
 export { AI } from './ai.ts'

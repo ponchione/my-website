@@ -1,12 +1,17 @@
 # Keystone: a campaign on the realm map
 
 Status (2026-10-20): phases 1 (the engine) and 2 (the watchable realm) are built on the
-`keystone-phase2` branch, local only and not merged; Mitchell wants it held off `main`
-and nothing pushed for now (a push deploys). The branch also carries the guided tour and
-the MP monogram. The map build writes each county's neighbors, development and terrain
-to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with tests in
-`tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`, which
-meets every target (see Testing). The numbers below are the tuned ones. Phase 3 is next.
+`keystone` branch (`origin/keystone`), not merged to `main`; a push to `main` deploys.
+The branch also carries the guided tour and the MP monogram. Phase 3's first playable
+slice is in: `/play` asks for a starting county (or Let fate decide), your house plays
+against eight computer houses, the top-left panel summarizes your house, and the
+bottom-right county panel gives Develop, Raise levies here or Disband, March here,
+Declare war and Offer (or Accept) peace; Move the army, then a click on a county, also
+marches. The map page passes its clicks and selection through `REALM_STAGE`. Saves and
+the end screens are next. The map build writes each county's neighbors, development and
+terrain to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with
+tests in `tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`,
+which meets every target (see Testing). The numbers below are the tuned ones.
 
 Phase 2 as built: the banner has a Play link (not prefetched). At `/play` the map page
 (`index.vue`) hides the résumé (banner, county panel, dock, tour, towns, tooltip) and

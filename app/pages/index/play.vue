@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { Pause, Play, Swords } from '@lucide/vue'
 import { armyBanners, campaignPalette, chronicleLine, entryDate, houseColor } from '~/utils/keystone/display'
-import { dateOf, found, holdings, newGame, rank, step, warOf, type GameState } from '~/utils/keystone/engine'
+import {
+  COUNTY_IDS, RULES, apply, county, dateOf, found, holdings, maxLevy, newGame, rank, score, siegeMonths, step, upkeep, warOf, warScore,
+  developmentOf, type CountyId, type GameState, type Order,
+} from '~/utils/keystone/engine'
+import type { MapPick } from '~/utils/realm/map-data'
 import { REALM_STAGE } from '~/utils/realm/stage'
 
 // Keystone, played on the map: the résumé has stepped aside (the map page hides it at
-// /play), the houses rise across Pennsylvania, and nine computer houses fight while you
-// watch. Choosing a house of your own comes in a later phase (KEYSTONE_SPEC.md).
+// /play), the visitor picks a county for their house, the houses rise across
+// Pennsylvania, and the visitor's house contends with eight computer houses.
 
 // The map page hands every child page its letters; the game has no use for them.
 defineOptions({ inheritAttrs: false })
 
-useSiteSeo('Keystone — Mitchell Ponchione', '/play', 'Keystone: nine medieval houses carve up Pennsylvania\'s 67 counties on the realm map.')
+useSiteSeo('Keystone — Mitchell Ponchione', '/play', 'Keystone: lead one of nine medieval houses carving up Pennsylvania\'s 67 counties on the realm map.')
 
 const stage = inject(REALM_STAGE)!
 const router = useRouter()
@@ -20,27 +24,50 @@ const router = useRouter()
 const SPEEDS = [2000, 1000, 500]
 // How long the houses take to spread from their seats.
 const RISE_MS = 1500
-// Long enough for the résumé to step aside before the houses rise.
+// Long enough for the résumé to step aside before the prompt shows.
 const SETTLE_MS = 600
 const FEED_LINES = 5
+const TERRAIN = { flat: 'Flat', hills: 'Hills', mountains: 'Mountains' } as const
 
 const game = shallowRef<GameState | null>(null)
+// Whether the prompt to choose a starting county is showing.
+const choosing = ref(false)
 // The order the houses claimed their counties in, and how many of those claims show.
 let claims: { house: number, county: number }[] = []
 const risen = ref(0)
 const rising = computed(() => !game.value || risen.value < claims.length)
 const paused = ref(true)
 const speed = ref(1)
+// The county the visitor has selected, and whether their next click marches the army.
+const selected = ref<CountyId | null>(null)
+const marching = ref(false)
+// Why the last order was refused.
+const notice = ref('')
 
 let settle: ReturnType<typeof setTimeout> | undefined
 let timer: ReturnType<typeof setTimeout> | undefined
 let frame = 0
 
-// A new world, with the houses spreading from their seats claim by claim, then paused.
-function begin() {
+// Back to the prompt: Pennsylvania unclaimed, waiting for a county.
+function choose() {
+  clearTimeout(timer)
+  cancelAnimationFrame(frame)
+  game.value = null
+  claims = []
+  selected.value = null
+  marching.value = false
+  notice.value = ''
+  choosing.value = true
+}
+
+// A new world with the visitor's house at `start` (or a random county), the houses
+// spreading from their seats claim by claim, then paused.
+function begin(start: CountyId | null) {
+  const seat = start ?? COUNTY_IDS[Math.floor(Math.random() * COUNTY_IDS.length)]!
   const seed = Math.floor(Math.random() * 2 ** 31)
-  claims = found({ rng: seed }, null).claims
-  game.value = newGame(seed, null)
+  claims = found({ rng: seed }, seat).claims
+  game.value = newGame(seed, seat)
+  choosing.value = false
   paused.value = true
   cancelAnimationFrame(frame)
   if (matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -48,32 +75,75 @@ function begin() {
     return
   }
   risen.value = 0
-  const start = performance.now()
+  const begun = performance.now()
   const spread = (now: number) => {
-    risen.value = Math.min(claims.length, Math.ceil(((now - start) / RISE_MS) * claims.length))
+    risen.value = Math.min(claims.length, Math.ceil(((now - begun) / RISE_MS) * claims.length))
     if (risen.value < claims.length) frame = requestAnimationFrame(spread)
   }
   frame = requestAnimationFrame(spread)
 }
 
-// The months pass on their own unless paused; the campaign pauses itself when it ends.
+// The months pass on their own unless paused. The campaign pauses itself when war is
+// declared on the visitor and when it ends.
 function schedule() {
   clearTimeout(timer)
   if (paused.value || rising.value || game.value?.ending) return
   timer = setTimeout(() => {
-    game.value = step(game.value!)
-    if (game.value.ending) paused.value = true
+    const before = game.value!
+    const after = step(before)
+    game.value = after
+    const war = after.player === null ? undefined : warOf(after, after.player)
+    if (after.ending || (war && war.defender === after.player && !warOf(before, after.player!))) paused.value = true
     schedule()
   }, SPEEDS[speed.value])
 }
 
 watch([paused, speed, rising], schedule)
 
+// An order from the visitor, at once. A refused order says why.
+function attempt(order: Order) {
+  try {
+    game.value = apply(game.value!, order)
+    notice.value = ''
+  }
+  catch (error) {
+    notice.value = (error as Error).message
+  }
+}
+
+// Why the rules would refuse an order, or '' if they'd take it.
+function refusal(order: Order) {
+  try {
+    apply(game.value!, order)
+    return ''
+  }
+  catch (error) {
+    return (error as Error).message
+  }
+}
+
+// A click on the map: a starting county at the prompt, a destination while marching,
+// otherwise a county to look at.
+function onPick(pick: MapPick | null) {
+  const c = pick?.kind === 'county' && COUNTY_IDS.includes(pick.id) ? pick.id : null
+  if (!game.value) {
+    if (choosing.value && c !== null) begin(c)
+    return
+  }
+  if (rising.value) return
+  notice.value = ''
+  if (marching.value && c !== null) {
+    marching.value = false
+    attempt({ kind: 'move', house: game.value.player!, county: c })
+  }
+  selected.value = c
+}
 
 const houses = computed(() => {
   const s = game.value
   if (!s) return []
   return s.houses
+    .filter(h => h.id !== s.player)
     .map((h) => {
       const held = holdings(s, h.id).length
       const war = warOf(s, h.id)
@@ -81,6 +151,81 @@ const houses = computed(() => {
       return { id: h.id, name: h.name, held, rank: held ? rank(s, h.id) : null, enemy }
     })
     .sort((a, b) => b.held - a.held || a.id - b.id)
+})
+
+// The visitor's house, for the summary at the top left.
+const mine = computed(() => {
+  const s = game.value
+  if (!s || s.player === null) return null
+  const h = s.houses[s.player]!
+  const held = holdings(s, h.id).length
+  const war = warOf(s, h.id)
+  const enemy = war ? (war.attacker === h.id ? war.defender : war.attacker) : null
+  return {
+    id: h.id,
+    name: h.name,
+    held,
+    rank: held ? rank(s, h.id) : 'Fallen',
+    gold: h.gold,
+    income: developmentOf(s, h.id) - (h.army ? upkeep(h.army.men) : 0),
+    levies: h.levies,
+    maxLevies: maxLevy(s, h.id),
+    army: h.army && {
+      men: h.army.men,
+      at: county(h.army.county).name,
+      to: h.army.target === null ? null : county(h.army.target).name,
+    },
+    war: war && enemy !== null && {
+      enemy,
+      name: s.houses[enemy]!.name,
+      score: warScore(war, h.id),
+      offer: war.offer,
+    },
+  }
+})
+
+// The selected county, with what the visitor may do there.
+const place = computed(() => {
+  const s = game.value
+  const c = selected.value
+  if (!s || c === null || rising.value || s.player === null) return null
+  const me = s.player
+  const holder = s.owner[c]!
+  const level = s.development[c]!
+  const own = holder === me
+  const h = s.houses[me]!
+  const besieger = s.houses.find((other) => {
+    const war = warOf(s, other.id)
+    return other.army?.county === c && other.id !== holder && war && (war.attacker === holder || war.defender === holder)
+  })
+  const myWar = warOf(s, me)
+  const atWarWithHolder = !!myWar && (myWar.attacker === holder || myWar.defender === holder)
+  const order = (o: Order) => ({ order: o, refused: refusal(o) })
+  return {
+    id: c,
+    name: `${county(c).name} County`,
+    holder,
+    holderName: s.houses[holder]!.name,
+    own,
+    seat: s.houses[holder]!.seat === c,
+    level,
+    terrain: TERRAIN[county(c).terrain],
+    levies: level * RULES.menPerDevelopment,
+    siege: besieger && { house: besieger.name, months: besieger.army!.siege, of: siegeMonths(s, c) },
+    develop: own ? { cost: RULES.developCost * level, ...order({ kind: 'develop', house: me, county: c }) } : null,
+    raise: own && !h.army ? { men: h.levies, ...order({ kind: 'raise', house: me, county: c }) } : null,
+    disband: own && h.army ? order({ kind: 'disband', house: me }) : null,
+    march: h.army && h.army.county !== c ? order({ kind: 'move', house: me, county: c }) : null,
+    declare: !own && !atWarWithHolder ? order({ kind: 'declare', house: me, target: holder }) : null,
+    peace: !own && atWarWithHolder ? { accept: myWar!.offer === holder, offered: myWar!.offer === me, ...order({ kind: 'peace', house: me }) } : null,
+  }
+})
+
+// A new selection starts without the last refusal.
+watch(selected, () => (notice.value = ''))
+// Marching needs an army.
+watch(() => mine.value?.army, (army) => {
+  if (!army) marching.value = false
 })
 
 const feed = computed(() => {
@@ -94,21 +239,31 @@ const feed = computed(() => {
 })
 
 const ending = computed(() => {
-  const end = game.value?.ending
-  if (!end) return null
-  return end.kind === 'united' ? `${game.value!.houses[end.house!]!.name} unites Pennsylvania` : 'The age of the houses ends'
+  const s = game.value
+  const end = s?.ending
+  if (!s || !end) return null
+  if (end.kind === 'fallen') return 'Your house has fallen'
+  if (end.kind === 'united') return end.house === s.player ? 'You unite Pennsylvania' : `${s.houses[end.house!]!.name} unites Pennsylvania`
+  return `The age ends. Your score: ${score(s, s.player!)}`
 })
+
+const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 
 function togglePause() {
   if (!game.value?.ending) paused.value = !paused.value
 }
 
-// Space pauses and 1–3 set the speed, as in the grand-strategy games. Keys pressed on a
-// control or in a field are left to it.
+// Space pauses and 1–3 set the speed, as in the grand-strategy games; Escape lets go of
+// the march, then the selected county. Keys pressed on a control or in a field are left
+// to it.
 function onKeydown(event: KeyboardEvent) {
   if (event.metaKey || event.ctrlKey || event.altKey || rising.value) return
   if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable], [aria-modal="true"]')) return
-  if (event.key === ' ') {
+  if (event.key === 'Escape') {
+    if (marching.value) marching.value = false
+    else selected.value = null
+  }
+  else if (event.key === ' ') {
     // A focused button takes Space itself.
     if (event.target instanceof HTMLElement && event.target.closest('button')) return
     event.preventDefault()
@@ -141,10 +296,14 @@ onMounted(() => {
   watchEffect(() => {
     stage.armies.value = game.value && !rising.value ? armyBanners(game.value) : []
   })
+  watchEffect(() => {
+    stage.selected.value = selected.value === null ? null : { kind: 'county', id: selected.value }
+  })
+  stage.onPick.value = onPick
   window.addEventListener('keydown', onKeydown)
   // Someone who opened /play directly waits for the map to be drawn first.
   watch(stage.ready, (ready) => {
-    if (ready && !game.value && !settle) settle = setTimeout(begin, SETTLE_MS)
+    if (ready && !game.value && !settle) settle = setTimeout(choose, SETTLE_MS)
   }, { immediate: true })
 })
 
@@ -155,20 +314,68 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
   stage.palette.value = null
   stage.armies.value = []
+  stage.selected.value = null
+  stage.onPick.value = null
 })
 </script>
 
 <template>
-  <div class="keystone">
-    <h1 class="sr-only">Keystone — nine houses contend for Pennsylvania</h1>
+  <div class="keystone" :class="{ 'keystone-with-place': place, 'keystone-ended': ending }">
+    <h1 class="sr-only">Keystone — lead a house in the contest for Pennsylvania</h1>
+
+    <Transition name="keystone-fade">
+      <section v-if="choosing && !game" class="keystone-panel keystone-prompt" aria-label="Choose where your house begins">
+        <p class="keystone-title">Keystone</p>
+        <p class="keystone-prompt-lead">Choose where your house begins.</p>
+        <p class="keystone-muted">Click a county on the map. Eight other houses rise around yours.</p>
+        <div class="keystone-prompt-actions">
+          <button type="button" class="keystone-action" @click="begin(null)">Let fate decide</button>
+          <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
+        </div>
+      </section>
+    </Transition>
 
     <Transition name="keystone-left">
-      <section v-if="!rising" class="keystone-panel keystone-houses" aria-label="The houses">
-        <header class="keystone-houses-head">
-          <p class="keystone-title">Keystone</p>
-          <p class="keystone-muted">Nine houses contend for Pennsylvania.</p>
+      <section v-if="!rising && mine" class="keystone-panel keystone-houses" aria-label="Your house and its rivals">
+        <header class="keystone-me" :style="{ '--house': houseColor(mine.id) }">
+          <div class="keystone-me-title">
+            <RealmHeraldicShield class="keystone-me-arms" :seed="mine.name" />
+            <div>
+              <p class="keystone-me-name">{{ mine.name }}</p>
+              <p class="keystone-muted">{{ mine.rank }} · your house</p>
+            </div>
+          </div>
+          <dl class="keystone-stats">
+            <div>
+              <dt>Gold</dt>
+              <dd>{{ mine.gold }} <span class="keystone-muted">({{ signed(mine.income) }} a month)</span></dd>
+            </div>
+            <div>
+              <dt>{{ mine.army ? 'Army' : 'Levies' }}</dt>
+              <dd v-if="mine.army">
+                {{ mine.army.men }} men in {{ mine.army.at }}<span v-if="mine.army.to" class="keystone-muted">, to {{ mine.army.to }}</span>
+              </dd>
+              <dd v-else>{{ mine.levies }} <span class="keystone-muted">of {{ mine.maxLevies }}</span></dd>
+            </div>
+            <div>
+              <dt>Counties</dt>
+              <dd>{{ mine.held }}</dd>
+            </div>
+            <div v-if="mine.war" class="keystone-stat-war">
+              <dt>War</dt>
+              <dd>
+                <span class="keystone-entry-house" :style="{ '--house': houseColor(mine.war.enemy) }">{{ mine.war.name }}</span>
+                <span class="keystone-muted"> · score {{ signed(mine.war.score) }}</span>
+              </dd>
+            </div>
+          </dl>
+          <p v-if="mine.war && mine.war.offer === mine.war.enemy" class="keystone-offer">{{ mine.war.name }} offers peace.</p>
+          <button v-if="mine.army" type="button" class="keystone-action keystone-move" :aria-pressed="marching" @click="marching = !marching">
+            {{ marching ? 'Cancel the march' : 'Move the army' }}
+          </button>
+          <p v-if="marching" class="keystone-muted keystone-hint" role="status">Click a county to march there.</p>
         </header>
-        <ol class="keystone-house-list">
+        <ol class="keystone-house-list" aria-label="The other houses">
           <li v-for="house in houses" :key="house.id" class="keystone-house" :class="{ 'keystone-fallen': !house.held }">
             <span class="keystone-swatch" :style="{ background: houseColor(house.id) }" />
             <RealmHeraldicShield class="keystone-house-arms" :seed="house.name" />
@@ -186,7 +393,7 @@ onBeforeUnmount(() => {
           </li>
         </ol>
         <footer class="keystone-houses-foot">
-          <button type="button" class="keystone-action" @click="begin">New campaign</button>
+          <button type="button" class="keystone-action" @click="choose">New campaign</button>
           <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
         </footer>
       </section>
@@ -221,6 +428,49 @@ onBeforeUnmount(() => {
         <p v-if="ending" class="keystone-ending">{{ ending }}</p>
         <p v-else-if="paused" class="keystone-paused">Paused</p>
       </div>
+    </Transition>
+
+    <Transition name="keystone-right">
+      <aside v-if="place" class="keystone-panel keystone-place" aria-live="polite">
+        <button class="keystone-close" type="button" aria-label="Close" @click="selected = null">×</button>
+        <h2 class="keystone-place-name">{{ place.name }}</h2>
+        <p class="keystone-place-owner">
+          <span class="keystone-entry-house" :style="{ '--house': houseColor(place.holder) }">{{ place.own ? 'Your house' : place.holderName }}</span>
+          <span v-if="place.seat" class="keystone-muted"> · seat</span>
+        </p>
+        <dl class="keystone-stats">
+          <div><dt>Development</dt><dd>{{ place.level }}</dd></div>
+          <div><dt>Terrain</dt><dd>{{ place.terrain }}</dd></div>
+          <div><dt>Levies</dt><dd>{{ place.levies }} men</dd></div>
+          <div v-if="place.siege">
+            <dt>Siege</dt>
+            <dd>{{ place.siege.house }}, {{ place.siege.months }} of {{ place.siege.of }} months</dd>
+          </div>
+        </dl>
+        <div class="keystone-place-actions">
+          <button v-if="place.develop" type="button" class="keystone-action" :disabled="!!place.develop.refused" :title="place.develop.refused || undefined" @click="attempt(place.develop.order)">
+            Develop · {{ place.develop.cost }} gold
+          </button>
+          <button v-if="place.raise" type="button" class="keystone-action" :disabled="!!place.raise.refused" :title="place.raise.refused || undefined" @click="attempt(place.raise.order)">
+            Raise levies here · {{ place.raise.men }}
+          </button>
+          <button v-if="place.disband" type="button" class="keystone-action" :disabled="!!place.disband.refused" @click="attempt(place.disband.order)">
+            Disband the army
+          </button>
+          <button v-if="place.march" type="button" class="keystone-action" :disabled="!!place.march.refused" :title="place.march.refused || undefined" @click="attempt(place.march.order)">
+            March here
+          </button>
+          <button v-if="place.declare" type="button" class="keystone-action" :disabled="!!place.declare.refused" :title="place.declare.refused || undefined" @click="attempt(place.declare.order)">
+            Declare war
+          </button>
+          <button v-if="place.peace" type="button" class="keystone-action" :disabled="!!place.peace.refused || place.peace.offered" @click="attempt(place.peace.order)">
+            {{ place.peace.accept ? 'Accept peace' : place.peace.offered ? 'Peace offered' : 'Offer peace' }}
+          </button>
+        </div>
+        <p v-if="notice" class="keystone-notice" role="alert">{{ notice }}.</p>
+        <p v-else-if="place.declare?.refused" class="keystone-muted keystone-hint">{{ place.declare.refused }}.</p>
+        <p v-else-if="place.develop?.refused" class="keystone-muted keystone-hint">Develop: {{ place.develop.refused.toLowerCase() }}.</p>
+      </aside>
     </Transition>
 
     <Transition name="keystone-left">
@@ -273,9 +523,144 @@ onBeforeUnmount(() => {
   max-height: calc(100vh - 260px);
 }
 
-.keystone-houses-head {
-  padding: 12px 14px 8px;
+.keystone-me {
+  display: grid;
+  gap: 8px;
+  padding: 12px 14px 10px 14px;
   border-bottom: 1px solid rgb(184 149 90 / 0.25);
+  box-shadow: inset 5px 0 0 var(--house);
+}
+
+.keystone-me-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.keystone-me-arms {
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.keystone-me-name {
+  font-family: Cinzel, Georgia, serif;
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+}
+
+/* Label and value rows, for the house and the selected county. */
+.keystone-stats {
+  display: grid;
+  gap: 2px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.keystone-stats > div {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 8px;
+}
+
+.keystone-stats dt {
+  color: var(--ink-muted);
+}
+
+.keystone-stats dd {
+  font-variant-numeric: tabular-nums;
+}
+
+.keystone-offer,
+.keystone-notice {
+  font-size: 15px;
+  font-style: italic;
+  color: var(--gold);
+}
+
+.keystone-notice {
+  color: #e08a72;
+}
+
+.keystone-hint {
+  font-size: 14px;
+  font-style: italic;
+}
+
+.keystone-move[aria-pressed="true"] {
+  border-color: var(--gold);
+}
+
+/* The prompt for a starting county, top centre, clear of the counties. */
+.keystone-prompt {
+  top: 16px;
+  left: 50%;
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  width: min(420px, calc(100vw - 20px));
+  padding: 14px 18px 16px;
+  text-align: center;
+  transform: translateX(-50%);
+}
+
+.keystone-prompt-lead {
+  font-size: 19px;
+}
+
+.keystone-prompt-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  width: 100%;
+  margin-top: 6px;
+}
+
+/* Bottom right: the selected county and its orders. */
+.keystone-place {
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 8px;
+  width: 300px;
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+  padding: 14px 16px 16px;
+}
+
+.keystone-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  font-size: 22px;
+  line-height: 1;
+  color: var(--ink-muted);
+}
+
+.keystone-close:hover {
+  color: var(--gold);
+}
+
+.keystone-place-name {
+  padding-right: 24px;
+  font-family: Cinzel, Georgia, serif;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--gold);
+}
+
+.keystone-place-owner {
+  margin-top: -4px;
+  font-size: 15px;
+}
+
+.keystone-place-actions {
+  display: grid;
+  gap: 6px;
+  margin-top: 4px;
 }
 
 .keystone-title {
@@ -355,11 +740,16 @@ onBeforeUnmount(() => {
   transition: border-color 150ms ease, background 150ms ease;
 }
 
-.keystone-action:hover,
+.keystone-action:hover:not(:disabled),
 .keystone-action:focus-visible {
   border-color: var(--gold);
   background: linear-gradient(180deg, #3a3226, #29231a);
   outline: none;
+}
+
+.keystone-action:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 /* Top right: the date, pause and the three speeds. */
@@ -492,6 +882,21 @@ onBeforeUnmount(() => {
   transition: opacity 500ms ease, transform 500ms ease;
 }
 
+.keystone-place.keystone-right-enter-active,
+.keystone-place.keystone-right-leave-active {
+  transition-duration: 200ms;
+}
+
+.keystone-fade-enter-active,
+.keystone-fade-leave-active {
+  transition: opacity 300ms ease;
+}
+
+.keystone-fade-enter-from,
+.keystone-fade-leave-to {
+  opacity: 0;
+}
+
 .keystone-left-enter-from,
 .keystone-left-leave-to {
   opacity: 0;
@@ -517,9 +922,17 @@ onBeforeUnmount(() => {
     padding: 8px 12px;
   }
 
-  .keystone-paused,
+  /* The play button already shows a pause; the ending needs the room. */
+  .keystone-paused {
+    display: none;
+  }
+
   .keystone-ending {
     grid-column: 1 / -1;
+  }
+
+  .keystone-ended .keystone-houses {
+    top: 100px;
   }
 
   .keystone-houses {
@@ -530,7 +943,63 @@ onBeforeUnmount(() => {
     max-height: none;
   }
 
-  .keystone-houses-head {
+  .keystone-me {
+    gap: 4px;
+    padding: 8px 10px 6px;
+  }
+
+  .keystone-me-arms {
+    width: 22px;
+  }
+
+  .keystone-me-name {
+    font-size: 15px;
+  }
+
+  .keystone-me .keystone-stats {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+    font-size: 13px;
+  }
+
+  .keystone-me .keystone-stats > div {
+    grid-template-columns: auto 1fr;
+    gap: 5px;
+  }
+
+  .keystone-hint,
+  .keystone-offer {
+    font-size: 13px;
+  }
+
+  .keystone-place {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    width: auto;
+    max-height: 45vh;
+    gap: 6px;
+    padding: 10px 12px 12px;
+  }
+
+  .keystone-place-name {
+    font-size: 17px;
+  }
+
+  .keystone-place .keystone-stats {
+    font-size: 14px;
+  }
+
+  .keystone-place .keystone-stats > div {
+    grid-template-columns: 90px 1fr;
+  }
+
+  .keystone-place-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* The selected county takes the chronicle's place. */
+  .keystone-with-place .keystone-chronicle {
     display: none;
   }
 
