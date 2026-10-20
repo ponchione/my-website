@@ -1,11 +1,25 @@
 # Keystone: a campaign on the realm map
 
-Status (2026-10-16): phase 1 (the engine) is built on the `keystone` branch, not yet
-merged; Mitchell wants it held off `main` for now. The map build writes each county's
-neighbors, development and terrain to `app/data/map/keystone.json`; the engine is under
-`app/utils/keystone/`, with tests in `tests/keystone.test.ts` and the balance harness at
-`scripts/keystone/simulate.ts`, which meets every target (see Testing). The numbers below
-are the tuned ones. Nothing on the site has changed yet; phase 2 is next.
+Status (2026-10-20): phases 1 (the engine) and 2 (the watchable realm) are built on the
+`keystone-phase2` branch, local only and not merged; Mitchell wants it held off `main`
+and nothing pushed for now (a push deploys). The branch also carries the guided tour and
+the MP monogram. The map build writes each county's neighbors, development and terrain
+to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with tests in
+`tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`, which
+meets every target (see Testing). The numbers below are the tuned ones. Phase 3 is next.
+
+Phase 2 as built: the banner has a Play link (not prefetched). At `/play` the map page
+(`index.vue`) hides the résumé (banner, county panel, dock, tour, towns, tooltip) and
+provides a `REALM_STAGE` (`app/utils/realm/stage.ts`) that the game fills with its
+palette and army banners; `RealmMap` takes its palette as a prop. `play.vue` generates a
+seeded computer-only world, spreads the houses over 1.5 s, starts paused, and shows the
+houses top left, the date, pause and speeds (Space, 1–3) top right and the chronicle
+bottom left. Display code is `app/utils/keystone/display.ts`; the banner marker is
+`KeystoneArmy.vue`. Two departures from "How it fits": the résumé UI still lives in
+`index.vue`, hidden by `v-if`, rather than in its own component (the guided tour landed
+there at the same time; do the split when it pays for itself), and the campaign isn't
+saved yet (phase 3). `verify-generated.mjs` checks that the home page loads no engine
+code.
 
 ## What it is
 

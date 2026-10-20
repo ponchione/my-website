@@ -109,7 +109,8 @@ function onKeydown(event: KeyboardEvent) {
   if (event.metaKey || event.ctrlKey || event.altKey || rising.value) return
   if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable], [aria-modal="true"]')) return
   if (event.key === ' ') {
-    if (event.target instanceof HTMLElement && event.target.closest('button, a')) return
+    // A focused button takes Space itself.
+    if (event.target instanceof HTMLElement && event.target.closest('button')) return
     event.preventDefault()
     togglePause()
   }
@@ -563,7 +564,8 @@ onBeforeUnmount(() => {
   }
 
   .keystone-entry-date {
-    width: 76px;
+    width: 92px;
+    white-space: nowrap;
   }
 }
 

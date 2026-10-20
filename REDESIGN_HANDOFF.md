@@ -130,6 +130,7 @@ node scripts/map/build-map.mjs                # regenerate map assets (~30 s cac
 | `app/components/realm/RealmDispatch.vue`, `RealmRecord.vue` | A blog post as a sealed letter; the full record of a post or degree |
 | `app/components/realm/RealmLetter.vue`, `RealmLetterCase.vue`, `RealmSeal.vue` | An opened letter on parchment; the letter case; the wax seal and its break |
 | `app/pages/index/blog/` | The letter and letter case routes, nested in the map page |
+| `app/pages/index/play.vue`, `app/components/keystone/`, `app/utils/keystone/` | Keystone at `/play`, on the same map (see `KEYSTONE_SPEC.md`); `app/utils/realm/stage.ts` is how it paints the map |
 | `app/composables/useLetters.ts`, `useModalFocus.ts` | Letter routing and the seal-break delay; the focus trap every pop-up shares |
 | `app/components/realm/RealmTour.vue` | The guided tour's card: the road of stops and the current one |
 | `app/components/realm/RealmTown.vue` | A town's map marker: icon, nameplate, lens states |
