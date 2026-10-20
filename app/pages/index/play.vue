@@ -69,20 +69,6 @@ function schedule() {
 
 watch([paused, speed, rising], schedule)
 
-watchEffect(() => {
-  const s = game.value
-  const shown = risen.value
-  if (!s) stage.palette.value = campaignPalette(() => -1)
-  else if (shown < claims.length) {
-    const owner = new Map(claims.slice(0, shown).map(claim => [claim.county, claim.house]))
-    stage.palette.value = campaignPalette(id => owner.get(id) ?? -1)
-  }
-  else stage.palette.value = campaignPalette(id => s.owner[id]!)
-})
-
-watchEffect(() => {
-  stage.armies.value = game.value && !rising.value ? armyBanners(game.value) : []
-})
 
 const houses = computed(() => {
   const s = game.value
@@ -139,6 +125,21 @@ function returnToMap(event: MouseEvent) {
 }
 
 onMounted(() => {
+  // The map takes the campaign's colors and armies once the page has hydrated; changing
+  // them during hydration would re-render the map page before it's in place.
+  watchEffect(() => {
+    const s = game.value
+    const shown = risen.value
+    if (!s) stage.palette.value = campaignPalette(() => -1)
+    else if (shown < claims.length) {
+      const owner = new Map(claims.slice(0, shown).map(claim => [claim.county, claim.house]))
+      stage.palette.value = campaignPalette(id => owner.get(id) ?? -1)
+    }
+    else stage.palette.value = campaignPalette(id => s.owner[id]!)
+  })
+  watchEffect(() => {
+    stage.armies.value = game.value && !rising.value ? armyBanners(game.value) : []
+  })
   window.addEventListener('keydown', onKeydown)
   // Someone who opened /play directly waits for the map to be drawn first.
   watch(stage.ready, (ready) => {

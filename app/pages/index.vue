@@ -37,7 +37,7 @@ const letters = useLetterRoutes()
 // Under /blog, a letter or the letter case is open over the map.
 const overLetters = computed(() => route.path.startsWith('/blog'))
 // At /play, Keystone is played on the map and the résumé steps aside.
-const playing = computed(() => route.path === '/play')
+const playing = computed(() => /^\/play\/?$/.test(route.path))
 const openLetter = computed(() => dispatches.value.find(dispatch => dispatch.path === route.path) ?? null)
 const homeRealm: MapPick = { kind: 'realm', id: mapData.realms.find(realm => realm.code === HOME_REALM_CODE)!.id }
 
