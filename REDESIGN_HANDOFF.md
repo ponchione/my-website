@@ -68,6 +68,12 @@ Decided (don't relitigate):
 - Clicking a title on the sheet flies the camera to its town and switches to Career
   (Education for schooling), then opens the record on landing. Mitchell specifically
   wanted that flight.
+- **The tour** (the Tour button in the dock) walks the resume in order: the degree, then
+  every post by start date (`journey` in `career.ts`). Each stop flies to its town in its
+  lens and selects its county; its card (`RealmTour.vue`) takes the county panel's place
+  and says what the step was and how far the road moved. "Read the record" opens the
+  usual record. Escape, Clear, a town marker or picking another county ends it. On
+  phones the button shrinks beside Clear; from 641 to 760 px it's only its seal.
 - Don't mark a home or "capital" county without asking (privacy). The family is "a
   growing family of five", not "five kids".
 
@@ -125,6 +131,7 @@ node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
 | `app/components/realm/RealmLetter.vue`, `RealmLetterCase.vue`, `RealmSeal.vue` | An opened letter on parchment; the letter case; the wax seal and its break |
 | `app/pages/index/blog/` | The letter and letter case routes, nested in the map page |
 | `app/composables/useLetters.ts`, `useModalFocus.ts` | Letter routing and the seal-break delay; the focus trap every pop-up shares |
+| `app/components/realm/RealmTour.vue` | The guided tour's card: the road of stops and the current one |
 | `app/components/realm/RealmTown.vue` | A town's map marker: icon, nameplate, lens states |
 | `app/components/realm/RealmHeraldicShield.vue` | SVG coats of arms (house arms or seeded per title) |
 | `scripts/map/build-map.mjs`, `scripts/portrait/build-portrait.mjs` | Asset pipelines |
