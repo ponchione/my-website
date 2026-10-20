@@ -331,27 +331,34 @@ onBeforeUnmount(() => {
 }
 
 .keystone-houses-foot {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 7px 14px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+  padding: 8px 10px;
   border-top: 1px solid rgb(184 149 90 / 0.25);
   background: rgb(0 0 0 / 0.18);
 }
 
+/* The same button as the tour's options. */
 .keystone-action {
-  font-family: Cinzel, Georgia, serif;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 10px;
+  border: 1px solid #5a4a2e;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #2f2920, #221e17);
+  font-size: 16px;
   text-decoration: none;
-  text-transform: uppercase;
+  white-space: nowrap;
   color: var(--ink);
+  transition: border-color 150ms ease, background 150ms ease;
 }
 
 .keystone-action:hover,
 .keystone-action:focus-visible {
-  color: var(--gold);
+  border-color: var(--gold);
+  background: linear-gradient(180deg, #3a3226, #29231a);
   outline: none;
 }
 
@@ -548,7 +555,12 @@ onBeforeUnmount(() => {
   }
 
   .keystone-houses-foot {
-    padding: 5px 12px;
+    padding: 6px 8px;
+  }
+
+  .keystone-action {
+    padding: 5px 8px;
+    font-size: 14px;
   }
 
   .keystone-chronicle {
