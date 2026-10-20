@@ -76,6 +76,8 @@ Decided (don't relitigate):
   phones the button shrinks beside Clear; from 641 to 760 px it's only its seal.
 - Don't mark a home or "capital" county without asking (privacy). The family is "a
   growing family of five", not "five kids".
+- **No photo or likeness of Mitchell on the site.** The banner and sheet show his "MP"
+  monogram (`RealmMonogram.vue`) where a portrait would go. Don't add a portrait back.
 
 Deferred until it's more polished: speed controls, a date ticker, keyboard shortcuts and
 an accessible outliner.
@@ -86,15 +88,12 @@ an accessible outliner.
   interaction feels right; Mitchell left this open.
 - **Character placeholders** in `app/data/character.ts`: traits, skill values, epithet,
   motto, counters. Mitchell will edit these; don't "improve" them unasked.
-- **Portrait**: `public/realm/portrait.webp` is a procedural stopgap. Mitchell may want a
-  model-painted head portrait later; drop it in at the same path (5:6).
 
 ## Running it
 
 ```sh
 npm run dev                                   # http://localhost:3000/
 node scripts/map/build-map.mjs                # regenerate map assets (~30 s cached)
-node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
 ```
 
 - `build-map.mjs` downloads Census cb_2024 counties/states, Natural Earth countries and
@@ -105,8 +104,6 @@ node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
   neighbors, development and terrain for Keystone (see `KEYSTONE_SPEC.md`), kept apart
   so the home page doesn't load it. Terrain over PA is USGS 3DEP + SRTM via those tiles,
   not Copernicus GLO-90.
-- The portrait's source photo is not in the repo (it lives on Mitchell's Windows
-  Pictures folder: `/mnt/c/Users/mitch/Pictures/mitchell_ponchione_professional.jpg`).
 - Checks: `npm run typecheck`, `npm run lint`, `npm test`, `npm run build` all passed at
   handoff. The build warns about the three.js chunk size; it only loads on `/`.
 - `public/og-image.jpg` (1200×630) is every page's link preview: the opening view with
@@ -137,7 +134,8 @@ node scripts/portrait/build-portrait.mjs <photo.jpg>   # regenerate the portrait
 | `app/components/realm/RealmTour.vue` | The guided tour's card: the road of stops and the current one |
 | `app/components/realm/RealmTown.vue` | A town's map marker: icon, nameplate, lens states |
 | `app/components/realm/RealmHeraldicShield.vue` | SVG coats of arms (house arms or seeded per title) |
-| `scripts/map/build-map.mjs`, `scripts/portrait/build-portrait.mjs` | Asset pipelines |
+| `app/components/realm/RealmMonogram.vue` | The "MP" monogram in the banner's and sheet's portrait frame |
+| `scripts/map/build-map.mjs` | Map asset pipeline |
 
 A new job in a new place needs a town in `TOWNS` (name, county FIPS, longitude/latitude)
 and its location mapped in `LOCATION_TOWN` (or `OFFICE_TOWN` for a remote role) in
@@ -222,7 +220,6 @@ when WSLg's X server is wedged, Chromium's GPU process waits on it forever.
 
 - Make the neighbors' counties real provinces (hover names, selectable). There's room
   in the 8-bit county id, but the client assumes every county id is a PA county.
-- Replace the stopgap portrait with a painted one.
 - `DEFAULT_DESCRIPTION` in `app/utils/site.ts` and the side nav's subtitle still say
   "Software Engineer · AI Systems"; the NESL title is IT Solutions Architect.
 - Pick up the deferred items above once the map feels finished.
