@@ -444,14 +444,13 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
           class="realm-lens"
           style="--lens: var(--ink)"
           :aria-pressed="tourStop !== null"
-          aria-label="Tour"
           aria-description="Follow the road from schooling to the current post"
           @click="tourStop === null ? goToStop(0) : endTour()"
         >
           <span class="realm-lens-seal">
             <Route class="size-[18px]" aria-hidden="true" />
           </span>
-          <span class="realm-lens-text" aria-hidden="true">
+          <span class="realm-lens-text">
             <span class="realm-lens-label">Tour</span>
             <span class="realm-lens-summary">{{ journey[0]!.year }} – now · {{ plural(journey.length, 'stop', 'stops') }}</span>
           </span>

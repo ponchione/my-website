@@ -23,7 +23,8 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
 <template>
   <header class="banner">
     <div class="banner-top">
-      <button type="button" class="banner-portrait" aria-label="Open the character sheet" @click="emit('open')">
+      <button type="button" class="banner-portrait" @click="emit('open')">
+        <span class="sr-only">Open the character sheet</span>
         <RealmMonogram />
         <RealmHeraldicShield class="banner-arms" :arms="character.house.arms" />
       </button>

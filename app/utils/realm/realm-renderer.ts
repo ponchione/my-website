@@ -34,6 +34,9 @@ const COUNTY_LABEL_FADE = [52, 36] as const
 const HOME_LABEL_FADE = [40, 62] as const
 const LABEL_FONT = '"Cinzel", "Cormorant SC", Georgia, serif'
 const GROUND = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+// Input on the map that can change what it shows. Listened for in the capture phase,
+// which also catches pointerleave, an event that does not bubble.
+const WAKE_EVENTS = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'pointerleave', 'wheel'] as const
 
 export type RealmRendererCallbacks = {
   onHover: (pick: MapPick | null, clientX: number, clientY: number) => void
@@ -234,6 +237,7 @@ export class RealmRenderer {
   private hovered: MapPick | null = null
 
   private frame = 0
+  private loaded = false
   private lastTime = 0
   private time = 0
   private disposed = false
@@ -304,6 +308,15 @@ export class RealmRenderer {
     this.buildLabels()
     this.attachEvents()
     this.fitHome()
+    this.loaded = true
+    this.wake()
+  }
+
+  // Draw a frame soon. With motion reduced nothing on the map moves by itself, so the
+  // frames stop once it settles and start again when something changes: input, a resize
+  // or a call from the page.
+  private wake = () => {
+    if (this.frame || this.disposed || !this.loaded) return
     this.lastTime = performance.now()
     this.frame = requestAnimationFrame(this.tick)
   }
@@ -321,11 +334,13 @@ export class RealmRenderer {
     palette.groups?.forEach((group, id) => (groupData[id * 4] = group))
     groups.needsUpdate = true
     this.uniforms.uOverlay.value = palette.overlay
+    this.wake()
   }
 
   setSelected(pick: MapPick | null) {
     this.uniforms.uSelectedCounty.value = pick?.kind === 'county' ? pick.id : -1
     this.uniforms.uSelectedRealm.value = pick?.kind === 'realm' ? pick.id : -1
+    this.wake()
   }
 
   // Glide to a county or realm, or to a spot on the map (normalized map coordinates).
@@ -400,12 +415,14 @@ export class RealmRenderer {
         near: old?.near ?? null,
       }
     })
+    this.wake()
   }
 
   // Keep this line drawn over the map, or none.
   setRoute(route: MapRoute | null) {
     this.route = route && { ...route, points: '', endTransform: '' }
     this.placeRoute()
+    this.wake()
   }
 
   // Where a marker stands at a moment: on its spot, or on its way there.
@@ -419,6 +436,7 @@ export class RealmRenderer {
   // Long trips pull back mid-flight so you see where you're going, like a camera on a
   // crane.
   private flyToView(to: View): Promise<boolean> {
+    this.wake()
     this.setAway(true)
     this.endFlight(false)
     // Places near the edge of the map can't be centered without showing past it.
@@ -1018,6 +1036,8 @@ export class RealmRenderer {
     window.addEventListener('keydown', this.onKeyDown)
     window.addEventListener('keyup', this.onKeyUp)
     window.addEventListener('blur', this.onBlur)
+    for (const name of WAKE_EVENTS) this.container.addEventListener(name, this.wake, { capture: true, passive: true })
+    for (const name of ['keydown', 'keyup', 'blur']) window.addEventListener(name, this.wake)
   }
 
   private detachEvents() {
@@ -1031,6 +1051,8 @@ export class RealmRenderer {
     window.removeEventListener('keydown', this.onKeyDown)
     window.removeEventListener('keyup', this.onKeyUp)
     window.removeEventListener('blur', this.onBlur)
+    for (const name of WAKE_EVENTS) this.container.removeEventListener(name, this.wake, { capture: true })
+    for (const name of ['keydown', 'keyup', 'blur']) window.removeEventListener(name, this.wake)
   }
 
   private onPointerDown = (event: PointerEvent) => {
@@ -1165,6 +1187,7 @@ export class RealmRenderer {
     this.probe.updateProjectionMatrix()
     if (!this.away) this.fitHome()
     else this.limitZoom()
+    this.wake()
   }
 
   private placeCamera() {
@@ -1247,8 +1270,8 @@ export class RealmRenderer {
 
   private tick = (now: number) => {
     if (this.disposed) return
-    this.frame = requestAnimationFrame(this.tick)
-    const dt = Math.min(0.05, (now - this.lastTime) / 1000)
+    this.frame = 0
+    const dt = clamp((now - this.lastTime) / 1000, 0, 0.05)
     this.lastTime = now
 
     const speed = this.goal.distance * 0.9 * dt
@@ -1313,5 +1336,10 @@ export class RealmRenderer {
     this.placeMarkers()
     this.placeRoute()
     this.renderer.render(this.scene, this.camera)
+
+    const settling = Math.abs(this.goal.distance - this.distance) + Math.abs(this.goal.x - this.target.x) + Math.abs(this.goal.z - this.target.z) > 0.01
+    if (!this.options.reducedMotion || settling || this.keys.size || this.flight || this.markers.some(marker => marker.from)) {
+      this.frame = requestAnimationFrame(this.tick)
+    }
   }
 }

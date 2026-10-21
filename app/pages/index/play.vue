@@ -615,9 +615,9 @@ onBeforeUnmount(() => {
     </Transition>
 
     <Transition name="keystone-right">
-      <aside v-if="place" class="keystone-panel keystone-place" aria-live="polite">
+      <aside v-if="place" class="keystone-panel keystone-place" aria-labelledby="keystone-place-name">
         <button class="keystone-close" type="button" aria-label="Close" @click="selected = null">×</button>
-        <h2 class="keystone-place-name">{{ place.name }}</h2>
+        <h2 id="keystone-place-name" class="keystone-place-name">{{ place.name }}</h2>
         <p class="keystone-place-owner">
           <span class="keystone-entry-house" :style="{ '--house': houseColor(place.holder) }">{{ place.own ? 'Your house' : place.holderName }}</span>
           <span v-if="place.seat" class="keystone-muted"> · seat</span>
