@@ -1,9 +1,10 @@
 <template>
   <nav class="flex h-full w-50 flex-col justify-between" aria-label="Primary navigation">
     <div class="flex flex-col gap-4">
-      <NuxtLink to="/" class="group" aria-label="Mitchell Ponchione, home">
+      <NuxtLink to="/" class="group">
         <div class="flex items-center gap-3 rounded-md p-2 transition-colors">
           <IconsInitialsIcon />
+          <span class="sr-only">Mitchell Ponchione, home</span>
         </div>
       </NuxtLink>
       <div class="flex flex-col px-2">

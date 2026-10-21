@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Landmark, MapPin, ScrollText, Hourglass } from '@lucide/vue'
+import { Landmark, MapPin, ScrollText, Hourglass, Swords } from '@lucide/vue'
 import { character } from '~/data/character'
 import { careerHoldings, countiesHeld, currentPost } from '~/utils/realm/career'
 
-// The always-visible corner of the character sheet: portrait, name, a few traits, and
-// the counters. Clicking the portrait or name opens the full sheet.
+// The always-visible corner of the character sheet: monogram, name, a few traits, and
+// the counters. Clicking the monogram or name opens the full sheet.
 
 defineProps<{
   dispatchCount: number
@@ -23,8 +23,9 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
 <template>
   <header class="banner">
     <div class="banner-top">
-      <button type="button" class="banner-portrait" aria-label="Open the character sheet" @click="emit('open')">
-        <img src="/realm/portrait.webp" alt="" width="500" height="600">
+      <button type="button" class="banner-portrait" @click="emit('open')">
+        <span class="sr-only">Open the character sheet</span>
+        <RealmMonogram />
         <RealmHeraldicShield class="banner-arms" :arms="character.house.arms" />
       </button>
       <div class="banner-body">
@@ -54,6 +55,12 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
         Dispatches
         <span v-if="unreadCount" class="banner-unread" :aria-label="`${unreadCount} unread`">{{ unreadCount }}</span>
       </button>
+      <!-- Keystone, the game on this map. Not prefetched: the game's code loads only
+           for someone who presses Play. -->
+      <NuxtLink to="/play" :prefetch="false" class="banner-play">
+        <Swords class="size-4" aria-hidden="true" />
+        Play
+      </NuxtLink>
     </div>
   </header>
 </template>
@@ -84,13 +91,6 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
   border-radius: 2px;
   box-shadow: 0 0 0 2px #1a1610, 0 0 0 3px rgb(184 149 90 / 0.55);
   cursor: pointer;
-}
-
-.banner-portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .banner-arms {
@@ -196,14 +196,30 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
   color: var(--ink);
 }
 
-.banner-dispatches svg {
+.banner-dispatches svg,
+.banner-play svg {
   color: var(--gold);
 }
 
 .banner-dispatches:hover:not(:disabled),
-.banner-dispatches:focus-visible {
+.banner-dispatches:focus-visible,
+.banner-play:hover,
+.banner-play:focus-visible {
   color: var(--gold);
   outline: none;
+}
+
+.banner-play {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding-left: 14px;
+  border-left: 1px solid rgb(184 149 90 / 0.25);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+  text-transform: uppercase;
+  color: var(--ink);
 }
 
 .banner-unread {
@@ -241,6 +257,10 @@ const yearsAtCraft = new Date().getFullYear() - character.counters.craftSince
   .banner-counters {
     gap: 12px;
     padding: 6px 12px;
+  }
+
+  .banner-play {
+    padding-left: 10px;
   }
 }
 </style>

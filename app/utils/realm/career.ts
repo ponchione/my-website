@@ -120,3 +120,57 @@ export function heldTown(id: string) {
 export const currentPost = careerHoldings.find(holding => holding.end === 'Present') ?? careerHoldings[0]
 
 export const countiesHeld = new Set(holdings.map(holding => holding.fips)).size
+
+// The guided tour: every holding in the order it began, schooling first, each with
+// how the road got there from the stop before.
+export type JourneyStop = {
+  holding: Holding
+  town: HeldTown
+  year: number
+  // What kind of step this was: schooling, the first post, a return, the current post.
+  milestone: string
+  // How far and which way from the last stop's town; the first stop has none.
+  move: string
+}
+
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+
+// "July 2021" → months since year 0. Schooling has only the year it was conferred.
+function began(holding: Holding) {
+  const [month, year] = holding.start ? holding.start.split(' ') : ['', holding.end]
+  return Number(year) * 12 + Math.max(0, MONTHS.indexOf(month!))
+}
+
+const COMPASS = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest']
+
+function move(from: Town, to: Town) {
+  if (from.id === to.id) return `Stays in ${to.name}`
+  const radians = (degrees: number) => (degrees * Math.PI) / 180
+  const [lon1, lat1] = from.at.map(radians) as [number, number]
+  const [lon2, lat2] = to.at.map(radians) as [number, number]
+  const km = 2 * 6371 * Math.asin(Math.sqrt(Math.sin((lat2 - lat1) / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin((lon2 - lon1) / 2) ** 2))
+  const bearing = Math.atan2(Math.sin(lon2 - lon1) * Math.cos(lat2), Math.cos(lat1) * Math.sin(lat2) - Math.sin(lat1) * Math.cos(lat2) * Math.cos(lon2 - lon1))
+  const heading = COMPASS[Math.round(((bearing * 180) / Math.PI + 360) / 45) % 8]
+  return `From ${from.name} · ${Math.round(km / 10) * 10} km ${heading}`
+}
+
+export const journey: JourneyStop[] = [...holdings]
+  .sort((a, b) => began(a) - began(b))
+  .map((holding, index, ordered) => {
+    const before = ordered.slice(0, index)
+    const milestone = holding.kind === 'schooling'
+      ? 'Schooling'
+      : holding.end === 'Present'
+        ? 'The current post'
+        : before.some(earlier => earlier.institution === holding.institution)
+          ? 'A return'
+          : before.some(earlier => earlier.kind === 'post') ? 'A new post' : 'The first post'
+    const last = before.at(-1)
+    return {
+      holding,
+      town: heldTown(holding.town)!,
+      year: Math.floor(began(holding) / 12),
+      milestone,
+      move: last ? move(heldTown(last.town)!, heldTown(holding.town)!) : 'Where the road begins',
+    }
+  })

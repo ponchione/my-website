@@ -30,7 +30,7 @@ const span = (holding: Holding) => (holding.start ? `${holding.start} – ${hold
 
     <header class="sheet-header">
       <div class="sheet-portrait">
-        <img src="/realm/portrait.webp" alt="Painted portrait of Mitchell Ponchione" width="500" height="600">
+        <RealmMonogram />
         <RealmHeraldicShield class="sheet-portrait-arms" :arms="character.house.arms" />
       </div>
       <div class="sheet-identity">
@@ -184,13 +184,6 @@ const span = (holding: Holding) => (holding.start ? `${holding.start} – ${hold
   height: 180px;
   border: 1px solid #8a6f3e;
   box-shadow: 0 0 0 3px #1a1610, 0 0 0 4px rgb(184 149 90 / 0.55), 0 10px 24px rgb(0 0 0 / 0.5);
-}
-
-.sheet-portrait img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
 }
 
 .sheet-portrait-arms {

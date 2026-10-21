@@ -6,8 +6,8 @@ import { spawnSync } from 'node:child_process'
 // nothing. A listed advisory that stops showing up also fails the check, so its entry
 // comes out once a fix lands.
 const ACCEPTED = {
-  'GHSA-86w9-cpqp-85rv': 'node-forge (every release through 1.4.0, the latest), via nuxt → nitropack → listhen. It only makes the local dev server\'s HTTPS certificate.',
-  'GHSA-vfj7-8cjw-p6xm': 'braces (every release through 3.0.3, the latest), via @nuxt/content → micromatch. It only matches this repository\'s own file patterns during the build.',
+  'GHSA-86w9-cpqp-85rv': 'node-forge (every release through 1.4.0, the latest), via nuxt → nitropack → listhen. It only makes the local dev server\'s HTTPS certificate. Upstream: https://github.com/digitalbazaar/forge/issues/1149',
+  'GHSA-vfj7-8cjw-p6xm': 'braces (every release through 3.0.3, the latest), via @nuxt/content → micromatch. It only matches this repository\'s own file patterns during the build. Upstream: https://github.com/micromatch/braces/issues/70',
 }
 
 const audit = spawnSync('npm', ['audit', '--omit=dev', '--json'], { encoding: 'utf8' })

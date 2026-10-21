@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import resumeData from '~/data/resume.json'
 import type { Resume } from '~/types'
-import { careerHoldings, educationHoldings, heldTown, heldTowns } from '~/utils/realm/career'
+import { careerHoldings, educationHoldings, heldTown, heldTowns, journey } from '~/utils/realm/career'
 import { countyByFips, locate, mapData } from '~/utils/realm/map-data'
 
 const { experience, education } = resumeData as Resume
@@ -33,6 +33,23 @@ describe('the resume on the map', () => {
         expect(coordinate).toBeLessThan(1)
       }
     }
+  })
+})
+
+describe('the guided tour', () => {
+  it('walks from the degree through every post in the order each began', () => {
+    expect(journey.map(stop => stop.holding.id)).toEqual(['schooling-1', 'post-5', 'post-4', 'post-3', 'post-2', 'post-1', 'post-6'])
+    expect(journey.map(stop => stop.year)).toEqual([2016, 2017, 2020, 2021, 2021, 2023, 2026])
+  })
+
+  it('says what each step was and how the road got there', () => {
+    expect(journey.map(stop => stop.milestone)).toEqual(['Schooling', 'The first post', 'A new post', 'A new post', 'A return', 'A new post', 'The current post'])
+    expect(journey[0]!.move).toBe('Where the road begins')
+    // Indiana to New Holland is about 265 km, a little south of due east.
+    expect(journey[1]!.move).toMatch(/^From Indiana · 2[67]0 km east$/)
+    expect(journey[3]!.move).toBe('Stays in Pittsburgh')
+    // The Mechanicsburg office is about 80 km west of New Holland.
+    expect(journey[5]!.move).toMatch(/^From New Holland · [78]0 km west$/)
   })
 })
 

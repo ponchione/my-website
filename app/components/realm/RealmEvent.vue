@@ -77,7 +77,7 @@ onMounted(paint)
 .realm-event {
   position: relative;
   width: min(540px, 100%);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   padding: 18px 22px 20px;
   border: 1px solid #6e5a36;

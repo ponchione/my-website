@@ -9,6 +9,8 @@
 //   public/realm/height.webp     8-bit elevation (for the mesh, coloring, and picking).
 //   public/realm/normals.webp    Precomputed lighting normals (lossy; smooth data).
 //   app/data/map/pennsylvania.json  ids, names, and label anchors for the above.
+//   app/data/map/keystone.json   each county's neighbors, development and terrain for
+//                                Keystone, apart so the home page doesn't load them.
 //
 // Everything is in normalized Web Mercator so the terrain tiles line up for free.
 // Downloads are cached in .cache/map.
@@ -58,6 +60,31 @@ const SOURCES = {
   riversNorthAmerica: 'https://naciscdn.org/naturalearth/10m/physical/ne_10m_rivers_north_america.zip',
   terrain: 'https://s3.amazonaws.com/elevation-tiles-prod/terrarium',
 }
+
+// Keystone's board. Two counties are neighbors when they share a border. The Census
+// adjacency file also lists counties that touch only at a corner, so a pair must also
+// share at least MIN_BORDER_PIXELS of edge on the province raster (about 1.3 km).
+// NEIGHBOR_OVERRIDES settles every pair where the two disagree; the build fails on any
+// it doesn't settle, and on overrides that no longer settle anything.
+const KEYSTONE_SOURCES = {
+  adjacency: 'https://www2.census.gov/geo/docs/reference/county_adjacency/county_adjacency2024.txt',
+  population: 'https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO42.txt',
+}
+const MIN_BORDER_PIXELS = 8
+const NEIGHBOR_OVERRIDES = {
+  // The four-county corner at Freeport. Allegheny–Armstrong, the other diagonal, is in
+  // neither source.
+  'Butler/Westmoreland': false,
+  'Elk/Warren': false, // the four-county corner with Forest and McKean
+  'Forest/McKean': false,
+  'Northumberland/Perry': false, // a corner in the Susquehanna
+  'Dauphin/Juniata': false, // one shared boundary vertex
+  'Butler/Clarion': true, // a real border, 0.6 km long
+}
+// Terrain from local relief: the elevation range within RELIEF_RADIUS terrain pixels
+// (about 2.3 km) of each point, averaged over the county.
+const RELIEF_RADIUS = 8
+const TERRAIN_RELIEF = { hills: 150, mountains: 250 }
 
 // Realm colors are set on the client; this only fixes names and order.
 const NEIGHBOR_NAMES = { ON: 'Ontario' }
@@ -400,6 +427,109 @@ function fillLakeshoreVoids(heights, land, width, height, rows, columns) {
   return voids.length
 }
 
+// --- Keystone board ---------------------------------------------------------
+
+async function readNeighbors(counties, countyIds) {
+  const byFips = new Map(counties.map(county => [county.fips, county]))
+  const pairName = (a, b) => [a.name, b.name].sort().join('/')
+  const pairs = new Map()
+  const pair = (a, b) => {
+    const name = pairName(a, b)
+    if (!pairs.has(name)) pairs.set(name, { a, b, census: false, pixels: 0 })
+    return pairs.get(name)
+  }
+  const text = (await cached(KEYSTONE_SOURCES.adjacency.split('/').pop(), KEYSTONE_SOURCES.adjacency)).toString('utf8')
+  for (const line of text.split('\n').slice(1)) {
+    const [, fipsA, , fipsB] = line.trim().split('|')
+    const a = byFips.get(fipsA), b = byFips.get(fipsB)
+    if (a && b && a !== b) pair(a, b).census = true
+  }
+  const byId = new Map(counties.map(county => [county.id, county]))
+  const touch = (i, j) => {
+    if (countyIds[i] && countyIds[j] && countyIds[i] !== countyIds[j]) pair(byId.get(countyIds[i]), byId.get(countyIds[j])).pixels++
+  }
+  for (let y = 0; y < H; y++) {
+    for (let x = 0; x < W; x++) {
+      if (x + 1 < W) touch(y * W + x, y * W + x + 1)
+      if (y + 1 < H) touch(y * W + x, (y + 1) * W + x)
+    }
+  }
+
+  const unsettled = []
+  const neighbors = new Map(counties.map(county => [county.id, []]))
+  for (const [name, { a, b, census, pixels }] of pairs) {
+    const raster = pixels >= MIN_BORDER_PIXELS
+    const override = NEIGHBOR_OVERRIDES[name]
+    if (census !== raster && override === undefined) unsettled.push(`${name} (Census ${census}, raster ${pixels} px)`)
+    if (census === raster && override !== undefined) unsettled.push(`${name} needs no override`)
+    if (census === raster ? census : override) {
+      neighbors.get(a.id).push(b.id)
+      neighbors.get(b.id).push(a.id)
+    }
+  }
+  for (const name of Object.keys(NEIGHBOR_OVERRIDES)) {
+    if (!pairs.has(name)) unsettled.push(`${name} touches in neither source`)
+  }
+  if (unsettled.length) throw new Error(`Settle these in NEIGHBOR_OVERRIDES:\n  ${unsettled.join('\n  ')}`)
+  for (const list of neighbors.values()) list.sort((a, b) => a - b)
+  return neighbors
+}
+
+// Census 2020 population on a log scale: 1 for the smallest county, 5 for the largest.
+async function readDevelopment(counties) {
+  const text = (await cached(KEYSTONE_SOURCES.population.split('/').pop(), KEYSTONE_SOURCES.population)).toString('utf8').replace(/^\uFEFF/, '')
+  const population = new Map()
+  for (const line of text.trim().split('\n').slice(1)) {
+    const [state, county, , , people] = line.split(',')
+    population.set(state + county, Number(people))
+  }
+  const logs = counties.map((county) => {
+    if (!population.get(county.fips)) throw new Error(`No 2020 population for ${county.name}`)
+    return Math.log(population.get(county.fips))
+  })
+  const lo = Math.min(...logs), hi = Math.max(...logs)
+  return new Map(counties.map((county, i) => [county.id, 1 + Math.round((4 * (logs[i] - lo)) / (hi - lo))]))
+}
+
+// Mean local relief (m) of each county, from the terrain grid.
+function countyRelief(heights, width, height, countyIds) {
+  const extreme = (source, pick) => {
+    const rows = new Float32Array(source.length)
+    const out = new Float32Array(source.length)
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let best = source[y * width + x]
+        for (let k = Math.max(0, x - RELIEF_RADIUS); k <= Math.min(width - 1, x + RELIEF_RADIUS); k++) best = pick(best, source[y * width + k])
+        rows[y * width + x] = best
+      }
+    }
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        let best = rows[y * width + x]
+        for (let k = Math.max(0, y - RELIEF_RADIUS); k <= Math.min(height - 1, y + RELIEF_RADIUS); k++) best = pick(best, rows[k * width + x])
+        out[y * width + x] = best
+      }
+    }
+    return out
+  }
+  const highs = extreme(heights, Math.max)
+  const lows = extreme(heights, Math.min)
+  const sums = new Map()
+  for (let j = 0; j < height; j++) {
+    for (let i = 0; i < width; i++) {
+      const id = countyIds[Math.floor(((j + 0.5) / height) * H) * W + Math.floor(((i + 0.5) / width) * W)]
+      if (!id) continue
+      const sum = sums.get(id) ?? { total: 0, count: 0 }
+      sum.total += highs[j * width + i] - lows[j * width + i]
+      sum.count++
+      sums.set(id, sum)
+    }
+  }
+  return new Map([...sums].map(([id, { total, count }]) => [id, total / count]))
+}
+
+const terrainOf = relief => relief >= TERRAIN_RELIEF.mountains ? 'mountains' : relief >= TERRAIN_RELIEF.hills ? 'hills' : 'flat'
+
 // --- build ------------------------------------------------------------------
 
 async function main() {
@@ -460,6 +590,10 @@ async function main() {
     const mx = (ax + bx) / 2, my = (ay + by) / 2
     return isLand(mx + nx, my + ny) && isLand(mx - nx, my - ny)
   }
+
+  console.log('keystone board')
+  const countyNeighbors = await readNeighbors(counties, countyIds)
+  const development = await readDevelopment(counties)
 
   console.log('county borders')
   // Neighboring states' counties are drawn as borders too, but they aren't provinces.
@@ -577,6 +711,17 @@ async function main() {
     minElevation = Math.min(minElevation, h)
     maxElevation = Math.max(maxElevation, h)
   }
+  const relief = countyRelief(heights, TW, TH, countyIds)
+  const board = counties.map(county => ({
+    id: county.id,
+    name: county.name,
+    neighbors: countyNeighbors.get(county.id),
+    development: development.get(county.id),
+    terrain: terrainOf(relief.get(county.id)),
+  }))
+  if (process.env.KEYSTONE_DEBUG) {
+    for (const county of board) console.log(`  ${county.name.padEnd(16)} relief ${relief.get(county.id).toFixed(0).padStart(4)} m  ${county.terrain.padEnd(9)} development ${county.development}  neighbors ${county.neighbors.length}`)
+  }
 
   // Lighting normals from the full-precision heights, so the 8-bit height map doesn't band.
   const metersPerPixel = (((BOUNDS.east - BOUNDS.west) * 111320 * Math.cos(((BOUNDS.north + BOUNDS.south) / 360) * Math.PI)) / TW)
@@ -618,6 +763,7 @@ async function main() {
     counties: countyData,
   }
   await writeFile(join(OUT_DATA, 'pennsylvania.json'), `${JSON.stringify(data, null, 2)}\n`)
+  await writeFile(join(OUT_DATA, 'keystone.json'), `${JSON.stringify({ sources: Object.values(KEYSTONE_SOURCES), counties: board }, null, 2)}\n`)
   console.log(`done: ${counties.length} counties, ${realms.length} realms, elevation ${minElevation.toFixed(0)}-${maxElevation.toFixed(0)} m`)
 }
 

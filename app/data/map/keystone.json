@@ -1,0 +1,876 @@
+{
+  "sources": [
+    "https://www2.census.gov/geo/docs/reference/county_adjacency/county_adjacency2024.txt",
+    "https://www2.census.gov/geo/docs/reference/cenpop2020/county/CenPop2020_Mean_CO42.txt"
+  ],
+  "counties": [
+    {
+      "id": 1,
+      "name": "Adams",
+      "neighbors": [
+        21,
+        28,
+        67
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 2,
+      "name": "Allegheny",
+      "neighbors": [
+        4,
+        10,
+        63,
+        65
+      ],
+      "development": 5,
+      "terrain": "flat"
+    },
+    {
+      "id": 3,
+      "name": "Armstrong",
+      "neighbors": [
+        10,
+        16,
+        32,
+        33,
+        65
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 4,
+      "name": "Beaver",
+      "neighbors": [
+        2,
+        10,
+        37,
+        63
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 5,
+      "name": "Bedford",
+      "neighbors": [
+        7,
+        11,
+        29,
+        31,
+        56
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 6,
+      "name": "Berks",
+      "neighbors": [
+        15,
+        36,
+        38,
+        39,
+        46,
+        54
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 7,
+      "name": "Blair",
+      "neighbors": [
+        5,
+        11,
+        14,
+        17,
+        31
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 8,
+      "name": "Bradford",
+      "neighbors": [
+        41,
+        57,
+        58,
+        59,
+        66
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 9,
+      "name": "Bucks",
+      "neighbors": [
+        39,
+        46,
+        48,
+        51
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 10,
+      "name": "Butler",
+      "neighbors": [
+        2,
+        3,
+        4,
+        16,
+        37,
+        43,
+        61
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 11,
+      "name": "Cambria",
+      "neighbors": [
+        5,
+        7,
+        17,
+        32,
+        56,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 12,
+      "name": "Cameron",
+      "neighbors": [
+        17,
+        18,
+        24,
+        42,
+        53
+      ],
+      "development": 1,
+      "terrain": "mountains"
+    },
+    {
+      "id": 13,
+      "name": "Carbon",
+      "neighbors": [
+        39,
+        40,
+        45,
+        48,
+        54
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 14,
+      "name": "Centre",
+      "neighbors": [
+        7,
+        17,
+        18,
+        31,
+        44,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 15,
+      "name": "Chester",
+      "neighbors": [
+        6,
+        23,
+        36,
+        46
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 16,
+      "name": "Clarion",
+      "neighbors": [
+        3,
+        10,
+        27,
+        33,
+        61
+      ],
+      "development": 2,
+      "terrain": "flat"
+    },
+    {
+      "id": 17,
+      "name": "Clearfield",
+      "neighbors": [
+        7,
+        11,
+        12,
+        14,
+        18,
+        24,
+        32,
+        33
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 18,
+      "name": "Clinton",
+      "neighbors": [
+        12,
+        14,
+        17,
+        41,
+        53,
+        60
+      ],
+      "development": 2,
+      "terrain": "mountains"
+    },
+    {
+      "id": 19,
+      "name": "Columbia",
+      "neighbors": [
+        40,
+        41,
+        47,
+        49,
+        54,
+        57
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 20,
+      "name": "Crawford",
+      "neighbors": [
+        25,
+        43,
+        61,
+        62
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 21,
+      "name": "Cumberland",
+      "neighbors": [
+        1,
+        22,
+        28,
+        50,
+        67
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 22,
+      "name": "Dauphin",
+      "neighbors": [
+        21,
+        36,
+        38,
+        49,
+        50,
+        54,
+        67
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 23,
+      "name": "Delaware",
+      "neighbors": [
+        15,
+        46,
+        51
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 24,
+      "name": "Elk",
+      "neighbors": [
+        12,
+        17,
+        27,
+        33,
+        42
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 25,
+      "name": "Erie",
+      "neighbors": [
+        20,
+        62
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 26,
+      "name": "Fayette",
+      "neighbors": [
+        30,
+        56,
+        63,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 27,
+      "name": "Forest",
+      "neighbors": [
+        16,
+        24,
+        33,
+        61,
+        62
+      ],
+      "development": 1,
+      "terrain": "hills"
+    },
+    {
+      "id": 28,
+      "name": "Franklin",
+      "neighbors": [
+        1,
+        21,
+        29,
+        31,
+        34,
+        50
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 29,
+      "name": "Fulton",
+      "neighbors": [
+        5,
+        28,
+        31
+      ],
+      "development": 2,
+      "terrain": "mountains"
+    },
+    {
+      "id": 30,
+      "name": "Greene",
+      "neighbors": [
+        26,
+        63
+      ],
+      "development": 2,
+      "terrain": "flat"
+    },
+    {
+      "id": 31,
+      "name": "Huntingdon",
+      "neighbors": [
+        5,
+        7,
+        14,
+        28,
+        29,
+        34,
+        44
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 32,
+      "name": "Indiana",
+      "neighbors": [
+        3,
+        11,
+        17,
+        33,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 33,
+      "name": "Jefferson",
+      "neighbors": [
+        3,
+        16,
+        17,
+        24,
+        27,
+        32
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 34,
+      "name": "Juniata",
+      "neighbors": [
+        28,
+        31,
+        44,
+        49,
+        50,
+        55
+      ],
+      "development": 2,
+      "terrain": "mountains"
+    },
+    {
+      "id": 35,
+      "name": "Lackawanna",
+      "neighbors": [
+        40,
+        45,
+        58,
+        64,
+        66
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 36,
+      "name": "Lancaster",
+      "neighbors": [
+        6,
+        15,
+        22,
+        38,
+        67
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 37,
+      "name": "Lawrence",
+      "neighbors": [
+        4,
+        10,
+        43
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 38,
+      "name": "Lebanon",
+      "neighbors": [
+        6,
+        22,
+        36,
+        54
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 39,
+      "name": "Lehigh",
+      "neighbors": [
+        6,
+        9,
+        13,
+        46,
+        48,
+        54
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 40,
+      "name": "Luzerne",
+      "neighbors": [
+        13,
+        19,
+        35,
+        45,
+        54,
+        57,
+        66
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 41,
+      "name": "Lycoming",
+      "neighbors": [
+        8,
+        18,
+        19,
+        47,
+        49,
+        53,
+        57,
+        59,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 42,
+      "name": "McKean",
+      "neighbors": [
+        12,
+        24,
+        53,
+        62
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 43,
+      "name": "Mercer",
+      "neighbors": [
+        10,
+        20,
+        37,
+        61
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 44,
+      "name": "Mifflin",
+      "neighbors": [
+        14,
+        31,
+        34,
+        55,
+        60
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 45,
+      "name": "Monroe",
+      "neighbors": [
+        13,
+        35,
+        40,
+        48,
+        52,
+        64
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 46,
+      "name": "Montgomery",
+      "neighbors": [
+        6,
+        9,
+        15,
+        23,
+        39,
+        51
+      ],
+      "development": 5,
+      "terrain": "flat"
+    },
+    {
+      "id": 47,
+      "name": "Montour",
+      "neighbors": [
+        19,
+        41,
+        49
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 48,
+      "name": "Northampton",
+      "neighbors": [
+        9,
+        13,
+        39,
+        45
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 49,
+      "name": "Northumberland",
+      "neighbors": [
+        19,
+        22,
+        34,
+        41,
+        47,
+        54,
+        55,
+        60
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 50,
+      "name": "Perry",
+      "neighbors": [
+        21,
+        22,
+        28,
+        34
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 51,
+      "name": "Philadelphia",
+      "neighbors": [
+        9,
+        23,
+        46
+      ],
+      "development": 5,
+      "terrain": "flat"
+    },
+    {
+      "id": 52,
+      "name": "Pike",
+      "neighbors": [
+        45,
+        64
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 53,
+      "name": "Potter",
+      "neighbors": [
+        12,
+        18,
+        41,
+        42,
+        59
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 54,
+      "name": "Schuylkill",
+      "neighbors": [
+        6,
+        13,
+        19,
+        22,
+        38,
+        39,
+        40,
+        49
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 55,
+      "name": "Snyder",
+      "neighbors": [
+        34,
+        44,
+        49,
+        60
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 56,
+      "name": "Somerset",
+      "neighbors": [
+        5,
+        11,
+        26,
+        65
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 57,
+      "name": "Sullivan",
+      "neighbors": [
+        8,
+        19,
+        40,
+        41,
+        66
+      ],
+      "development": 1,
+      "terrain": "hills"
+    },
+    {
+      "id": 58,
+      "name": "Susquehanna",
+      "neighbors": [
+        8,
+        35,
+        64,
+        66
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 59,
+      "name": "Tioga",
+      "neighbors": [
+        8,
+        41,
+        53
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 60,
+      "name": "Union",
+      "neighbors": [
+        14,
+        18,
+        41,
+        44,
+        49,
+        55
+      ],
+      "development": 3,
+      "terrain": "mountains"
+    },
+    {
+      "id": 61,
+      "name": "Venango",
+      "neighbors": [
+        10,
+        16,
+        20,
+        27,
+        43,
+        62
+      ],
+      "development": 3,
+      "terrain": "flat"
+    },
+    {
+      "id": 62,
+      "name": "Warren",
+      "neighbors": [
+        20,
+        25,
+        27,
+        42,
+        61
+      ],
+      "development": 2,
+      "terrain": "hills"
+    },
+    {
+      "id": 63,
+      "name": "Washington",
+      "neighbors": [
+        2,
+        4,
+        26,
+        30,
+        65
+      ],
+      "development": 4,
+      "terrain": "flat"
+    },
+    {
+      "id": 64,
+      "name": "Wayne",
+      "neighbors": [
+        35,
+        45,
+        52,
+        58
+      ],
+      "development": 3,
+      "terrain": "hills"
+    },
+    {
+      "id": 65,
+      "name": "Westmoreland",
+      "neighbors": [
+        2,
+        3,
+        11,
+        26,
+        32,
+        56,
+        63
+      ],
+      "development": 4,
+      "terrain": "hills"
+    },
+    {
+      "id": 66,
+      "name": "Wyoming",
+      "neighbors": [
+        8,
+        35,
+        40,
+        57,
+        58
+      ],
+      "development": 2,
+      "terrain": "mountains"
+    },
+    {
+      "id": 67,
+      "name": "York",
+      "neighbors": [
+        1,
+        21,
+        22,
+        36
+      ],
+      "development": 4,
+      "terrain": "flat"
+    }
+  ]
+}

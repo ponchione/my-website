@@ -18,7 +18,21 @@ assert.doesNotMatch(agencyPayload, /Open your LinkedIn feed right now/, 'article
 // A shared post link lands on the map with the letter open, and its text is in the page.
 assert.match(letterHtml, /<title>Software Goes to Zero — Mitchell Ponchione<\/title>/, 'a letter should have its post\'s title')
 assert.match(letterHtml, /<link rel="canonical" href="https:\/\/ponchione\.dev\/blog\/software_goes_to_zero">/, 'a letter should be canonical at its own path, not the map\'s')
-assert.match(letterHtml, /class="realm"/, 'a letter should open over the map')
+assert.match(letterHtml, /<main class="realm"/, 'a letter should open over the map, in the page\'s main landmark')
 assert.match(letterHtml, /Open your LinkedIn feed right now/, 'a letter\'s text should be in the prerendered HTML')
+
+// Keystone is a page over the map, and the home page doesn't load its code.
+const playHtml = await readFile(new URL('../.output/public/play/index.html', import.meta.url), 'utf8')
+assert.match(playHtml, /<title>Keystone — Mitchell Ponchione<\/title>/, '/play should have the game\'s title')
+assert.match(playHtml, /<main class="realm"/, '/play should open over the map, in the page\'s main landmark')
+assert.match(playHtml, /<meta property="og:image" content="https:\/\/ponchione\.dev\/og-play\.jpg">/, '/play should have its own link preview')
+const homeHtml = await readFile(new URL('../.output/public/index.html', import.meta.url), 'utf8')
+assert.match(homeHtml, /<meta property="og:image" content="https:\/\/ponchione\.dev\/og-image\.jpg">/, 'the home page should keep the map\'s link preview')
+const homeScripts = [...new Set([...homeHtml.matchAll(/(?:src|href)="(\/_nuxt\/[^"]+\.js)"/g)].map(match => match[1]))]
+assert.ok(homeScripts.length, 'the home page should load scripts')
+for (const script of homeScripts) {
+  const code = await readFile(new URL(`../.output/public${script}`, import.meta.url), 'utf8')
+  assert.doesNotMatch(code, /The campaign is over/, `the home page should not load Keystone's engine (${script})`)
+}
 
 console.log('Generated output verification passed.')

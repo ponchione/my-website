@@ -24,9 +24,9 @@ onBeforeUnmount(() => desktopQuery?.removeEventListener('change', closeOnDesktop
 
 <template>
   <header class="sticky top-0 z-40 flex items-center justify-between border-b bg-background px-4 py-3 md:hidden">
-    <NuxtLink to="/" class="flex items-center gap-3" aria-label="Mitchell Ponchione, home">
+    <NuxtLink to="/" class="flex items-center gap-3">
       <IconsInitialsIcon />
-      <span class="text-lg font-bold tracking-tight text-primary">Mitchell Ponchione</span>
+      <span class="text-lg font-bold tracking-tight text-primary">Mitchell Ponchione</span><span class="sr-only">, home</span>
     </NuxtLink>
     <UiSheet v-model:open="open" title="Navigation">
       <template #trigger>

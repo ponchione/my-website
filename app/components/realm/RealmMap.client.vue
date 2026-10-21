@@ -1,17 +1,19 @@
-<script setup lang="ts" generic="Marker extends { id: string, at: readonly [number, number] }">
+<script setup lang="ts" generic="Marker extends { id: string, at: readonly [number, number], glide?: number }">
 import type { ComponentPublicInstance } from 'vue'
 import type { MapPick } from '~/utils/realm/map-data'
-import { mapModePalette, type BaseMapId, type LensId } from '~/utils/realm/map-modes'
+import type { MapModePalette } from '~/utils/realm/map-modes'
 import { RealmRenderer, type ViewPadding } from '~/utils/realm/realm-renderer'
 
 const props = defineProps<{
-  base: BaseMapId
-  lens: LensId | null
+  palette: MapModePalette
   selected: MapPick | null
   viewPadding: () => ViewPadding
   // Things to pin over spots on the map (normalized map coordinates). Each draws itself
   // in the `marker` slot, standing on its spot: the slot's origin is the spot itself.
   markers?: Marker[]
+  // A line over the map through spots (normalized map coordinates). `follow` names the
+  // marker it starts from, so it stays attached while that marker walks.
+  route?: { at: readonly (readonly [number, number])[], follow?: string } | null
 }>()
 
 const emit = defineEmits<{
@@ -37,8 +39,19 @@ function setPin(id: string, element: Element | ComponentPublicInstance | null) {
 function pinMarkers() {
   renderer?.setMarkers((props.markers ?? []).flatMap((marker) => {
     const element = pins.get(marker.id)
-    return element ? [{ element, at: marker.at }] : []
+    return element ? [{ element, at: marker.at, glide: marker.glide }] : []
   }))
+}
+
+const routeCasing = useTemplateRef<SVGPolylineElement>('routeCasing')
+const routeLine = useTemplateRef<SVGPolylineElement>('routeLine')
+const routeEnd = useTemplateRef<SVGGElement>('routeEnd')
+
+function drawRoute() {
+  const route = props.route
+  renderer?.setRoute(route && routeCasing.value && routeLine.value
+    ? { lines: [routeCasing.value, routeLine.value], end: routeEnd.value, at: route.at, follow: (route.follow && pins.get(route.follow)) || null }
+    : null)
 }
 
 onMounted(async () => {
@@ -54,10 +67,11 @@ onMounted(async () => {
       reducedMotion: window.matchMedia('(prefers-reduced-motion: reduce)').matches,
       viewPadding: props.viewPadding,
     })
-    renderer.setPalette(mapModePalette(props.base, props.lens))
+    renderer.setPalette(props.palette)
     renderer.setSelected(props.selected)
     pinMarkers()
     await renderer.load('/realm')
+    drawRoute()
     emit('ready')
   }
   catch (error) {
@@ -67,9 +81,10 @@ onMounted(async () => {
   }
 })
 
-watch([() => props.base, () => props.lens], ([base, lens]) => renderer?.setPalette(mapModePalette(base, lens)))
+watch(() => props.palette, palette => renderer?.setPalette(palette))
 watch(() => props.selected, pick => renderer?.setSelected(pick))
 watch(() => props.markers, pinMarkers, { flush: 'post' })
+watch(() => props.route, drawRoute, { flush: 'post' })
 
 onBeforeUnmount(() => {
   renderer?.dispose()
@@ -87,6 +102,13 @@ defineExpose({
 <template>
   <div ref="container" class="absolute inset-0 isolate">
     <div class="realm-pins">
+      <svg v-if="route" class="realm-route" aria-hidden="true">
+        <polyline ref="routeCasing" class="realm-route-casing" />
+        <polyline ref="routeLine" class="realm-route-line" />
+        <g ref="routeEnd" class="realm-route-end">
+          <circle r="6" />
+        </g>
+      </svg>
       <div v-for="marker in markers" :key="marker.id" :ref="element => setPin(marker.id, element)" class="realm-pin">
         <slot name="marker" :marker="marker" />
       </div>
@@ -103,6 +125,57 @@ defineExpose({
   z-index: 1;
   overflow: hidden;
   pointer-events: none;
+}
+
+/* A route over the map (an army's march): a dashed gold line on a dark casing,
+   ending in a ring. The renderer sets the points each frame. */
+.realm-route {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.realm-route polyline {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.realm-route-casing {
+  stroke: rgb(20 16 10 / 0.75);
+  stroke-width: 6px;
+}
+
+.realm-route-line {
+  stroke: #e9c77a;
+  stroke-width: 2.5px;
+  stroke-dasharray: 8 7;
+  animation: realm-route-march 900ms linear infinite;
+}
+
+.realm-route-end {
+  transform: scale(0);
+}
+
+.realm-route-end circle {
+  fill: rgb(20 16 10 / 0.55);
+  stroke: #e9c77a;
+  stroke-width: 2.5px;
+}
+
+/* The dashes walk toward the destination. */
+@keyframes realm-route-march {
+  to {
+    stroke-dashoffset: -15;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .realm-route-line {
+    animation: none;
+  }
 }
 
 /* A point, moved onto its spot by the renderer each frame; hidden until it has been. */

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { Briefcase, ChevronRight, Eraser, GraduationCap, Landmark, Mountain } from '@lucide/vue'
+import { Briefcase, ChevronRight, Eraser, GraduationCap, Landmark, Mountain, Route } from '@lucide/vue'
 import type { ComponentPublicInstance } from 'vue'
-import { heldTown, heldTowns, holdingsIn, type HeldTown, type Holding } from '~/utils/realm/career'
+import { heldTown, heldTowns, holdingsIn, journey, type HeldTown, type Holding } from '~/utils/realm/career'
 import { dispatchQueue, loadReadDispatches, saveReadDispatches, type Dispatch } from '~/utils/realm/dispatches'
 import { HOME_REALM_CODE, countyByFips, countyById, locate, mapData, realmById, type MapPick } from '~/utils/realm/map-data'
-import { BASE_MAPS, LENSES, type BaseMapId, type LensId } from '~/utils/realm/map-modes'
+import { BASE_MAPS, LENSES, mapModePalette, type BaseMapId, type LensId, type MapModePalette } from '~/utils/realm/map-modes'
 import type { ViewPadding } from '~/utils/realm/realm-renderer'
+import { REALM_STAGE, type ArmyBanner, type ArmyRoute } from '~/utils/realm/stage'
 
 definePageMeta({ layout: false })
 
@@ -33,8 +34,10 @@ const { data: posts } = await useAsyncData('realm-dispatches', () => queryCollec
 const dispatches = computed<Dispatch[]>(() => posts.value ?? [])
 const route = useRoute()
 const letters = useLetterRoutes()
-// Anywhere but the bare map, a letter or the letter case is open over it.
-const overLetters = computed(() => route.path !== '/')
+// Under /blog, a letter or the letter case is open over the map.
+const overLetters = computed(() => route.path.startsWith('/blog'))
+// At /play, Keystone is played on the map and the résumé steps aside.
+const playing = computed(() => /^\/play\/?$/.test(route.path))
 const openLetter = computed(() => dispatches.value.find(dispatch => dispatch.path === route.path) ?? null)
 const homeRealm: MapPick = { kind: 'realm', id: mapData.realms.find(realm => realm.code === HOME_REALM_CODE)!.id }
 
@@ -65,6 +68,26 @@ const pristine = computed(() => !lens.value && base.value === 'political' && !se
 const banner = useTemplateRef<ComponentPublicInstance>('banner')
 const modes = useTemplateRef<HTMLElement>('modes')
 const panel = useTemplateRef<HTMLElement>('panel')
+// The guided tour's stop, while it's on.
+const tourStop = ref<number | null>(null)
+const tourCard = useTemplateRef<ComponentPublicInstance>('tourCard')
+
+// What a game on the map paints and pins over it, in place of the map modes and towns.
+const gamePalette = shallowRef<MapModePalette | null>(null)
+const armies = shallowRef<ArmyBanner[]>([])
+const armyRoute = shallowRef<ArmyRoute | null>(null)
+const gameSelected = shallowRef<MapPick | null>(null)
+const gamePick = shallowRef<((pick: MapPick | null) => void) | null>(null)
+provide(REALM_STAGE, {
+  ready: computed(() => status.value === 'ready'),
+  palette: gamePalette,
+  armies,
+  route: armyRoute,
+  selected: gameSelected,
+  onPick: gamePick,
+})
+const palette = computed(() => gamePalette.value ?? mapModePalette(base.value, lens.value))
+const markers = computed<((typeof townMarkers)[number] | ArmyBanner)[]>(() => (playing.value ? armies.value : townMarkers))
 
 const unreadCount = computed(() => dispatches.value.filter(dispatch => !read.value.has(dispatch.path)).length)
 
@@ -73,8 +96,9 @@ const unreadCount = computed(() => dispatches.value.filter(dispatch => !read.val
 // otherwise cover most of it. Flights land clear of the place panel while it's open.
 function viewPadding(): ViewPadding {
   const gap = 16
-  // Once nothing is selected the panel is only fading out.
-  const open = selectedPlace.value ? panel.value?.getBoundingClientRect() : undefined
+  // Once nothing is selected the panel is only fading out. The tour's card takes its place.
+  const card = tourStop.value === null ? selectedPlace.value && panel.value : tourCard.value?.$el as HTMLElement | undefined
+  const open = card ? card.getBoundingClientRect() : undefined
   if (window.innerWidth >= 640) {
     const x = Math.round(window.innerWidth * 0.07)
     const y = Math.round(window.innerHeight * 0.09)
@@ -131,6 +155,12 @@ function onHover(pick: MapPick | null, x: number, y: number) {
 }
 
 async function onSelect(pick: MapPick | null) {
+  if (playing.value) return gamePick.value?.(pick)
+  // On the tour, a stray click keeps the stop; picking another place leaves the tour.
+  if (tourStop.value !== null) {
+    if (!pick || (pick.kind === selected.value?.kind && pick.id === selected.value.id)) return
+    tourStop.value = null
+  }
   selected.value = pick
   if (pick?.kind !== 'county') return
   // Let the panel open first, so the flight lands clear of it.
@@ -141,6 +171,7 @@ async function onSelect(pick: MapPick | null) {
 // Fly to a town and select its county. The record unrolls once the camera lands, unless
 // the visitor has moved on by then (a flight that's interrupted never lands).
 async function travel(town: HeldTown, holding = town.holdings[0]!) {
+  tourStop.value = null
   const county = countyByFips(town.fips)
   selected.value = county ? { kind: 'county', id: county.id } : null
   await nextTick()
@@ -170,6 +201,26 @@ function visit(holding: Holding) {
   if (town) travel(town, holding)
 }
 
+// The guided tour: each stop flies to its town in its lens, oldest first.
+async function goToStop(index: number) {
+  const stop = journey[index]
+  if (!stop) return
+  tourStop.value = index
+  sheetOpen.value = false
+  lens.value = stop.holding.kind === 'schooling' ? 'education' : 'career'
+  const county = countyByFips(stop.town.fips)
+  selected.value = county ? { kind: 'county', id: county.id } : null
+  // Let the card show first, so the flight lands clear of it.
+  await nextTick()
+  map.value?.flyTo(locate(stop.town.at))
+}
+
+function endTour() {
+  if (tourStop.value === null) return
+  tourStop.value = null
+  selected.value = null
+}
+
 function openRecord(holding: Holding) {
   const queue = heldTown(holding.town)?.holdings ?? [holding]
   records.value = { queue, index: Math.max(0, queue.indexOf(holding)) }
@@ -192,6 +243,7 @@ function paintRecordPlate(canvas: HTMLCanvasElement, holding: Holding) {
 
 // Back to how the map opened: Political, no lens, nothing selected, the realm in view.
 function clearMap() {
+  tourStop.value = null
   lens.value = null
   base.value = 'political'
   selected.value = null
@@ -228,14 +280,28 @@ watch(overLetters, (open) => {
   closeDispatches()
   closeRecord()
   sheetOpen.value = false
+  endTour()
+})
+
+// Entering the game clears the résumé off the map and flies back to the opening view.
+watch(playing, (entered) => {
+  if (!entered) return
+  closeDispatches()
+  closeRecord()
+  sheetOpen.value = false
+  tourStop.value = null
+  lens.value = null
+  selected.value = null
+  map.value?.resetView()
 })
 
 function onKeydown(event: KeyboardEvent) {
-  if (event.key !== 'Escape') return
+  if (event.key !== 'Escape' || playing.value) return
   if (overLetters.value) letters.close()
   else if (activeDispatch.value) closeDispatches()
   else if (activeRecord.value) closeRecord()
   else if (sheetOpen.value) sheetOpen.value = false
+  else if (tourStop.value !== null) endTour()
   else selected.value = null
 }
 
@@ -256,20 +322,20 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
 </script>
 
 <template>
-  <div class="realm">
+  <main class="realm">
     <!-- First stop for the keyboard and screen readers, and a way in for crawlers: the
          map itself is a canvas. -->
     <NuxtLink to="/about" class="realm-skip">Skip the map for the plain pages</NuxtLink>
     <!-- An open letter has its own title. -->
-    <h1 v-if="!openLetter" class="sr-only">Mitchell Ponchione — a map of the realm</h1>
+    <h1 v-if="!openLetter && !playing" class="sr-only">Mitchell Ponchione — a map of the realm</h1>
 
     <RealmMap
       ref="map"
-      :base="base"
-      :lens="lens"
-      :selected="selected"
+      :palette="palette"
+      :selected="playing ? gameSelected : selected"
       :view-padding="viewPadding"
-      :markers="townMarkers"
+      :markers="markers"
+      :route="playing ? armyRoute : null"
       @hover="onHover"
       @select="onSelect"
       @away="(value) => away = value"
@@ -278,6 +344,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     >
       <template #marker="{ marker }">
         <RealmTown
+          v-if="'town' in marker"
           :town="marker.town"
           :color="marker.color"
           :lit="lens === marker.lens"
@@ -285,6 +352,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
           :active="selected?.kind === 'county' && selected.id === marker.county"
           @visit="travel(marker.town)"
         />
+        <!-- Only /play has armies, so the home page never loads their code. -->
+        <LazyKeystoneArmy v-else :banner="marker" />
       </template>
     </RealmMap>
 
@@ -298,7 +367,8 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       </div>
     </Transition>
 
-    <div class="realm-left">
+    <Transition name="slide-left">
+    <div v-if="!playing" class="realm-left">
       <RealmCharacterBanner
         ref="banner"
         :dispatch-count="dispatches.length"
@@ -308,7 +378,16 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       />
 
       <Transition name="fade">
-        <aside v-if="selectedPlace" ref="panel" class="realm-panel" aria-live="polite">
+        <RealmTour
+          v-if="tourStop !== null"
+          ref="tourCard"
+          :stops="journey"
+          :index="tourStop"
+          @go="goToStop"
+          @record="openRecord"
+          @close="endTour"
+        />
+        <aside v-else-if="selectedPlace" ref="panel" class="realm-panel" aria-live="polite">
         <button class="realm-close" type="button" aria-label="Close" @click="selected = null">×</button>
         <h2 class="realm-panel-title">{{ selectedPlace.name }}</h2>
         <p class="realm-muted">
@@ -337,24 +416,46 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
         </aside>
       </Transition>
     </div>
+    </Transition>
 
     <RealmCharacterSheet v-if="sheetOpen" @close="sheetOpen = false" @visit="visit" />
 
     <div
-      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters"
+      v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters && (!playing || hovered?.kind === 'county')"
       class="realm-tooltip"
+      :class="{ 'realm-tooltip-play': playing }"
       :style="tooltipStyle"
       aria-hidden="true"
     >
       <p class="realm-tooltip-title">{{ hoveredPlace.name }}</p>
       <p class="realm-muted">{{ hoveredPlace.kind }}</p>
-      <p v-if="hoveredPlace.holdings.length" class="realm-tooltip-holdings">
+      <p v-if="hoveredPlace.holdings.length && !playing" class="realm-tooltip-holdings">
         {{ plural(hoveredPlace.holdings.length, 'holding', 'holdings') }}
       </p>
     </div>
 
     <!-- The lenses are the point of the map; the base map is a quieter setting beside them. -->
-    <div ref="modes" class="realm-dock">
+    <Transition name="slide-down">
+    <div v-if="!playing" ref="modes" class="realm-dock">
+      <!-- The guided tour: schooling to the current post, stop by stop. -->
+      <div class="realm-lenses realm-tour-start">
+        <button
+          type="button"
+          class="realm-lens"
+          style="--lens: var(--ink)"
+          :aria-pressed="tourStop !== null"
+          aria-description="Follow the road from schooling to the current post"
+          @click="tourStop === null ? goToStop(0) : endTour()"
+        >
+          <span class="realm-lens-seal">
+            <Route class="size-[18px]" aria-hidden="true" />
+          </span>
+          <span class="realm-lens-text">
+            <span class="realm-lens-label">Tour</span>
+            <span class="realm-lens-summary">{{ journey[0]!.year }} – now · {{ plural(journey.length, 'stop', 'stops') }}</span>
+          </span>
+        </button>
+      </div>
       <div class="realm-lenses" role="group" aria-label="Show on the map">
         <button
           v-for="option in LENSES"
@@ -401,8 +502,11 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
         </div>
       </div>
     </div>
+    </Transition>
 
-    <p class="realm-controls" aria-hidden="true">Drag or WASD to move · Scroll to zoom · Click a town or county</p>
+    <Transition name="fade">
+      <p v-if="!playing" class="realm-controls" aria-hidden="true">Drag or WASD to move · Scroll to zoom · Click a town or county</p>
+    </Transition>
 
     <RealmDispatch
       v-if="activeDispatch && map"
@@ -426,9 +530,9 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       @close="closeRecord"
     />
 
-    <!-- A letter (/blog/<slug>) or the letter case (/blog), over the map. -->
+    <!-- A letter (/blog/<slug>) or the letter case (/blog), or Keystone (/play), over the map. -->
     <NuxtPage :transition="{ name: 'letter', mode: 'out-in' }" :dispatches="dispatches" :read="read" />
-  </div>
+  </main>
 </template>
 
 <style scoped>
@@ -472,7 +576,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   gap: 12px;
   width: 380px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   pointer-events: none;
 }
 
@@ -659,6 +763,14 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   font-size: 15px;
   letter-spacing: 0.05em;
   color: var(--gold);
+}
+
+/* In the game a tap selects the county and its panel names it; a touch screen's
+   tooltip would only cover the map. */
+@media (hover: none) {
+  .realm-tooltip-play {
+    display: none;
+  }
 }
 
 .realm-tooltip-holdings {
@@ -896,6 +1008,26 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   opacity: 0;
 }
 
+/* The résumé stepping aside for the game, off the edges it sits on, and back. */
+.slide-left-enter-active,
+.slide-left-leave-active,
+.slide-down-enter-active,
+.slide-down-leave-active {
+  transition: opacity 500ms ease, transform 500ms ease;
+}
+
+.slide-left-enter-from,
+.slide-left-leave-to {
+  opacity: 0;
+  transform: translateX(-40px);
+}
+
+.slide-down-enter-from,
+.slide-down-leave-to {
+  opacity: 0;
+  transform: translateY(40px);
+}
+
 @media (max-width: 640px) {
   .realm-left {
     top: 10px;
@@ -925,6 +1057,35 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     flex: 1;
   }
 
+  /* On phones the tour shrinks to a small button level with Clear, so the lenses keep
+     the row. */
+  .realm-tour-start {
+    position: absolute;
+    top: 0;
+    left: 0;
+    padding: 3px;
+  }
+
+  .realm-tour-start .realm-lens {
+    gap: 6px;
+    padding: 2px 10px 2px 3px;
+  }
+
+  .realm-tour-start .realm-lens-seal {
+    width: 22px;
+    height: 22px;
+  }
+
+  .realm-tour-start .realm-lens-seal svg {
+    width: 13px;
+    height: 13px;
+  }
+
+  .realm-tour-start .realm-lens-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+  }
+
   .realm-lens {
     flex: 1;
     gap: 8px;
@@ -951,7 +1112,19 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   }
 }
 
-@media (max-width: 900px) {
+/* Between phones and wider windows the full dock doesn't fit; the tour is its seal. */
+@media (min-width: 641px) and (max-width: 760px) {
+  .realm-tour-start .realm-lens {
+    padding: 7px;
+  }
+
+  .realm-tour-start .realm-lens-text {
+    display: none;
+  }
+}
+
+/* Hidden once the dock would run into it. */
+@media (max-width: 1100px) {
   .realm-controls {
     display: none;
   }
@@ -960,6 +1133,10 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
 @media (prefers-reduced-motion: reduce) {
   .fade-enter-active,
   .fade-leave-active,
+  .slide-left-enter-active,
+  .slide-left-leave-active,
+  .slide-down-enter-active,
+  .slide-down-leave-active,
   .realm-lens,
   .realm-lens-seal,
   .realm-base-tip,

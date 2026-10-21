@@ -34,6 +34,9 @@ const COUNTY_LABEL_FADE = [52, 36] as const
 const HOME_LABEL_FADE = [40, 62] as const
 const LABEL_FONT = '"Cinzel", "Cormorant SC", Georgia, serif'
 const GROUND = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0)
+// Input on the map that can change what it shows. Listened for in the capture phase,
+// which also catches pointerleave, an event that does not bubble.
+const WAKE_EVENTS = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel', 'pointerleave', 'wheel'] as const
 
 export type RealmRendererCallbacks = {
   onHover: (pick: MapPick | null, clientX: number, clientY: number) => void
@@ -46,8 +49,29 @@ export type ViewPadding = { top: number, right: number, bottom: number, left: nu
 
 // An element to keep pinned over a spot on the map (normalized map coordinates, as the
 // label anchors are). Its transform, visibility, --marker-scale and data-near are the
-// renderer's to set.
-export type MapMarker = { element: HTMLElement, at: readonly [number, number] }
+// renderer's to set. With `glide` (ms), an element already pinned walks from where it
+// stands to its new spot instead of jumping there.
+export type MapMarker = { element: HTMLElement, at: readonly [number, number], glide?: number }
+
+// A line drawn over the map through spots (normalized map coordinates), as SVG
+// polylines the renderer keeps in place. With `follow`, the line starts wherever that
+// marker's element stands, so it stays attached while the marker glides.
+export type MapRoute = {
+  lines: SVGPolylineElement[]
+  end: SVGGraphicsElement | null // moved onto the last spot
+  at: readonly (readonly [number, number])[]
+  follow: HTMLElement | null
+}
+
+type PlacedMarker = {
+  element: HTMLElement
+  x: number
+  z: number
+  from: { x: number, z: number, start: number, duration: number } | null
+  transform: string
+  scale: string
+  near: boolean | null
+}
 
 type PixelBox = { minX: number, maxX: number, minY: number, maxY: number }
 
@@ -154,6 +178,7 @@ export class RealmRenderer {
     uRelief: { value: null as THREE.Texture | null },
     uCountyColors: { value: dataTexture(new Uint8Array(256 * 4), 256, 1, THREE.NearestFilter) },
     uRealmColors: { value: dataTexture(new Uint8Array(256 * 4), 256, 1, THREE.NearestFilter) },
+    uCountyGroups: { value: dataTexture(new Uint8Array(256 * 4), 256, 1, THREE.NearestFilter) },
     uHomeRealm: { value: mapData.realms.find(realm => realm.code === HOME_REALM_CODE)?.id ?? 1 },
     uHoverCounty: { value: -1 },
     uHoverRealm: { value: -1 },
@@ -204,13 +229,15 @@ export class RealmRenderer {
     // Told whether the camera landed (true) or was interrupted on the way.
     settle: (landed: boolean) => void
   } | null = null
-  private markers: { element: HTMLElement, x: number, z: number, transform: string, scale: string, near: boolean | null }[] = []
+  private markers: PlacedMarker[] = []
+  private route: (MapRoute & { points: string, endTransform: string }) | null = null
   private readonly scratch = new THREE.Vector3()
   private hoverAt: { x: number, y: number } | null = null
   private mouse: { x: number, y: number } | null = null
   private hovered: MapPick | null = null
 
   private frame = 0
+  private loaded = false
   private lastTime = 0
   private time = 0
   private disposed = false
@@ -276,11 +303,20 @@ export class RealmRenderer {
       fragmentShader: terrainFragmentShader,
     })
     this.scene.add(new THREE.Mesh(geometry, material))
-    this.disposables.push(provinces, fields, relief, geometry, material, this.uniforms.uCountyColors.value, this.uniforms.uRealmColors.value)
+    this.disposables.push(provinces, fields, relief, geometry, material, this.uniforms.uCountyColors.value, this.uniforms.uRealmColors.value, this.uniforms.uCountyGroups.value)
 
     this.buildLabels()
     this.attachEvents()
     this.fitHome()
+    this.loaded = true
+    this.wake()
+  }
+
+  // Draw a frame soon. With motion reduced nothing on the map moves by itself, so the
+  // frames stop once it settles and start again when something changes: input, a resize
+  // or a call from the page.
+  private wake = () => {
+    if (this.frame || this.disposed || !this.loaded) return
     this.lastTime = performance.now()
     this.frame = requestAnimationFrame(this.tick)
   }
@@ -292,12 +328,19 @@ export class RealmRenderer {
     ;(realms.image.data as Uint8Array).set(palette.realms)
     counties.needsUpdate = true
     realms.needsUpdate = true
+    const groups = this.uniforms.uCountyGroups.value
+    const groupData = groups.image.data as Uint8Array
+    groupData.fill(0)
+    palette.groups?.forEach((group, id) => (groupData[id * 4] = group))
+    groups.needsUpdate = true
     this.uniforms.uOverlay.value = palette.overlay
+    this.wake()
   }
 
   setSelected(pick: MapPick | null) {
     this.uniforms.uSelectedCounty.value = pick?.kind === 'county' ? pick.id : -1
     this.uniforms.uSelectedRealm.value = pick?.kind === 'realm' ? pick.id : -1
+    this.wake()
   }
 
   // Glide to a county or realm, or to a spot on the map (normalized map coordinates).
@@ -353,19 +396,47 @@ export class RealmRenderer {
 
   // Keep these elements pinned over their spots as the camera moves.
   setMarkers(markers: MapMarker[]) {
-    this.markers = markers.map(({ element, at }) => ({
-      element,
-      x: (at[0] - 0.5) * MAP_WIDTH,
-      z: (at[1] - 0.5) * MAP_DEPTH,
-      transform: '',
-      scale: '',
-      near: null,
-    }))
+    const now = performance.now()
+    const before = new Map(this.markers.map(marker => [marker.element, marker]))
+    this.markers = markers.map(({ element, at, glide }) => {
+      const x = (at[0] - 0.5) * MAP_WIDTH
+      const z = (at[1] - 0.5) * MAP_DEPTH
+      const old = before.get(element)
+      // A glide starts from wherever the marker stands now, even mid-glide.
+      const from = old && glide && !this.options.reducedMotion ? this.spotOf(old, now) : null
+      const moves = from && Math.hypot(from.x - x, from.z - z) > 1e-4
+      return {
+        element,
+        x,
+        z,
+        from: moves ? { ...from, start: now, duration: glide! } : null,
+        transform: old?.transform ?? '',
+        scale: old?.scale ?? '',
+        near: old?.near ?? null,
+      }
+    })
+    this.wake()
+  }
+
+  // Keep this line drawn over the map, or none.
+  setRoute(route: MapRoute | null) {
+    this.route = route && { ...route, points: '', endTransform: '' }
+    this.placeRoute()
+    this.wake()
+  }
+
+  // Where a marker stands at a moment: on its spot, or on its way there.
+  private spotOf(marker: PlacedMarker, now: number) {
+    if (!marker.from) return { x: marker.x, z: marker.z }
+    const t = clamp((now - marker.from.start) / marker.from.duration, 0, 1)
+    if (t >= 1) marker.from = null
+    return { x: marker.from ? marker.from.x + (marker.x - marker.from.x) * t : marker.x, z: marker.from ? marker.from.z + (marker.z - marker.from.z) * t : marker.z }
   }
 
   // Long trips pull back mid-flight so you see where you're going, like a camera on a
   // crane.
   private flyToView(to: View): Promise<boolean> {
+    this.wake()
     this.setAway(true)
     this.endFlight(false)
     // Places near the edge of the map can't be centered without showing past it.
@@ -965,6 +1036,8 @@ export class RealmRenderer {
     window.addEventListener('keydown', this.onKeyDown)
     window.addEventListener('keyup', this.onKeyUp)
     window.addEventListener('blur', this.onBlur)
+    for (const name of WAKE_EVENTS) this.container.addEventListener(name, this.wake, { capture: true, passive: true })
+    for (const name of ['keydown', 'keyup', 'blur']) window.addEventListener(name, this.wake)
   }
 
   private detachEvents() {
@@ -978,6 +1051,8 @@ export class RealmRenderer {
     window.removeEventListener('keydown', this.onKeyDown)
     window.removeEventListener('keyup', this.onKeyUp)
     window.removeEventListener('blur', this.onBlur)
+    for (const name of WAKE_EVENTS) this.container.removeEventListener(name, this.wake, { capture: true })
+    for (const name of ['keydown', 'keyup', 'blur']) window.removeEventListener(name, this.wake)
   }
 
   private onPointerDown = (event: PointerEvent) => {
@@ -1112,6 +1187,7 @@ export class RealmRenderer {
     this.probe.updateProjectionMatrix()
     if (!this.away) this.fitHome()
     else this.limitZoom()
+    this.wake()
   }
 
   private placeCamera() {
@@ -1132,8 +1208,10 @@ export class RealmRenderer {
     const { clientWidth: width, clientHeight: height } = this.container
     const scale = (1 - (1 - MARKER_FAR_SCALE) * smoothstep(MARKER_SHRINK[0], MARKER_SHRINK[1], this.distance)).toFixed(3)
     const near = this.distance < MARKER_NEAR
+    const now = performance.now()
     for (const marker of this.markers) {
-      const point = this.scratch.set(marker.x, this.heightAt(marker.x, marker.z), marker.z).project(this.camera)
+      const spot = this.spotOf(marker, now)
+      const point = this.scratch.set(spot.x, this.heightAt(spot.x, spot.z), spot.z).project(this.camera)
       const x = ((point.x + 1) / 2) * width
       const y = ((1 - point.y) / 2) * height
       const shown = x > -80 && x < width + 80 && y > -20 && y < height + 120
@@ -1154,10 +1232,46 @@ export class RealmRenderer {
     }
   }
 
+  // Draw the route through its spots on the ground. Segments are cut where they pass
+  // behind the camera, which would otherwise project them back onto the screen.
+  private placeRoute() {
+    const route = this.route
+    if (!route || !this.heights.length) return
+    this.camera.updateMatrixWorld()
+    const { clientWidth: width, clientHeight: height } = this.container
+    const spots = route.at.map(([u, v]) => ({ x: (u - 0.5) * MAP_WIDTH, z: (v - 0.5) * MAP_DEPTH }))
+    const followed = route.follow && this.markers.find(marker => marker.element === route.follow)
+    if (followed && spots.length) spots[0] = this.spotOf(followed, performance.now())
+    const near = -this.camera.near * 2
+    const view = spots.map(({ x, z }) => new THREE.Vector3(x, this.heightAt(x, z), z).applyMatrix4(this.camera.matrixWorldInverse))
+    const screen = (p: THREE.Vector3) => {
+      const ndc = p.clone().applyMatrix4(this.camera.projectionMatrix)
+      return `${(((ndc.x + 1) / 2) * width).toFixed(1)},${(((1 - ndc.y) / 2) * height).toFixed(1)}`
+    }
+    const points: string[] = []
+    for (let i = 0; i < view.length; i++) {
+      const p = view[i]!
+      const previous = view[i - 1]
+      if (previous && (previous.z > near) !== (p.z > near)) points.push(screen(previous.clone().lerp(p, (near - previous.z) / (p.z - previous.z))))
+      if (p.z <= near) points.push(screen(p))
+    }
+    const joined = points.join(' ')
+    if (joined !== route.points) {
+      route.points = joined
+      for (const line of route.lines) line.setAttribute('points', joined)
+    }
+    const last = view[view.length - 1]
+    const endTransform = last && last.z <= near ? `translate(${screen(last).replace(',', 'px, ')}px)` : 'scale(0)'
+    if (route.end && endTransform !== route.endTransform) {
+      route.endTransform = endTransform
+      route.end.style.transform = endTransform
+    }
+  }
+
   private tick = (now: number) => {
     if (this.disposed) return
-    this.frame = requestAnimationFrame(this.tick)
-    const dt = Math.min(0.05, (now - this.lastTime) / 1000)
+    this.frame = 0
+    const dt = clamp((now - this.lastTime) / 1000, 0, 0.05)
     this.lastTime = now
 
     const speed = this.goal.distance * 0.9 * dt
@@ -1220,6 +1334,12 @@ export class RealmRenderer {
     }
 
     this.placeMarkers()
+    this.placeRoute()
     this.renderer.render(this.scene, this.camera)
+
+    const settling = Math.abs(this.goal.distance - this.distance) + Math.abs(this.goal.x - this.target.x) + Math.abs(this.goal.z - this.target.z) > 0.01
+    if (!this.options.reducedMotion || settling || this.keys.size || this.flight || this.markers.some(marker => marker.from)) {
+      this.frame = requestAnimationFrame(this.tick)
+    }
   }
 }
