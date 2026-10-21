@@ -11,6 +11,7 @@ describe('production edge worker', () => {
 
     expect(response.status).toBe(308)
     expect(response.headers.get('location')).toBe('https://ponchione.dev/blog/post?source=audit')
+    expect(response.headers.get('x-frame-options')).toBe('DENY')
     expect(assetsFetch).not.toHaveBeenCalled()
   })
 
@@ -24,6 +25,8 @@ describe('production edge worker', () => {
 
       expect(response.status).toBe(301)
       expect(response.headers.get('location')).toBe('https://ponchione.dev/blog/post?source=audit&x=%2F')
+      expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000')
+      expect(response.headers.get('x-content-type-options')).toBe('nosniff')
     }
     expect(assetsFetch).not.toHaveBeenCalled()
   })
@@ -38,7 +41,7 @@ describe('production edge worker', () => {
     expect(response.status).toBe(200)
   })
 
-  it('adds HSTS to HTTPS asset responses', async () => {
+  it('adds HSTS and the security headers to HTTPS asset responses', async () => {
     const assetsFetch = vi.fn().mockResolvedValue(new Response('page', {
       status: 200,
       headers: { 'Content-Type': 'text/html' },
@@ -49,6 +52,10 @@ describe('production edge worker', () => {
     expect(await response.text()).toBe('page')
     expect(response.headers.get('content-type')).toBe('text/html')
     expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000')
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(response.headers.get('x-frame-options')).toBe('DENY')
+    expect(response.headers.get('content-security-policy')).toBe('frame-ancestors \'none\'')
+    expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin')
     expect(assetsFetch).toHaveBeenCalledWith(request)
   })
 

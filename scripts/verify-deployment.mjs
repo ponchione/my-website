@@ -3,6 +3,22 @@ import assert from 'node:assert/strict'
 const secureBaseUrl = new URL(process.env.DEPLOYMENT_URL ?? 'https://ponchione.dev')
 assert.equal(secureBaseUrl.protocol, 'https:', 'DEPLOYMENT_URL must use HTTPS')
 
+// The Worker sends these with every response. The old apex is redirected by a Cloudflare
+// redirect rule before the Worker runs, so a zone response header rule sends them there.
+const SECURITY_HEADERS = {
+  'x-content-type-options': 'nosniff',
+  'x-frame-options': 'DENY',
+  'content-security-policy': 'frame-ancestors \'none\'',
+  'referrer-policy': 'strict-origin-when-cross-origin',
+  'permissions-policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
+}
+
+function assertSecurityHeaders(response, url) {
+  for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
+    assert.equal(response.headers.get(name), value, `${url.href} should send ${name}: ${value}`)
+  }
+}
+
 const representativePaths = [
   '/',
   '/projects?transport-check=1',
@@ -17,6 +33,7 @@ for (const path of representativePaths) {
   const response = await fetch(insecureUrl, { redirect: 'manual' })
   assert.ok([301, 308].includes(response.status), `${insecureUrl.href} should return a permanent redirect`)
   assert.equal(response.headers.get('location'), expectedUrl.href, `${insecureUrl.href} should preserve its path and query`)
+  assertSecurityHeaders(response, insecureUrl)
 }
 
 const oldOrigins = [
@@ -24,6 +41,7 @@ const oldOrigins = [
   'https://www.mitchellponchione.com',
   'http://www.mitchellponchione.com',
   'https://mitchellponchione.com',
+  'http://mitchellponchione.com',
 ]
 
 for (const origin of oldOrigins) {
@@ -34,6 +52,7 @@ for (const origin of oldOrigins) {
     assert.ok(hop < 3, `${oldUrl.href} should reach ${expectedUrl.href} within three redirects`)
     const response = await fetch(url, { redirect: 'manual' })
     assert.ok([301, 308].includes(response.status), `${url.href} should return a permanent redirect`)
+    assertSecurityHeaders(response, url)
     url = new URL(response.headers.get('location'), url)
   }
 }
@@ -45,5 +64,6 @@ const maxAge = Number(/(?:^|;)\s*max-age=(\d+)/i.exec(hsts)?.[1])
 assert.ok(secureResponse.ok, `${secureBaseUrl.href} should return a successful response`)
 assert.ok(Number.isFinite(maxAge) && maxAge >= 31_536_000, 'HTTPS responses should set HSTS for at least one year')
 assert.doesNotMatch(hsts, /includeSubDomains/i, 'HSTS should not include unverified subdomains')
+assertSecurityHeaders(secureResponse, secureBaseUrl)
 
-console.log('Production HTTPS redirect and HSTS verification passed.')
+console.log('Production HTTPS redirect, HSTS and security header verification passed.')
