@@ -7,6 +7,7 @@ import {
 } from '~/utils/keystone/engine'
 import type { MapPick } from '~/utils/realm/map-data'
 import { REALM_STAGE } from '~/utils/realm/stage'
+import { loadCampaign, saveCampaign, type Saved } from '~/utils/keystone/save'
 
 // Keystone, played on the map: the résumé has stepped aside (the map page hides it at
 // /play), the visitor picks a county for their house, the houses rise across
@@ -30,8 +31,12 @@ const FEED_LINES = 5
 const TERRAIN = { flat: 'Flat', hills: 'Hills', mountains: 'Mountains' } as const
 
 const game = shallowRef<GameState | null>(null)
-// Whether the prompt to choose a starting county is showing.
+// Whether the prompt to choose a starting county is showing, and the saved campaign it
+// offers first, if any.
 const choosing = ref(false)
+const saved = shallowRef<Saved>({ kind: 'none' })
+// Whether the end screen is open; closing it leaves the final map to look at.
+const endOpen = ref(false)
 // The order the houses claimed their counties in, and how many of those claims show.
 let claims: { house: number, county: number }[] = []
 const risen = ref(0)
@@ -48,8 +53,9 @@ let settle: ReturnType<typeof setTimeout> | undefined
 let timer: ReturnType<typeof setTimeout> | undefined
 let frame = 0
 
-// Back to the prompt: Pennsylvania unclaimed, waiting for a county.
-function choose() {
+// Back to the prompt: Pennsylvania unclaimed, waiting for a county. On arrival the
+// prompt first offers the saved campaign, if there is one.
+function choose(offerSave = false) {
   clearTimeout(timer)
   cancelAnimationFrame(frame)
   game.value = null
@@ -57,7 +63,25 @@ function choose() {
   selected.value = null
   marching.value = false
   notice.value = ''
+  endOpen.value = false
+  saved.value = offerSave ? loadCampaign() : { kind: 'none' }
   choosing.value = true
+}
+
+// The saved campaign, as it was left: paused, without the houses rising again.
+function resume() {
+  if (saved.value.kind !== 'saved') return
+  claims = []
+  risen.value = 0
+  game.value = saved.value.state
+  saved.value = { kind: 'none' }
+  choosing.value = false
+  paused.value = true
+  endOpen.value = !!game.value.ending
+}
+
+function save() {
+  if (game.value) saveCampaign(game.value)
 }
 
 // A new world with the visitor's house at `start` (or a random county), the houses
@@ -67,6 +91,7 @@ function begin(start: CountyId | null) {
   const seed = Math.floor(Math.random() * 2 ** 31)
   claims = found({ rng: seed }, seat).claims
   game.value = newGame(seed, seat)
+  save()
   choosing.value = false
   paused.value = true
   cancelAnimationFrame(frame)
@@ -92,8 +117,10 @@ function schedule() {
     const before = game.value!
     const after = step(before)
     game.value = after
+    save()
     const war = after.player === null ? undefined : warOf(after, after.player)
     if (after.ending || (war && war.defender === after.player && !warOf(before, after.player!))) paused.value = true
+    if (after.ending) endOpen.value = true
     schedule()
   }, SPEEDS[speed.value])
 }
@@ -127,7 +154,7 @@ function refusal(order: Order) {
 function onPick(pick: MapPick | null) {
   const c = pick?.kind === 'county' && COUNTY_IDS.includes(pick.id) ? pick.id : null
   if (!game.value) {
-    if (choosing.value && c !== null) begin(c)
+    if (choosing.value && saved.value.kind === 'none' && c !== null) begin(c)
     return
   }
   if (rising.value) return
@@ -247,6 +274,34 @@ const ending = computed(() => {
   return `The age ends. Your score: ${score(s, s.player!)}`
 })
 
+// The end screen: the outcome, the score at 1250, and the whole chronicle in order.
+const finale = computed(() => {
+  const s = game.value
+  const end = s?.ending
+  if (!s || !end || s.player === null) return null
+  const me = s.houses[s.player]!
+  const held = holdings(s, s.player).length
+  const outcomes = {
+    united: { kicker: 'Victory', title: 'You unite Pennsylvania', lead: `${me.name} holds all 67 counties. Its ruler is King of Pennsylvania.` },
+    fallen: { kicker: 'Defeat', title: 'Your house has fallen', lead: `${me.name} has lost its last county.` },
+    time: { kicker: 'The age ends', title: `Your score: ${score(s, s.player)}`, lead: `${me.name} reaches 1250 as a ${rank(s, s.player)} with ${held} ${held === 1 ? 'county' : 'counties'}.` },
+  }
+  return {
+    ...outcomes[end.kind],
+    date: dateOf(end.month),
+    lines: s.chronicle.map((entry, index) => ({ key: index, date: entryDate(entry), parts: chronicleLine(s, entry) })),
+  }
+})
+
+// What the prompt says about the saved campaign.
+const savedCampaign = computed(() => {
+  const save = saved.value
+  if (save.kind !== 'saved') return null
+  const s = save.state
+  const me = s.player === null ? null : s.houses[s.player]
+  return `${me?.name ?? 'The houses'}, ${s.ending ? 'ended ' : ''}${dateOf(s.month)}.`
+})
+
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 
 function togglePause() {
@@ -258,6 +313,10 @@ function togglePause() {
 // to it.
 function onKeydown(event: KeyboardEvent) {
   if (event.metaKey || event.ctrlKey || event.altKey || rising.value) return
+  if (event.key === 'Escape' && endOpen.value) {
+    endOpen.value = false
+    return
+  }
   if (event.target instanceof HTMLElement && event.target.closest('input, textarea, select, [contenteditable], [aria-modal="true"]')) return
   if (event.key === 'Escape') {
     if (marching.value) marching.value = false
@@ -301,14 +360,18 @@ onMounted(() => {
   })
   stage.onPick.value = onPick
   window.addEventListener('keydown', onKeydown)
+  // A reload or a closed tab never unmounts the page, so save as it goes.
+  window.addEventListener('pagehide', save)
   // Someone who opened /play directly waits for the map to be drawn first.
   watch(stage.ready, (ready) => {
-    if (ready && !game.value && !settle) settle = setTimeout(choose, SETTLE_MS)
+    if (ready && !game.value && !settle) settle = setTimeout(() => choose(true), SETTLE_MS)
   }, { immediate: true })
 })
 
 onBeforeUnmount(() => {
+  save()
   window.removeEventListener('keydown', onKeydown)
+  window.removeEventListener('pagehide', save)
   clearTimeout(settle)
   clearTimeout(timer)
   cancelAnimationFrame(frame)
@@ -326,12 +389,30 @@ onBeforeUnmount(() => {
     <Transition name="keystone-fade">
       <section v-if="choosing && !game" class="keystone-panel keystone-prompt" aria-label="Choose where your house begins">
         <p class="keystone-title">Keystone</p>
-        <p class="keystone-prompt-lead">Choose where your house begins.</p>
-        <p class="keystone-muted">Click a county on the map. Eight other houses rise around yours.</p>
-        <div class="keystone-prompt-actions">
-          <button type="button" class="keystone-action" @click="begin(null)">Let fate decide</button>
-          <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
-        </div>
+        <template v-if="savedCampaign">
+          <p class="keystone-prompt-lead">A campaign is saved.</p>
+          <p class="keystone-muted">{{ savedCampaign }}</p>
+          <div class="keystone-prompt-actions">
+            <button type="button" class="keystone-action" @click="resume">Continue</button>
+            <button type="button" class="keystone-action" @click="choose()">New campaign</button>
+          </div>
+        </template>
+        <template v-else-if="saved.kind === 'old'">
+          <p class="keystone-prompt-lead">This campaign was begun under older laws.</p>
+          <p class="keystone-muted">It can't be continued.</p>
+          <div class="keystone-prompt-actions">
+            <button type="button" class="keystone-action" @click="choose()">New campaign</button>
+            <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
+          </div>
+        </template>
+        <template v-else>
+          <p class="keystone-prompt-lead">Choose where your house begins.</p>
+          <p class="keystone-muted">Click a county on the map. Eight other houses rise around yours.</p>
+          <div class="keystone-prompt-actions">
+            <button type="button" class="keystone-action" @click="begin(null)">Let fate decide</button>
+            <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
+          </div>
+        </template>
       </section>
     </Transition>
 
@@ -393,7 +474,7 @@ onBeforeUnmount(() => {
           </li>
         </ol>
         <footer class="keystone-houses-foot">
-          <button type="button" class="keystone-action" @click="choose">New campaign</button>
+          <button type="button" class="keystone-action" @click="choose()">New campaign</button>
           <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
         </footer>
       </section>
@@ -425,7 +506,7 @@ onBeforeUnmount(() => {
             />
           </div>
         </div>
-        <p v-if="ending" class="keystone-ending">{{ ending }}</p>
+        <button v-if="ending" type="button" class="keystone-ending" @click="endOpen = true">{{ ending }}</button>
         <p v-else-if="paused" class="keystone-paused">Paused</p>
       </div>
     </Transition>
@@ -488,6 +569,35 @@ onBeforeUnmount(() => {
         </ol>
       </section>
     </Transition>
+
+    <RealmEvent
+      v-if="finale && endOpen"
+      class="keystone-end"
+      :kicker="`${finale.kicker} · ${finale.date}`"
+      :title="finale.title"
+      described-by="keystone-end-lead"
+      wide
+      @close="endOpen = false"
+    >
+      <p id="keystone-end-lead" class="keystone-end-lead">{{ finale.lead }}</p>
+      <h3 class="keystone-end-rule"><span>The chronicle</span></h3>
+      <ol class="keystone-end-chronicle">
+        <li v-for="line in finale.lines" :key="line.key">
+          <span class="keystone-entry-date">{{ line.date }}</span>
+          <span>
+            <template v-for="(part, index) in line.parts" :key="index">
+              <span v-if="part.house !== undefined" class="keystone-entry-house" :style="{ '--house': houseColor(part.house) }">{{ part.text }}</span>
+              <template v-else>{{ part.text }}</template>
+            </template>.
+          </span>
+        </li>
+        <li v-if="!finale.lines.length" class="keystone-muted">Nothing worth recording happened.</li>
+      </ol>
+      <template #options>
+        <button type="button" class="realm-event-option realm-event-option-primary" @click="choose()">New campaign</button>
+        <a href="/" class="realm-event-option" @click="returnToMap">Return to the map</a>
+      </template>
+    </RealmEvent>
   </div>
 </template>
 
@@ -835,6 +945,69 @@ onBeforeUnmount(() => {
   color: var(--ink);
 }
 
+/* The ending, in the ticker, reopens the end screen. */
+button.keystone-ending {
+  text-decoration: underline;
+  text-decoration-color: var(--gold-dim);
+  text-underline-offset: 3px;
+}
+
+button.keystone-ending:hover,
+button.keystone-ending:focus-visible {
+  color: var(--gold);
+  outline: none;
+}
+
+/* The end screen, in the event pop-up's frame, over the whole map. */
+.keystone-end {
+  z-index: 2;
+  pointer-events: auto;
+}
+
+.keystone-end-lead {
+  margin-top: 8px;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.keystone-end-rule {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 16px 0 8px;
+  font-family: Cinzel, Georgia, serif;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.keystone-end-rule::before,
+.keystone-end-rule::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+
+/* The whole chronicle, oldest first, scrolling inside the frame. */
+.keystone-end-chronicle {
+  display: grid;
+  gap: 3px;
+  max-height: min(340px, calc(100vh - 340px));
+  min-height: 80px;
+  overflow-y: auto;
+  padding-right: 6px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+
+.keystone-end-chronicle li {
+  display: flex;
+  gap: 10px;
+}
+
 /* Bottom left: the latest lines of the chronicle, newest first. */
 .keystone-chronicle {
   left: 16px;
@@ -1037,6 +1210,10 @@ onBeforeUnmount(() => {
     right: 10px;
     bottom: 10px;
     width: auto;
+    font-size: 13px;
+  }
+
+  .keystone-end-chronicle {
     font-size: 13px;
   }
 

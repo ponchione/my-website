@@ -4,6 +4,7 @@ import {
   COUNTY_IDS, RULES, apply, county, maxLevy, newGame, step,
   type CountyId, type GameState, type Order,
 } from '../app/utils/keystone/engine.ts'
+import { SAVE_KEY, SAVE_VERSION, loadCampaign, saveCampaign } from '../app/utils/keystone/save.ts'
 
 const byName = (name: string) => COUNTY_IDS.find(c => county(c).name === name)!
 const borders = (a: string, b: string) => county(byName(a)).neighbors.includes(byName(b))
@@ -191,5 +192,41 @@ describe('orders', () => {
     expect(s.owner[target]).toBe(0)
     expect(s.wars.find(w => w.attacker === 0)!.taken).toEqual([s.development[target], 0])
     expect(s.chronicle).toContainEqual({ month: 2, kind: 'taken', house: 0, other: enemy, county: target })
+  })
+})
+
+describe('saves', () => {
+  const memory = () => {
+    const items = new Map<string, string>()
+    return { getItem: (k: string) => items.get(k) ?? null, setItem: (k: string, v: string) => void items.set(k, v) }
+  }
+
+  it('continues a loaded campaign exactly as an uninterrupted one, dice included', () => {
+    let s = newGame(21, byName('Erie'))
+    s = apply(s, { kind: 'raise', house: 0, county: byName('Erie') })
+    s = play(s, 137)
+    const store = memory()
+    expect(saveCampaign(s, store)).toBe(true)
+    const loaded = loadCampaign(store)
+    expect(loaded.kind).toBe('saved')
+    if (loaded.kind !== 'saved') return
+    expect(loaded.state.rng).toBe(s.rng)
+    expect(play(loaded.state, RULES.months)).toEqual(play(s, RULES.months))
+  })
+
+  it('reports older saves and shrugs off broken or missing storage', () => {
+    const store = memory()
+    expect(loadCampaign(store)).toEqual({ kind: 'none' })
+    store.setItem(SAVE_KEY, JSON.stringify({ version: SAVE_VERSION - 1, savedAt: 0, state: {} }))
+    expect(loadCampaign(store)).toEqual({ kind: 'old' })
+    for (const junk of ['{', 'null', '42', JSON.stringify({ version: SAVE_VERSION, state: { month: 3 } })]) {
+      store.setItem(SAVE_KEY, junk)
+      expect(loadCampaign(store), junk).toEqual({ kind: 'none' })
+    }
+    const refusing = { getItem: () => { throw new Error('denied') }, setItem: () => { throw new Error('full') } }
+    expect(loadCampaign(refusing)).toEqual({ kind: 'none' })
+    expect(saveCampaign(newGame(1, null), refusing)).toBe(false)
+    expect(loadCampaign(null)).toEqual({ kind: 'none' })
+    expect(saveCampaign(newGame(1, null), null)).toBe(false)
   })
 })

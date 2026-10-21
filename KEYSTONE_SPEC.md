@@ -7,8 +7,12 @@ slice is in: `/play` asks for a starting county (or Let fate decide), your house
 against eight computer houses, the top-left panel summarizes your house, and the
 bottom-right county panel gives Develop, Raise levies here or Disband, March here,
 Declare war and Offer (or Accept) peace; Move the army, then a click on a county, also
-marches. The map page passes its clicks and selection through `REALM_STAGE`. Saves and
-the end screens are next. The map build writes each county's neighbors, development and
+marches. The map page passes its clicks and selection through `REALM_STAGE`. The
+campaign autosaves (`app/utils/keystone/save.ts`) at each new month, on leaving `/play`
+and on `pagehide`; arriving at `/play` with a save offers Continue or New campaign. The
+end screen (victory, defeat or the 1250 score) uses the event pop-up frame; closing it
+leaves the final map, and the ending in the date panel reopens it. Phase 3 is done;
+rulers and events (phase 4) are next. The map build writes each county's neighbors, development and
 terrain to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with
 tests in `tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`,
 which meets every target (see Testing). The numbers below are the tuned ones.
@@ -22,8 +26,7 @@ houses top left, the date, pause and speeds (Space, 1–3) top right and the chr
 bottom left. Display code is `app/utils/keystone/display.ts`; the banner marker is
 `KeystoneArmy.vue`. Two departures from "How it fits": the résumé UI still lives in
 `index.vue`, hidden by `v-if`, rather than in its own component (the guided tour landed
-there at the same time; do the split when it pays for itself), and the campaign isn't
-saved yet (phase 3). `verify-generated.mjs` checks that the home page loads no engine
+there at the same time; do the split when it pays for itself). `verify-generated.mjs` checks that the home page loads no engine
 code.
 
 ## What it is
