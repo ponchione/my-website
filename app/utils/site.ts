@@ -1,4 +1,4 @@
-export const SITE_URL = 'https://www.mitchellponchione.com'
+export const SITE_URL = 'https://ponchione.dev'
 
 export const STATIC_ROUTE_PATHS = ['/', '/about', '/work-history', '/projects', '/blog', '/play'] as const
 

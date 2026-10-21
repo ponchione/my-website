@@ -44,7 +44,7 @@ async function verifyDirectRoutes(browser) {
     assert.equal(await page.title(), route.title, `${route.path} title`)
     assert.equal(
       await page.locator('link[rel="canonical"]').getAttribute('href'),
-      `https://www.mitchellponchione.com${route.path}`,
+      `https://ponchione.dev${route.path}`,
       `${route.path} canonical URL`,
     )
     assert.ok((await page.locator('main').innerText()).trim().length > 30, `${route.path} should render useful content`)
