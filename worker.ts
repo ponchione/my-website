@@ -1,4 +1,8 @@
 const HSTS_POLICY = 'max-age=31536000'
+const PRIMARY_HOST = 'ponchione.dev'
+// Hosts that permanently redirect to the primary domain. workers.dev and preview URLs
+// keep serving the site so deployments can still be checked before they go live.
+const REDIRECT_HOSTS = new Set(['www.ponchione.dev', 'mitchellponchione.com', 'www.mitchellponchione.com'])
 
 // Nuxt fingerprints its build output, so those files never change (except the build
 // manifest, which says which build is current). The map's textures keep their names
@@ -19,6 +23,13 @@ type Environment = {
 export default {
   async fetch(request: Request, environment: Environment): Promise<Response> {
     const url = new URL(request.url)
+
+    if (REDIRECT_HOSTS.has(url.hostname)) {
+      url.protocol = 'https:'
+      url.hostname = PRIMARY_HOST
+      url.port = ''
+      return Response.redirect(url, 301)
+    }
 
     if (url.protocol === 'http:') {
       url.protocol = 'https:'

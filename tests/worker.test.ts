@@ -5,13 +5,37 @@ describe('production edge worker', () => {
   it('permanently redirects HTTP while preserving path and query parameters', async () => {
     const assetsFetch = vi.fn()
     const response = await worker.fetch(
-      new Request('http://www.mitchellponchione.com/blog/post?source=audit'),
+      new Request('http://ponchione.dev/blog/post?source=audit'),
       { ASSETS: { fetch: assetsFetch } },
     )
 
     expect(response.status).toBe(308)
-    expect(response.headers.get('location')).toBe('https://www.mitchellponchione.com/blog/post?source=audit')
+    expect(response.headers.get('location')).toBe('https://ponchione.dev/blog/post?source=audit')
     expect(assetsFetch).not.toHaveBeenCalled()
+  })
+
+  it('permanently redirects the old and www domains to the primary domain in one hop', async () => {
+    const assetsFetch = vi.fn()
+    for (const origin of ['https://www.mitchellponchione.com', 'http://mitchellponchione.com', 'https://www.ponchione.dev']) {
+      const response = await worker.fetch(
+        new Request(`${origin}/blog/post?source=audit&x=%2F`),
+        { ASSETS: { fetch: assetsFetch } },
+      )
+
+      expect(response.status).toBe(301)
+      expect(response.headers.get('location')).toBe('https://ponchione.dev/blog/post?source=audit&x=%2F')
+    }
+    expect(assetsFetch).not.toHaveBeenCalled()
+  })
+
+  it('serves preview hosts without redirecting them', async () => {
+    const assetsFetch = vi.fn().mockResolvedValue(new Response('page'))
+    const response = await worker.fetch(
+      new Request('https://my-website.example.workers.dev/about'),
+      { ASSETS: { fetch: assetsFetch } },
+    )
+
+    expect(response.status).toBe(200)
   })
 
   it('adds HSTS to HTTPS asset responses', async () => {
@@ -19,7 +43,7 @@ describe('production edge worker', () => {
       status: 200,
       headers: { 'Content-Type': 'text/html' },
     }))
-    const request = new Request('https://www.mitchellponchione.com/')
+    const request = new Request('https://ponchione.dev/')
     const response = await worker.fetch(request, { ASSETS: { fetch: assetsFetch } })
 
     expect(await response.text()).toBe('page')
@@ -30,7 +54,7 @@ describe('production edge worker', () => {
 
   it('caches fingerprinted build files for good and map textures for a day', async () => {
     const serve = (path: string, status = 200) => worker.fetch(
-      new Request(`https://www.mitchellponchione.com${path}`),
+      new Request(`https://ponchione.dev${path}`),
       { ASSETS: { fetch: vi.fn().mockResolvedValue(new Response('asset', { status, headers: { 'Cache-Control': 'public, max-age=0, must-revalidate' } })) } },
     )
     const cacheOf = async (path: string, status?: number) => (await serve(path, status)).headers.get('cache-control')

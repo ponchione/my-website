@@ -17,7 +17,7 @@ assert.doesNotMatch(agencyPayload, /I&#39;ve been kicking around an idea|I've be
 assert.doesNotMatch(agencyPayload, /Open your LinkedIn feed right now/, 'article payloads should not include neighboring post bodies')
 // A shared post link lands on the map with the letter open, and its text is in the page.
 assert.match(letterHtml, /<title>Software Goes to Zero — Mitchell Ponchione<\/title>/, 'a letter should have its post\'s title')
-assert.match(letterHtml, /<link rel="canonical" href="https:\/\/www\.mitchellponchione\.com\/blog\/software_goes_to_zero">/, 'a letter should be canonical at its own path, not the map\'s')
+assert.match(letterHtml, /<link rel="canonical" href="https:\/\/ponchione\.dev\/blog\/software_goes_to_zero">/, 'a letter should be canonical at its own path, not the map\'s')
 assert.match(letterHtml, /class="realm"/, 'a letter should open over the map')
 assert.match(letterHtml, /Open your LinkedIn feed right now/, 'a letter\'s text should be in the prerendered HTML')
 

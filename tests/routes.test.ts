@@ -32,7 +32,7 @@ describe('public route contract', () => {
     const routes = buildKnownRoutePaths(expectedSlugs)
 
     for (const route of routes) {
-      expect(sitemap).toContain(`<loc>https://www.mitchellponchione.com${route}</loc>`)
+      expect(sitemap).toContain(`<loc>https://ponchione.dev${route}</loc>`)
     }
   })
 })

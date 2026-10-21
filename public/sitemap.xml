@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- Remember to add new blog post URLs here when publishing -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.mitchellponchione.com/</loc></url>
-  <url><loc>https://www.mitchellponchione.com/about</loc></url>
-  <url><loc>https://www.mitchellponchione.com/work-history</loc></url>
-  <url><loc>https://www.mitchellponchione.com/projects</loc></url>
-  <url><loc>https://www.mitchellponchione.com/blog</loc></url>
-  <url><loc>https://www.mitchellponchione.com/blog/agency_in_an_AI_world</loc></url>
-  <url><loc>https://www.mitchellponchione.com/blog/micro_business_architecture</loc></url>
-  <url><loc>https://www.mitchellponchione.com/blog/software_goes_to_zero</loc></url>
+  <url><loc>https://ponchione.dev/</loc></url>
+  <url><loc>https://ponchione.dev/about</loc></url>
+  <url><loc>https://ponchione.dev/work-history</loc></url>
+  <url><loc>https://ponchione.dev/projects</loc></url>
+  <url><loc>https://ponchione.dev/blog</loc></url>
+  <url><loc>https://ponchione.dev/blog/agency_in_an_AI_world</loc></url>
+  <url><loc>https://ponchione.dev/blog/micro_business_architecture</loc></url>
+  <url><loc>https://ponchione.dev/blog/software_goes_to_zero</loc></url>
 </urlset>
