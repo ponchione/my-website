@@ -1,9 +1,11 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import {
-  COUNTY_IDS, EVENTS, RULES, ageOf, apply, county, developmentOf, maxLevy, newGame, step,
+  COUNTY_IDS, EVENTS, RULES, ageOf, apply, county, developmentOf, maxLevy, newGame, nextStep, routes, step,
   type CountyId, type GameState, type Order,
 } from '../app/utils/keystone/engine.ts'
+import { armyBanners, armyRoute } from '../app/utils/keystone/display.ts'
+import { countyById } from '../app/utils/realm/map-data.ts'
 import { SAVE_KEY, SAVE_VERSION, loadCampaign, saveCampaign } from '../app/utils/keystone/save.ts'
 
 const byName = (name: string) => COUNTY_IDS.find(c => county(c).name === name)!
@@ -379,5 +381,65 @@ describe('saves', () => {
     expect(saveCampaign(newGame(1, null), refusing)).toBe(false)
     expect(loadCampaign(null)).toEqual({ kind: 'none' })
     expect(saveCampaign(newGame(1, null), null)).toBe(false)
+  })
+})
+
+describe('the map', () => {
+  // The player's army on its longest legal march: at war with a neighbor, raised in one
+  // of its own counties and sent to the enemy county farthest away.
+  function longMarch() {
+    const s = newGame(12345, byName('Centre'))
+    let best: { s: GameState, target: CountyId, months: number } | null = null
+    for (const enemy of s.houses.slice(1)) {
+      let atWar: GameState
+      try {
+        atWar = apply(s, { kind: 'declare', house: 0, target: enemy.id })
+      }
+      catch {
+        continue
+      }
+      for (const from of COUNTY_IDS.filter(c => atWar.owner[c] === 0)) {
+        const { months } = routes(atWar, 0, from)
+        for (const c of COUNTY_IDS.filter(c => atWar.owner[c] === enemy.id && months[c]! < Infinity)) {
+          if (!best || months[c]! > best.months) best = { s: apply(atWar, { kind: 'raise', house: 0, county: from }), target: c, months: months[c]! }
+        }
+      }
+    }
+    return apply(best!.s, { kind: 'move', house: 0, county: best!.target })
+  }
+
+  const label = (c: CountyId) => countyById(c)!.label
+  const distance = (a: readonly number[], b: readonly number[]) => Math.hypot(a[0]! - b[0]!, a[1]! - b[1]!)
+
+  it('walks armies toward the next county but keeps them on their own side until they enter', () => {
+    let s = longMarch()
+    let midway = 0
+    for (let month = 0; month < 12 && s.houses[0]!.army?.target != null; month++) {
+      for (const h of s.houses) {
+        if (!h.army) continue
+        const banner = armyBanners(s).find(b => b.id === `army-${h.id}`)!
+        const next = h.army.target === null ? null : nextStep(s, h.id, h.army.county, h.army.target)
+        if (next === null || !h.army.march) continue
+        midway++
+        expect(distance(banner.at, label(h.army.county))).toBeLessThan(distance(banner.at, label(next)))
+        expect(distance(banner.at, label(h.army.county))).toBeGreaterThan(0)
+      }
+      s = step(answer(s))
+    }
+    // Some month caught an army partway across a mountain county.
+    expect(midway).toBeGreaterThan(0)
+  })
+
+  it('draws the player\'s march county by county to its target', () => {
+    const s = step(longMarch())
+    const army = s.houses[0]!.army!
+    const route = armyRoute(s)!
+    const byLabel = new Map(COUNTY_IDS.map(c => [label(c).join(), c]))
+    const path = route.at.map(at => byLabel.get(at.join())!)
+    expect(path[0]).toBe(army.county)
+    expect(path.at(-1)).toBe(army.target)
+    for (let i = 1; i < path.length; i++) expect(county(path[i - 1]!).neighbors).toContain(path[i])
+    expect(route.follow).toBe('army-0')
+    expect(armyRoute(apply(s, { kind: 'move', house: 0, county: army.county }))).toBeNull()
   })
 })

@@ -21,6 +21,7 @@ uniform sampler2D uFields;
 uniform sampler2D uRelief;
 uniform sampler2D uCountyColors;
 uniform sampler2D uRealmColors;
+uniform sampler2D uCountyGroups;
 uniform vec3 uRanges;
 uniform vec2 uMapPixels;
 uniform vec3 uSunDirection;
@@ -93,6 +94,11 @@ vec4 lookup(sampler2D table, float id) {
   return texture2D(table, vec2((id + 0.5) / 256.0, 0.5));
 }
 
+// A county's group (0 for none): its house, in Keystone.
+float groupOf(float id) {
+  return floor(lookup(uCountyGroups, id).r * 255.0 + 0.5);
+}
+
 float band(float distance, float width, float aa) {
   return 1.0 - smoothstep(width - aa, width + aa, distance);
 }
@@ -160,6 +166,27 @@ void main() {
   // Wide enough to cover the stair-steps of the nearest-sampled province fill.
   float countyLine = band(countyDistance, max(0.9, texelsPerPixel * 0.6), aa);
   color = mix(color, color * 0.4, countyLine * (foreign ? 0.4 : 0.75));
+
+  // Between counties of different groups (houses), a broad band in each side's own
+  // color around a dark core, like the realm border's. The border field doesn't say
+  // what lies across it, so look across.
+  float groupWidth = max(2.6, texelsPerPixel * 2.4);
+  float group = county > 0.5 ? groupOf(county) : 0.0;
+  if (group > 0.5 && countyDistance < groupWidth + aa) {
+    float reach = (groupWidth + aa) * 1.3 + 1.0;
+    float across = 0.0;
+    for (int i = 0; i < 8; i++) {
+      float angle = float(i) * 0.785398;
+      vec4 around = texture2D(uProvinces, uv + vec2(cos(angle), sin(angle)) * reach / uMapPixels);
+      float aroundCounty = floor(around.r * 255.0 + 0.5);
+      float aroundGroup = aroundCounty > 0.5 ? groupOf(aroundCounty) : 0.0;
+      if (aroundGroup > 0.5 && abs(aroundGroup - group) > 0.5) across = 1.0;
+    }
+    float groupBand = band(countyDistance, groupWidth, aa) * across;
+    float groupCore = band(countyDistance, max(1.0, texelsPerPixel * 1.1), aa) * across;
+    color = mix(color, tint.rgb * 0.42 * light, groupBand * 0.8);
+    color = mix(color, vec3(0.07, 0.06, 0.05), groupCore * 0.85);
+  }
 
   float realmBand = band(realmDistance, max(3.2, texelsPerPixel * 2.6), aa);
   float realmCore = band(realmDistance, max(0.8, texelsPerPixel * 0.9), aa);

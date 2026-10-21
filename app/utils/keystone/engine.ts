@@ -12,7 +12,7 @@ import {
 
 export { COUNTY_IDS, county, type County, type CountyId, type Terrain } from './board.ts'
 export {
-  RULES, ageOf, deathChance, developCost, developmentOf, holdings, income, maxLevy, outcome, rank, siegeMonths, upkeep, warOf, warScore,
+  RULES, ageOf, crossing, deathChance, developCost, developmentOf, holdings, income, maxLevy, nextStep, outcome, rank, routes, siegeMonths, upkeep, warOf, warScore,
   type Army, type Ending, type Entry, type GameState, type House, type HouseId, type Order, type Ruler, type War,
 } from './rules.ts'
 export { EVENTS, eventById, type Choice, type Effect, type KeystoneEvent } from './events.ts'

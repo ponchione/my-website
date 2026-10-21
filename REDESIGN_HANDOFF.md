@@ -108,7 +108,8 @@ node scripts/map/build-map.mjs                # regenerate map assets (~30 s cac
   handoff. The build warns about the three.js chunk size; it only loads on `/`.
 - `public/og-image.jpg` (1200×630) is every page's link preview: the opening view with
   the Career lens on, the UI hidden and a name card on top. Re-shoot it if the map's
-  look changes.
+  look changes. `/play` has its own, `public/og-play.jpg`, shot the same way from a
+  campaign under way (`useSiteSeo` takes the image as its last argument).
 - `worker.ts` caches `/_nuxt/` build files for a year (they're fingerprinted, except
   `/_nuxt/builds/`) and the map textures under `/realm/` for a day.
 

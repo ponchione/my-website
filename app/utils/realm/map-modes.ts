@@ -12,6 +12,9 @@ export type MapModePalette = {
   realms: Uint8Array
   // Overall strength of the color overlay on top of the terrain.
   overlay: number
+  // Optional: a group per county id (0 for none). Counties of different groups get a
+  // thick border between them, as houses do in Keystone.
+  groups?: Uint8Array
 }
 
 export type Rgb = [number, number, number]

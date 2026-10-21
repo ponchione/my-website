@@ -25,7 +25,9 @@ assert.match(letterHtml, /Open your LinkedIn feed right now/, 'a letter\'s text 
 const playHtml = await readFile(new URL('../.output/public/play/index.html', import.meta.url), 'utf8')
 assert.match(playHtml, /<title>Keystone — Mitchell Ponchione<\/title>/, '/play should have the game\'s title')
 assert.match(playHtml, /class="realm"/, '/play should open over the map')
+assert.match(playHtml, /<meta property="og:image" content="https:\/\/www\.mitchellponchione\.com\/og-play\.jpg">/, '/play should have its own link preview')
 const homeHtml = await readFile(new URL('../.output/public/index.html', import.meta.url), 'utf8')
+assert.match(homeHtml, /<meta property="og:image" content="https:\/\/www\.mitchellponchione\.com\/og-image\.jpg">/, 'the home page should keep the map\'s link preview')
 const homeScripts = [...new Set([...homeHtml.matchAll(/(?:src|href)="(\/_nuxt\/[^"]+\.js)"/g)].map(match => match[1]))]
 assert.ok(homeScripts.length, 'the home page should load scripts')
 for (const script of homeScripts) {

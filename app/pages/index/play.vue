@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Pause, Play, Swords } from '@lucide/vue'
-import { armyBanners, campaignPalette, chronicleLine, effectText, entryDate, fill, houseColor } from '~/utils/keystone/display'
+import { ChevronDown, Pause, Play, Swords } from '@lucide/vue'
+import { armyBanners, armyRoute, campaignPalette, chronicleLine, effectText, entryDate, fill, houseColor } from '~/utils/keystone/display'
 import {
   COUNTY_IDS, RULES, ageOf, apply, county, dateOf, developCost, eventById, found, holdings, income, maxLevy, newGame, rank, score, siegeMonths, step, upkeep, warOf, warScore,
   type CountyId, type GameState, type Order, type Ruler,
@@ -16,7 +16,10 @@ import { loadCampaign, saveCampaign, type Saved } from '~/utils/keystone/save'
 // The map page hands every child page its letters; the game has no use for them.
 defineOptions({ inheritAttrs: false })
 
-useSiteSeo('Keystone — Mitchell Ponchione', '/play', 'Keystone: lead one of nine medieval houses carving up Pennsylvania\'s 67 counties on the realm map.')
+useSiteSeo('Keystone — Mitchell Ponchione', '/play', 'Keystone: lead one of nine medieval houses carving up Pennsylvania\'s 67 counties on the realm map.', {
+  path: '/og-play.jpg',
+  alt: 'Pennsylvania\'s counties in nine house colors, with two armies and a dashed march route',
+})
 
 const stage = inject(REALM_STAGE)!
 const router = useRouter()
@@ -28,6 +31,8 @@ const RISE_MS = 1500
 // Long enough for the résumé to step aside before the prompt shows.
 const SETTLE_MS = 600
 const FEED_LINES = 5
+// How long an army takes to walk to where an order (rather than a month) puts it.
+const ORDER_GLIDE_MS = 300
 const TERRAIN = { flat: 'Flat', hills: 'Hills', mountains: 'Mountains' } as const
 
 const game = shallowRef<GameState | null>(null)
@@ -46,12 +51,18 @@ const speed = ref(1)
 // The county the visitor has selected, and whether their next click marches the army.
 const selected = ref<CountyId | null>(null)
 const marching = ref(false)
+// On phones the house panel folds its ruler, the other houses and the campaign's links
+// away until asked for, so the map keeps the screen.
+const courtOpen = ref(false)
 // Why the last order was refused.
 const notice = ref('')
 
 let settle: ReturnType<typeof setTimeout> | undefined
 let timer: ReturnType<typeof setTimeout> | undefined
 let frame = 0
+// How long the armies take to walk to their next places: a whole month when the month
+// moves them, so they're always on their way.
+let glide = ORDER_GLIDE_MS
 
 // Back to the prompt: Pennsylvania unclaimed, waiting for a county. On arrival the
 // prompt first offers the saved campaign, if there is one.
@@ -116,6 +127,7 @@ function schedule() {
   timer = setTimeout(() => {
     const before = game.value!
     const after = step(before)
+    glide = SPEEDS[speed.value]!
     game.value = after
     save()
     const war = after.player === null ? undefined : warOf(after, after.player)
@@ -384,7 +396,11 @@ onMounted(() => {
     else stage.palette.value = campaignPalette(id => s.owner[id]!)
   })
   watchEffect(() => {
-    stage.armies.value = game.value && !rising.value ? armyBanners(game.value) : []
+    stage.armies.value = game.value && !rising.value ? armyBanners(game.value, glide) : []
+    glide = ORDER_GLIDE_MS
+  })
+  watchEffect(() => {
+    stage.route.value = game.value && !rising.value ? armyRoute(game.value) : null
   })
   watchEffect(() => {
     stage.selected.value = selected.value === null ? null : { kind: 'county', id: selected.value }
@@ -408,6 +424,7 @@ onBeforeUnmount(() => {
   cancelAnimationFrame(frame)
   stage.palette.value = null
   stage.armies.value = []
+  stage.route.value = null
   stage.selected.value = null
   stage.onPick.value = null
 })
@@ -448,21 +465,36 @@ onBeforeUnmount(() => {
     </Transition>
 
     <Transition name="keystone-left">
-      <section v-if="!rising && mine" class="keystone-panel keystone-houses" aria-label="Your house and its rivals">
+      <section
+        v-if="!rising && mine"
+        class="keystone-panel keystone-houses"
+        :class="{ 'keystone-court-open': courtOpen }"
+        aria-label="Your house and its rivals"
+      >
         <header class="keystone-me" :style="{ '--house': houseColor(mine.id) }">
           <div class="keystone-me-title">
             <RealmHeraldicShield class="keystone-me-arms" :seed="mine.name" />
-            <div>
+            <div class="keystone-me-text">
               <p class="keystone-me-name">{{ mine.name }}</p>
               <p class="keystone-muted">{{ mine.rank }} · your house</p>
             </div>
+            <button
+              type="button"
+              class="keystone-court-toggle"
+              :aria-expanded="courtOpen"
+              aria-controls="keystone-court"
+              @click="courtOpen = !courtOpen"
+            >
+              <span>{{ courtOpen ? 'Less' : 'Court' }}</span>
+              <ChevronDown class="size-4" aria-hidden="true" />
+            </button>
           </div>
-          <dl class="keystone-stats">
-            <div>
+          <dl id="keystone-court" class="keystone-stats">
+            <div class="keystone-court-detail">
               <dt>Ruler</dt>
               <dd>{{ mine.ruler.name }}, {{ mine.ruler.age }}</dd>
             </div>
-            <div class="keystone-stat-skills">
+            <div class="keystone-stat-skills keystone-court-detail">
               <dt class="sr-only">Skills</dt>
               <dd>
                 <ul class="keystone-skills">
@@ -476,7 +508,7 @@ onBeforeUnmount(() => {
               <dt>Gold</dt>
               <dd>{{ mine.gold }} <span class="keystone-muted">({{ signed(mine.income) }} a month)</span></dd>
             </div>
-            <div>
+            <div class="keystone-stat-army">
               <dt>{{ mine.army ? 'Army' : 'Levies' }}</dt>
               <dd v-if="mine.army">
                 {{ mine.army.men }} men in {{ mine.army.at }}<span v-if="mine.army.to" class="keystone-muted">, to {{ mine.army.to }}</span>
@@ -501,7 +533,7 @@ onBeforeUnmount(() => {
           </button>
           <p v-if="marching" class="keystone-muted keystone-hint" role="status">Click a county to march there.</p>
         </header>
-        <ol class="keystone-house-list" aria-label="The other houses">
+        <ol class="keystone-house-list keystone-court-detail" aria-label="The other houses">
           <li v-for="house in houses" :key="house.id" class="keystone-house" :class="{ 'keystone-fallen': !house.held }">
             <span class="keystone-swatch" :style="{ background: houseColor(house.id) }" />
             <RealmHeraldicShield class="keystone-house-arms" :seed="house.name" />
@@ -518,7 +550,7 @@ onBeforeUnmount(() => {
             </span>
           </li>
         </ol>
-        <footer class="keystone-houses-foot">
+        <footer class="keystone-houses-foot keystone-court-detail">
           <button type="button" class="keystone-action" @click="choose()">New campaign</button>
           <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
         </footer>
@@ -1196,17 +1228,55 @@ button.keystone-ending:focus-visible {
   transform: translateX(40px);
 }
 
-/* Phones: the date across the top, the houses as a compact grid beneath it and the
-   chronicle at the bottom. Phase 5 designs this properly. */
+/* The court toggle only folds the house panel on phones. */
+.keystone-court-toggle {
+  display: none;
+}
+
+/* Phones: the map keeps the screen. The date and its controls run across the top, your
+   house folds to a few lines beneath them (Court unfolds the ruler, the other houses and
+   the campaign's links), and the selected county or the latest chronicle lines sit at
+   the bottom. Controls are big enough for a thumb. */
 @media (max-width: 640px) {
   .keystone-ticker {
-    top: 10px;
-    right: 10px;
-    left: 10px;
+    top: 8px;
+    right: 8px;
+    left: 8px;
     grid-template-columns: 1fr auto;
     align-items: center;
     min-width: 0;
-    padding: 8px 12px;
+    padding: 4px 6px 4px 12px;
+  }
+
+  .keystone-date {
+    font-size: 16px;
+  }
+
+  .keystone-controls {
+    gap: 6px;
+  }
+
+  .keystone-pause {
+    width: 40px;
+    height: 40px;
+  }
+
+  .keystone-speeds {
+    gap: 6px;
+    padding: 0 6px;
+  }
+
+  /* A pip's touch area reaches well past the pip itself. */
+  .keystone-pip {
+    position: relative;
+    width: 20px;
+    height: 12px;
+  }
+
+  .keystone-pip::after {
+    content: "";
+    position: absolute;
+    inset: -14px -4px;
   }
 
   /* The play button already shows a pause; the ending needs the room. */
@@ -1216,23 +1286,37 @@ button.keystone-ending:focus-visible {
 
   .keystone-ending {
     grid-column: 1 / -1;
-  }
-
-  .keystone-ended .keystone-houses {
-    top: 100px;
+    padding-bottom: 4px;
   }
 
   .keystone-houses {
-    top: 76px;
-    left: 10px;
-    right: 10px;
+    top: 64px;
+    left: 8px;
+    right: 8px;
     width: auto;
-    max-height: none;
+    max-height: calc(100dvh - 150px);
+  }
+
+  .keystone-ended .keystone-houses {
+    top: 92px;
+  }
+
+  .keystone-houses:not(.keystone-court-open) .keystone-court-detail {
+    display: none;
   }
 
   .keystone-me {
     gap: 4px;
-    padding: 8px 10px 6px;
+    padding: 6px 8px 8px 12px;
+  }
+
+  .keystone-houses:not(.keystone-court-open) .keystone-me {
+    border-bottom: 0;
+  }
+
+  .keystone-me-text {
+    flex: 1;
+    min-width: 0;
   }
 
   .keystone-me-arms {
@@ -1243,15 +1327,49 @@ button.keystone-ending:focus-visible {
     font-size: 15px;
   }
 
+  .keystone-me .keystone-muted {
+    font-size: 13px;
+  }
+
+  .keystone-court-toggle {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    min-height: 36px;
+    padding: 0 6px 0 10px;
+    border: 1px solid #5a4a2e;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #2f2920, #221e17);
+    font-size: 14px;
+    color: var(--ink);
+  }
+
+  .keystone-court-toggle svg {
+    transition: transform 200ms ease;
+  }
+
+  .keystone-court-toggle[aria-expanded="true"] svg {
+    transform: rotate(180deg);
+  }
+
+  /* Gold and counties side by side; the army and the war get a line each. */
   .keystone-me .keystone-stats {
     grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row dense;
     column-gap: 10px;
-    font-size: 13px;
+    font-size: 14px;
   }
 
   .keystone-me .keystone-stats > div {
     grid-template-columns: auto 1fr;
-    gap: 5px;
+    gap: 6px;
+  }
+
+  .keystone-me .keystone-stat-army,
+  .keystone-me .keystone-stat-war,
+  .keystone-me .keystone-stat-skills,
+  .keystone-me .keystone-court-detail {
+    grid-column: 1 / -1;
   }
 
   .keystone-hint,
@@ -1259,35 +1377,8 @@ button.keystone-ending:focus-visible {
     font-size: 13px;
   }
 
-  .keystone-place {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
-    width: auto;
-    max-height: 45vh;
-    gap: 6px;
-    padding: 10px 12px 12px;
-  }
-
-  .keystone-place-name {
-    font-size: 17px;
-  }
-
-  .keystone-place .keystone-stats {
-    font-size: 14px;
-  }
-
-  .keystone-place .keystone-stats > div {
-    grid-template-columns: 90px 1fr;
-  }
-
-  .keystone-place-actions {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  /* The selected county takes the chronicle's place. */
-  .keystone-with-place .keystone-chronicle {
-    display: none;
+  .keystone-move {
+    min-height: 40px;
   }
 
   .keystone-house-list {
@@ -1315,28 +1406,87 @@ button.keystone-ending:focus-visible {
   }
 
   .keystone-action {
+    min-height: 40px;
     padding: 5px 8px;
     font-size: 14px;
   }
 
-  .keystone-chronicle {
-    left: 10px;
-    right: 10px;
-    bottom: 10px;
+  /* The selected county, as a sheet along the bottom. */
+  .keystone-place {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
     width: auto;
+    max-height: 48dvh;
+    gap: 6px;
+    padding: 10px 12px 12px;
+  }
+
+  .keystone-close {
+    top: 2px;
+    right: 2px;
+    width: 40px;
+    height: 40px;
+  }
+
+  .keystone-place-name {
+    font-size: 17px;
+  }
+
+  .keystone-place .keystone-stats {
+    grid-template-columns: 1fr 1fr;
+    column-gap: 10px;
+    font-size: 14px;
+  }
+
+  .keystone-place .keystone-stats > div {
+    grid-template-columns: auto 1fr;
+    gap: 6px;
+  }
+
+  .keystone-place .keystone-stats > div:first-child,
+  .keystone-place .keystone-stats > .keystone-stat-skills {
+    grid-column: 1 / -1;
+    grid-template-columns: auto 1fr;
+  }
+
+  .keystone-place .keystone-stats > .keystone-stat-skills {
+    grid-template-columns: 1fr;
+  }
+
+  .keystone-skills {
     font-size: 13px;
+  }
+
+  .keystone-place-actions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  /* The selected county takes the chronicle's place. */
+  .keystone-with-place .keystone-chronicle {
+    display: none;
+  }
+
+  .keystone-chronicle {
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    width: auto;
+    max-width: none;
+    padding: 6px 10px;
+    font-size: 13px;
+  }
+
+  .keystone-chronicle li:nth-child(n + 3) {
+    display: none;
   }
 
   .keystone-end-chronicle {
     font-size: 13px;
   }
 
-  .keystone-chronicle li:nth-child(n + 4) {
-    display: none;
-  }
-
   .keystone-entry-date {
-    width: 92px;
+    width: 84px;
     white-space: nowrap;
   }
 }

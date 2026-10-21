@@ -3,8 +3,10 @@
 
 import { countyById, realmById } from '~/utils/realm/map-data'
 import { NEUTRAL, palette, shade, type MapModePalette, type Rgb } from '~/utils/realm/map-modes'
-import type { ArmyBanner } from '~/utils/realm/stage'
-import { county, dateOf, eventById, outcome, type Effect, type Entry, type GameState, type HouseId } from './engine.ts'
+import type { ArmyBanner, ArmyRoute } from '~/utils/realm/stage'
+import {
+  county, crossing, dateOf, eventById, nextStep, outcome, routes, type CountyId, type Effect, type Entry, type GameState, type House, type HouseId,
+} from './engine.ts'
 
 // One per house, by house id: strong enough to read over the terrain, apart from one
 // another, and none of them the unclaimed parchment.
@@ -25,9 +27,13 @@ const UNCLAIMED: Rgb = [214, 196, 154]
 export const houseColor = (id: HouseId) => `rgb(${HOUSE_COLORS[id]!.join(' ')})`
 
 // Each county in its owner's color (`owner` gives -1 for none yet: parchment), and the
-// neighboring realms in grey.
+// neighboring realms in grey. Each house's counties are one group, so a thick border
+// runs between houses.
 export function campaignPalette(owner: (countyId: number) => HouseId): MapModePalette {
+  const groups = new Uint8Array(256)
+  for (let id = 1; id < 256; id++) if (countyById(id)) groups[id] = owner(id) + 1
   return {
+    groups,
     counties: palette((id) => {
       if (!countyById(id)) return undefined
       const holder = owner(id)
@@ -38,17 +44,54 @@ export function campaignPalette(owner: (countyId: number) => HouseId): MapModePa
   }
 }
 
-// A raised army stands at its county's label point. Two in one county (about to fight)
-// stand side by side.
-export function armyBanners(s: GameState): ArmyBanner[] {
+const labelOf = (c: CountyId) => {
+  const [x, y] = countyById(c)!.label
+  return [x!, y!] as const
+}
+
+// The next county an army's march takes it into, if it's on its way.
+function nextOf(s: GameState, h: House): CountyId | null {
+  const army = h.army!
+  return army.target === null ? null : nextStep(s, h.id, army.county, army.target)
+}
+
+// A raised army stands at its county's label point, or partway along the road to the
+// next county, as far as its months of marching have taken it (a mountain county takes
+// two). Until it enters, it stays on its own side of the border, about halfway between
+// the two label points, so two armies marching on each other's counties never seem to
+// meet. Two in one county (about to fight) stand side by side. `glide` is how long each
+// takes to walk there from where it stood.
+export function armyBanners(s: GameState, glide = 0): ArmyBanner[] {
   const raised = s.houses.filter(h => h.army)
   return raised.map((h) => {
     const army = h.army!
     const here = raised.filter(other => other.army!.county === army.county)
-    const label = countyById(army.county)!.label
+    const [x, y] = labelOf(army.county)
+    const next = nextOf(s, h)
+    const [nx, ny] = next === null ? [x, y] : labelOf(next)
+    const along = next === null ? 0 : (army.march / crossing(next)) * 0.5
     const shift = (here.indexOf(h) - (here.length - 1) / 2) * 0.012
-    return { id: `army-${h.id}`, at: [label[0]! + shift, label[1]!], house: h.name, color: houseColor(h.id), men: army.men }
+    return {
+      id: `army-${h.id}`,
+      at: [x + (nx - x) * along + shift, y + (ny - y) * along],
+      house: h.name,
+      color: houseColor(h.id),
+      men: army.men,
+      glide,
+    }
   })
+}
+
+// The visitor's army's march, county by county along the quickest legal route, or null
+// if it isn't marching.
+export function armyRoute(s: GameState): ArmyRoute | null {
+  const h = s.player === null ? null : s.houses[s.player]!
+  const army = h?.army
+  if (!h || !army || army.target === null || nextOf(s, h) === null) return null
+  const { previous } = routes(s, h.id, army.county)
+  const path = [army.target]
+  while (path[0] !== army.county) path.unshift(previous[path[0]!]!)
+  return { at: path.map(labelOf), follow: `army-${h.id}` }
 }
 
 // A chronicle entry as a line of text, with each house's name marked for its color.

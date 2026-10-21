@@ -13,12 +13,17 @@ export type ArmyBanner = {
   house: string
   color: string // CSS color of the house
   men: number
+  glide?: number // ms to walk from where it stood, rather than jump
 }
+
+// The visitor's army's march: the spots it passes through, from its own.
+export type ArmyRoute = { at: readonly (readonly [number, number])[], follow: string }
 
 export type RealmStage = {
   ready: Readonly<Ref<boolean>>
   palette: ShallowRef<MapModePalette | null> // null: the résumé's map modes
   armies: ShallowRef<ArmyBanner[]>
+  route: ShallowRef<ArmyRoute | null>
   selected: ShallowRef<MapPick | null>
   onPick: ShallowRef<((pick: MapPick | null) => void) | null> // a click on the map
 }

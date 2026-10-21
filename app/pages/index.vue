@@ -6,7 +6,7 @@ import { dispatchQueue, loadReadDispatches, saveReadDispatches, type Dispatch } 
 import { HOME_REALM_CODE, countyByFips, countyById, locate, mapData, realmById, type MapPick } from '~/utils/realm/map-data'
 import { BASE_MAPS, LENSES, mapModePalette, type BaseMapId, type LensId, type MapModePalette } from '~/utils/realm/map-modes'
 import type { ViewPadding } from '~/utils/realm/realm-renderer'
-import { REALM_STAGE, type ArmyBanner } from '~/utils/realm/stage'
+import { REALM_STAGE, type ArmyBanner, type ArmyRoute } from '~/utils/realm/stage'
 
 definePageMeta({ layout: false })
 
@@ -75,12 +75,14 @@ const tourCard = useTemplateRef<ComponentPublicInstance>('tourCard')
 // What a game on the map paints and pins over it, in place of the map modes and towns.
 const gamePalette = shallowRef<MapModePalette | null>(null)
 const armies = shallowRef<ArmyBanner[]>([])
+const armyRoute = shallowRef<ArmyRoute | null>(null)
 const gameSelected = shallowRef<MapPick | null>(null)
 const gamePick = shallowRef<((pick: MapPick | null) => void) | null>(null)
 provide(REALM_STAGE, {
   ready: computed(() => status.value === 'ready'),
   palette: gamePalette,
   armies,
+  route: armyRoute,
   selected: gameSelected,
   onPick: gamePick,
 })
@@ -333,6 +335,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
       :selected="playing ? gameSelected : selected"
       :view-padding="viewPadding"
       :markers="markers"
+      :route="playing ? armyRoute : null"
       @hover="onHover"
       @select="onSelect"
       @away="(value) => away = value"
@@ -420,6 +423,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
     <div
       v-if="hoveredPlace && status === 'ready' && !activeDispatch && !activeRecord && !overLetters && (!playing || hovered?.kind === 'county')"
       class="realm-tooltip"
+      :class="{ 'realm-tooltip-play': playing }"
       :style="tooltipStyle"
       aria-hidden="true"
     >
@@ -760,6 +764,14 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   font-size: 15px;
   letter-spacing: 0.05em;
   color: var(--gold);
+}
+
+/* In the game a tap selects the county and its panel names it; a touch screen's
+   tooltip would only cover the map. */
+@media (hover: none) {
+  .realm-tooltip-play {
+    display: none;
+  }
 }
 
 .realm-tooltip-holdings {

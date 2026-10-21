@@ -16,7 +16,21 @@ Phase 4 (2026-10-21) adds rulers, succession and the player's events (`events.ts
 house panel and the county panel show each ruler, a waiting event pauses the campaign
 and holds the months until you choose, it survives a save and reload, and deaths and
 choices go into the chronicle. Saves are version 2; version 1 saves are reported as older
-laws. Polish (phase 5) is next. The map build writes each county's neighbors, development and
+laws. Phase 5 (2026-10-21) is the polish: a palette may give each county a group
+(`groups` in `MapModePalette`), and the shader draws a thick border, in each side's
+color around a dark core, wherever two groups meet, so houses read apart from their
+counties' thin lines. Armies walk: a banner glides to its new spot over the month that
+moved it (`glide`), and a marching army stands partway toward the next county, by its
+months of marching, but on its own side of the border until the rules move it in.
+Your army's march is a dashed gold route from the banner to its target
+(`armyRoute`, drawn by `RealmMap` as SVG the renderer keeps in place). On phones the
+house panel folds to gold, army, counties and war, with Court for the ruler, the
+other houses and the campaign's links; controls are at least 40 px tall; the county
+is a sheet along the bottom; the hover tooltip is hidden on touch screens. `/play`
+has its own link preview, `public/og-play.jpg` (a campaign under way with a name
+card). With reduced motion the banners jump and the route's dashes stand still. None
+of it changes the rules or the timing: the display only reads `march`, `target` and
+the routes the engine already computes. The map build writes each county's neighbors, development and
 terrain to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with
 tests in `tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`,
 which meets every target (see Testing). The numbers below are the tuned ones.
@@ -349,7 +363,7 @@ Each phase ends with something that works.
 4. **Depth.** Rulers and succession, events and the full chronicle.
 5. **Polish.** Thicker borders between houses (a shader change), armies that walk between
    counties instead of jumping, a route line for your army, a layout designed for phones
-   (until then it only has to work on them) and a link preview for `/play`.
+   (until then it only has to work on them) and a link preview for `/play`. Done.
 
 ## Out of scope
 
