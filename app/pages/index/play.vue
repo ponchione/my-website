@@ -349,11 +349,14 @@ const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 // or a screen reader. A choice from the list counts as a click on the map.
 const COUNTIES_BY_NAME = COUNTY_IDS.map(id => ({ id, name: county(id).name })).sort((a, b) => a.name.localeCompare(b.name))
 
-function pickFromList(event: Event) {
-  const list = event.target as HTMLSelectElement
-  const id = Number(list.value)
-  list.value = ''
-  if (id) onPick({ kind: 'county', id })
+// The county chosen in the list. Arrow keys on a closed list change it at once, so it
+// only acts when its button is pressed.
+const listed = ref<CountyId | ''>('')
+
+function pickFromList() {
+  const id = listed.value
+  listed.value = ''
+  if (id !== '') onPick({ kind: 'county', id })
 }
 
 function togglePause() {
@@ -469,10 +472,13 @@ onBeforeUnmount(() => {
             <button type="button" class="keystone-action" @click="begin(null)">Let fate decide</button>
             <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
           </div>
-          <select class="keystone-action keystone-county-list" aria-label="Choose a county from the list" @change="pickFromList">
-            <option value="" selected disabled>Or choose from the list</option>
-            <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <div class="keystone-county-pick">
+            <select v-model="listed" class="keystone-action keystone-county-list" aria-label="Choose a county from the list">
+              <option value="" disabled>Or choose from the list</option>
+              <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+            <button type="button" class="keystone-action" :disabled="listed === ''" @click="pickFromList">Begin here</button>
+          </div>
         </template>
       </section>
     </Transition>
@@ -564,10 +570,13 @@ onBeforeUnmount(() => {
           </li>
         </ol>
         <footer class="keystone-houses-foot keystone-court-detail">
-          <select class="keystone-action keystone-county-list" :aria-label="marching ? 'March to a county' : 'Select a county'" @change="pickFromList">
-            <option value="" selected disabled>{{ marching ? 'March to a county' : 'Select a county' }}</option>
-            <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
-          </select>
+          <div class="keystone-county-pick">
+            <select v-model="listed" class="keystone-action keystone-county-list" :aria-label="marching ? 'March to a county' : 'Select a county'">
+              <option value="" disabled>{{ marching ? 'March to a county' : 'Select a county' }}</option>
+              <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
+            </select>
+            <button type="button" class="keystone-action" :disabled="listed === ''" @click="pickFromList">{{ marching ? 'March' : 'Show' }}</button>
+          </div>
           <button type="button" class="keystone-action" @click="choose()">New campaign</button>
           <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
         </footer>
@@ -985,9 +994,16 @@ onBeforeUnmount(() => {
   outline: none;
 }
 
-.keystone-county-list {
+.keystone-county-pick {
+  display: grid;
+  grid-template-columns: 1fr auto;
   grid-column: 1 / -1;
+  gap: 6px;
   width: 100%;
+}
+
+.keystone-county-list {
+  min-width: 0;
   color-scheme: dark;
   cursor: pointer;
 }
