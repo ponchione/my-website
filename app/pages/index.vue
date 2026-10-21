@@ -322,7 +322,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
 </script>
 
 <template>
-  <div class="realm">
+  <main class="realm">
     <!-- First stop for the keyboard and screen readers, and a way in for crawlers: the
          map itself is a canvas. -->
     <NuxtLink to="/about" class="realm-skip">Skip the map for the plain pages</NuxtLink>
@@ -533,7 +533,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
 
     <!-- A letter (/blog/<slug>) or the letter case (/blog), or Keystone (/play), over the map. -->
     <NuxtPage :transition="{ name: 'letter', mode: 'out-in' }" :dispatches="dispatches" :read="read" />
-  </div>
+  </main>
 </template>
 
 <style scoped>
@@ -577,7 +577,7 @@ const lensSummary = ({ holdings, unit }: (typeof LENSES)[number]) =>
   gap: 12px;
   width: 380px;
   max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   pointer-events: none;
 }
 

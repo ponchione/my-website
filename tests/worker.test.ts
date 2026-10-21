@@ -14,7 +14,7 @@ describe('production edge worker', () => {
     expect(assetsFetch).not.toHaveBeenCalled()
   })
 
-  it('adds HSTS to HTTPS asset responses', async () => {
+  it('adds HSTS and the security headers to HTTPS asset responses', async () => {
     const assetsFetch = vi.fn().mockResolvedValue(new Response('page', {
       status: 200,
       headers: { 'Content-Type': 'text/html' },
@@ -25,6 +25,10 @@ describe('production edge worker', () => {
     expect(await response.text()).toBe('page')
     expect(response.headers.get('content-type')).toBe('text/html')
     expect(response.headers.get('strict-transport-security')).toBe('max-age=31536000')
+    expect(response.headers.get('x-content-type-options')).toBe('nosniff')
+    expect(response.headers.get('x-frame-options')).toBe('DENY')
+    expect(response.headers.get('content-security-policy')).toBe('frame-ancestors \'none\'')
+    expect(response.headers.get('referrer-policy')).toBe('strict-origin-when-cross-origin')
     expect(assetsFetch).toHaveBeenCalledWith(request)
   })
 

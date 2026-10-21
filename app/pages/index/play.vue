@@ -274,8 +274,6 @@ const place = computed(() => {
   }
 })
 
-// A new selection starts without the last refusal.
-watch(selected, () => (notice.value = ''))
 // Marching needs an army.
 watch(() => mine.value?.army, (army) => {
   if (!army) marching.value = false
@@ -346,6 +344,17 @@ const savedCampaign = computed(() => {
 })
 
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
+
+// The counties by name, so a county can be chosen without the map: from the keyboard
+// or a screen reader. A choice from the list counts as a click on the map.
+const COUNTIES_BY_NAME = COUNTY_IDS.map(id => ({ id, name: county(id).name })).sort((a, b) => a.name.localeCompare(b.name))
+
+function pickFromList(event: Event) {
+  const list = event.target as HTMLSelectElement
+  const id = Number(list.value)
+  list.value = ''
+  if (id) onPick({ kind: 'county', id })
+}
 
 function togglePause() {
   if (!game.value?.ending && !game.value?.event) paused.value = !paused.value
@@ -460,6 +469,10 @@ onBeforeUnmount(() => {
             <button type="button" class="keystone-action" @click="begin(null)">Let fate decide</button>
             <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
           </div>
+          <select class="keystone-action keystone-county-list" aria-label="Choose a county from the list" @change="pickFromList">
+            <option value="" selected disabled>Or choose from the list</option>
+            <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
         </template>
       </section>
     </Transition>
@@ -533,7 +546,7 @@ onBeforeUnmount(() => {
           </button>
           <p v-if="marching" class="keystone-muted keystone-hint" role="status">Click a county to march there.</p>
         </header>
-        <ol class="keystone-house-list keystone-court-detail" aria-label="The other houses">
+        <ol class="keystone-house-list keystone-court-detail" aria-label="The other houses" tabindex="0">
           <li v-for="house in houses" :key="house.id" class="keystone-house" :class="{ 'keystone-fallen': !house.held }">
             <span class="keystone-swatch" :style="{ background: houseColor(house.id) }" />
             <RealmHeraldicShield class="keystone-house-arms" :seed="house.name" />
@@ -551,6 +564,10 @@ onBeforeUnmount(() => {
           </li>
         </ol>
         <footer class="keystone-houses-foot keystone-court-detail">
+          <select class="keystone-action keystone-county-list" :aria-label="marching ? 'March to a county' : 'Select a county'" @change="pickFromList">
+            <option value="" selected disabled>{{ marching ? 'March to a county' : 'Select a county' }}</option>
+            <option v-for="c in COUNTIES_BY_NAME" :key="c.id" :value="c.id">{{ c.name }}</option>
+          </select>
           <button type="button" class="keystone-action" @click="choose()">New campaign</button>
           <a href="/" class="keystone-action" @click="returnToMap">Return to the map</a>
         </footer>
@@ -692,7 +709,7 @@ onBeforeUnmount(() => {
     >
       <p id="keystone-end-lead" class="keystone-end-lead">{{ finale.lead }}</p>
       <h3 class="keystone-end-rule"><span>The chronicle</span></h3>
-      <ol class="keystone-end-chronicle">
+      <ol class="keystone-end-chronicle" aria-label="The chronicle" tabindex="0">
         <li v-for="line in finale.lines" :key="line.key">
           <span class="keystone-entry-date">{{ line.date }}</span>
           <span>
@@ -741,7 +758,7 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   width: 300px;
-  max-height: calc(100vh - 260px);
+  max-height: calc(100dvh - 260px);
 }
 
 .keystone-me {
@@ -846,7 +863,7 @@ onBeforeUnmount(() => {
   display: grid;
   gap: 8px;
   width: 300px;
-  max-height: calc(100vh - 180px);
+  max-height: calc(100dvh - 180px);
   overflow-y: auto;
   padding: 14px 16px 16px;
 }
@@ -966,6 +983,13 @@ onBeforeUnmount(() => {
   border-color: var(--gold);
   background: linear-gradient(180deg, #3a3226, #29231a);
   outline: none;
+}
+
+.keystone-county-list {
+  grid-column: 1 / -1;
+  width: 100%;
+  color-scheme: dark;
+  cursor: pointer;
 }
 
 .keystone-action:disabled {
@@ -1141,7 +1165,7 @@ button.keystone-ending:focus-visible {
 .keystone-end-chronicle {
   display: grid;
   gap: 3px;
-  max-height: min(340px, calc(100vh - 340px));
+  max-height: min(340px, calc(100dvh - 340px));
   min-height: 80px;
   overflow-y: auto;
   padding-right: 6px;
