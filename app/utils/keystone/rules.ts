@@ -2,7 +2,8 @@
 // here works on a GameState the caller owns; engine.ts copies the state first.
 
 import { COUNTY_IDS, county, type CountyId } from './board.ts'
-import { random } from './rng.ts'
+import { EVENTS, eventById, type Effect } from './events.ts'
+import { random, randomInt } from './rng.ts'
 
 // Every number in the rules. KEYSTONE_SPEC.md quotes these; keep the two in step.
 export const RULES = {
@@ -25,7 +26,33 @@ export const RULES = {
   winnerLoss: 0.1, // ÷ r
   peaceMonths: 24, // a computer house takes any peace once a war is this old
   truceMonths: 60,
+  skillStep: 4, // percent per point of a ruler's skill away from 5
+  maxSkill: 10, // skills and health run from 0 to this
+  rulerAge: [20, 50], // a founding ruler's age
+  heirAge: [16, 30], // an heir's age on succeeding
+  frailFrom: 30, // the age at which the risk of death starts to climb
+  healthYears: 3, // each point of health below 5 counts as this many years older
+  deathScale: 72_000, // monthly chance of death: (years past frailFrom)² ÷ this
+  baseDeath: 1 / 2400, // and this, at any age
+  eventMonths: [18, 30], // months between the player's events
 } as const
+
+// Founders and heirs draw their names from here.
+export const NAMES = [
+  'Adela', 'Agnes', 'Aldric', 'Alys', 'Amaury', 'Baldwin', 'Beatrix', 'Bertram', 'Cecily', 'Conrad',
+  'Edith', 'Edmund', 'Eleanor', 'Emma', 'Geoffrey', 'Gilbert', 'Godfrey', 'Hugh', 'Isabel', 'Joan',
+  'Lambert', 'Mabel', 'Matilda', 'Maud', 'Odo', 'Osric', 'Petronilla', 'Ralph', 'Reginald', 'Roger',
+  'Rohese', 'Sibyl', 'Simon', 'Tancred', 'Walter', 'William',
+]
+
+export type Ruler = {
+  name: string
+  born: number // the month of birth, counted like GameState.month (before 1200, negative)
+  martial: number
+  stewardship: number
+  learning: number
+  health: number
+}
 
 export type HouseId = number
 
@@ -44,6 +71,7 @@ export type House = {
   gold: number
   levies: number // the pool, not counting a raised army
   army: Army | null
+  ruler: Ruler
 }
 
 export type War = {
@@ -61,6 +89,8 @@ export type Truce = { houses: [HouseId, HouseId], until: number }
 export type Happening =
   | { kind: 'war' | 'peace' | 'fell', house: HouseId, other: HouseId }
   | { kind: 'battle' | 'taken', house: HouseId, other: HouseId, county: CountyId }
+  | { kind: 'died', house: HouseId, ruler: string, age: number, heir: string }
+  | { kind: 'event', house: HouseId, ruler: string, event: string, choice: number, county: CountyId }
 
 export type Entry = Happening & { month: number }
 
@@ -78,6 +108,8 @@ export type GameState = {
   truces: Truce[]
   chronicle: Entry[]
   ending: Ending | null
+  event: { id: string, county: CountyId } | null // waiting on the player's choice
+  nextEvent: number // the month the player's next event arrives
 }
 
 export type Order =
@@ -87,6 +119,7 @@ export type Order =
   | { kind: 'move', house: HouseId, county: CountyId }
   | { kind: 'declare', house: HouseId, target: HouseId }
   | { kind: 'peace', house: HouseId }
+  | { kind: 'choose', house: HouseId, choice: number }
 
 export function need(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message)
@@ -109,6 +142,84 @@ export function developmentOf(s: GameState, id: HouseId): number {
   let total = 0
   for (const c of COUNTY_IDS) if (s.owner[c] === id) total += s.development[c]!
   return total
+}
+
+// --- rulers -----------------------------------------------------------------
+
+export const ageOf = (r: Ruler, month: number) => Math.floor((month - r.born) / 12)
+
+// n shifted by RULES.skillStep percent per point of skill away from 5, rounded down.
+export const bySkill = (n: number, skill: number) => Math.floor((n * (100 + RULES.skillStep * (skill - 5))) / 100)
+
+const skillRoll = (s: GameState) => randomInt(s, 6) + randomInt(s, 6)
+
+// A new ruler of the given age range, born in a random month: a name and three skills,
+// 0–10 and most often near 5. Health starts at 5.
+export function newRuler(s: GameState, [youngest, oldest]: readonly [number, number]): Ruler {
+  const name = NAMES[randomInt(s, NAMES.length)]!
+  const age = youngest + randomInt(s, oldest - youngest + 1)
+  const born = s.month - 12 * age - randomInt(s, 12)
+  return { name, born, martial: skillRoll(s), stewardship: skillRoll(s), learning: skillRoll(s), health: 5 }
+}
+
+// The chance a ruler dies this month: it climbs with age, and poor health adds years.
+export function deathChance(r: Ruler, month: number): number {
+  const years = Math.max(0, ageOf(r, month) + RULES.healthYears * (5 - r.health) - RULES.frailFrom)
+  return RULES.baseDeath + (years * years) / RULES.deathScale
+}
+
+// Each living house's ruler may die; a generated heir succeeds at once.
+export function age(s: GameState) {
+  for (const h of s.houses) {
+    if (!alive(h) || random(s) >= deathChance(h.ruler, s.month)) continue
+    const dead = h.ruler
+    h.ruler = newRuler(s, RULES.heirAge)
+    record(s, { kind: 'died', house: h.id, ruler: dead.name, age: ageOf(dead, s.month), heir: h.ruler.name })
+  }
+}
+
+// Gold a month before upkeep: development, shifted by Stewardship.
+export const income = (s: GameState, id: HouseId) => bySkill(developmentOf(s, id), house(s, id).ruler.stewardship)
+
+// Gold to develop a county one level: cheaper with Learning.
+export function developCost(s: GameState, id: HouseId, c: CountyId): number {
+  const base = RULES.developCost * developmentAt(s, c)
+  return Math.floor((base * (100 - RULES.skillStep * (house(s, id).ruler.learning - 5))) / 100)
+}
+
+// --- events -----------------------------------------------------------------
+
+const clamp = (n: number, low: number, high: number) => Math.min(high, Math.max(low, n))
+
+// What a choice of the waiting event would do, in whole numbers: gold and levies scaled
+// to the house's development (see events.ts).
+export function outcome(s: GameState, effect: Effect) {
+  const base = developmentOf(s, s.player!)
+  return {
+    gold: (effect.gold ?? 0) * base,
+    levies: (effect.levies ?? 0) * base,
+    development: effect.development ?? 0,
+    martial: effect.martial ?? 0,
+    stewardship: effect.stewardship ?? 0,
+    learning: effect.learning ?? 0,
+    health: effect.health ?? 0,
+  }
+}
+
+// The next event for the player: any but the last one, in one of the player's counties.
+function rollEvent(s: GameState) {
+  const last = s.chronicle.findLast(e => e.kind === 'event')
+  const ids = EVENTS.map(e => e.id).filter(id => last?.kind !== 'event' || id !== last.event)
+  const held = holdings(s, s.player!)
+  s.event = { id: ids[randomInt(s, ids.length)]!, county: held[randomInt(s, held.length)]! }
+}
+
+// When the player's event is due, it arrives and the next is set 18–30 months on.
+export function arrive(s: GameState) {
+  if (s.ending || s.player === null || s.month < s.nextEvent) return
+  rollEvent(s)
+  const [soonest, latest] = RULES.eventMonths
+  s.nextEvent = s.month + soonest + randomInt(s, latest - soonest + 1)
 }
 
 export const maxLevy = (s: GameState, id: HouseId) => developmentOf(s, id) * RULES.menPerDevelopment
@@ -222,8 +333,9 @@ export function execute(s: GameState, order: Order) {
       need(ownerOf(s, order.county) === h.id, 'A house develops only its own counties')
       const level = developmentAt(s, order.county)
       need(level < RULES.maxDevelopment, 'That county is fully developed')
-      need(h.gold >= RULES.developCost * level, 'Not enough gold')
-      h.gold -= RULES.developCost * level
+      const cost = developCost(s, h.id, order.county)
+      need(h.gold >= cost, 'Not enough gold')
+      h.gold -= cost
       s.development[order.county] = level + 1
       return
     }
@@ -262,6 +374,22 @@ export function execute(s: GameState, order: Order) {
       const other = otherSide(war, h.id)
       if (war.offer === other || (other !== s.player && acceptsPeace(s, war, other))) makePeace(s, war)
       else war.offer = h.id
+      return
+    }
+    case 'choose': {
+      need(s.event && h.id === s.player, 'No event awaits a choice')
+      const { id, county: c } = s.event
+      const choice = eventById(id).choices[order.choice]
+      need(choice, 'No such choice')
+      const o = outcome(s, choice.effect)
+      need(h.gold + o.gold >= 0, 'Not enough gold')
+      h.gold += o.gold
+      s.development[c] = clamp(developmentAt(s, c) + o.development, 1, RULES.maxDevelopment)
+      h.levies = clamp(h.levies + o.levies, 0, maxLevy(s, h.id))
+      const r = h.ruler
+      for (const skill of ['martial', 'stewardship', 'learning', 'health'] as const) r[skill] = clamp(r[skill] + o[skill], 0, RULES.maxSkill)
+      record(s, { kind: 'event', house: h.id, ruler: r.name, event: id, choice: order.choice, county: c })
+      s.event = null
       return
     }
   }
@@ -317,7 +445,8 @@ function battle(s: GameState, a: House, b: House) {
   const strength = (h: House) => {
     const [low, high] = RULES.roll
     const terrain = ownerOf(s, c) === h.id ? RULES.defense[county(c).terrain] : 1
-    return h.army!.men * (low + (high - low) * random(s)) * terrain
+    const martial = (100 + RULES.skillStep * (h.ruler.martial - 5)) / 100
+    return h.army!.men * (low + (high - low) * random(s)) * terrain * martial
   }
   const strengthA = strength(a)
   const strengthB = strength(b)
@@ -388,15 +517,15 @@ export function besiege(s: GameState, moved: Set<HouseId>, fought: Set<HouseId>)
 export function collect(s: GameState) {
   for (const h of s.houses) {
     if (!alive(h)) continue
-    const income = developmentOf(s, h.id)
+    const earned = income(s, h.id)
     const cost = h.army ? upkeep(h.army.men) : 0
-    const most = income * RULES.menPerDevelopment
-    if (h.gold + income - cost < 0) {
+    const most = maxLevy(s, h.id)
+    if (h.gold + earned - cost < 0) {
       disband(h, most)
-      h.gold += income
+      h.gold += earned
     }
     else {
-      h.gold += income - cost
+      h.gold += earned - cost
     }
     h.levies = Math.min(most, h.levies + Math.floor(most / RULES.refillMonths))
   }

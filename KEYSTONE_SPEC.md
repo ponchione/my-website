@@ -11,8 +11,12 @@ marches. The map page passes its clicks and selection through `REALM_STAGE`. The
 campaign autosaves (`app/utils/keystone/save.ts`) at each new month, on leaving `/play`
 and on `pagehide`; arriving at `/play` with a save offers Continue or New campaign. The
 end screen (victory, defeat or the 1250 score) uses the event pop-up frame; closing it
-leaves the final map, and the ending in the date panel reopens it. Phase 3 is done;
-rulers and events (phase 4) are next. The map build writes each county's neighbors, development and
+leaves the final map, and the ending in the date panel reopens it. Phase 3 is done.
+Phase 4 (2026-10-21) adds rulers, succession and the player's events (`events.ts`): the
+house panel and the county panel show each ruler, a waiting event pauses the campaign
+and holds the months until you choose, it survives a save and reload, and deaths and
+choices go into the chronicle. Saves are version 2; version 1 saves are reported as older
+laws. Polish (phase 5) is next. The map build writes each county's neighbors, development and
 terrain to `app/data/map/keystone.json`; the engine is under `app/utils/keystone/`, with
 tests in `tests/keystone.test.ts` and the balance harness at `scripts/keystone/simulate.ts`,
 which meets every target (see Testing). The numbers below are the tuned ones.
@@ -184,19 +188,27 @@ the chronicle.
 (or offer peace). Orders take effect at once, paused or not. Only the monthly tick rolls
 dice.
 
-**Rulers** (phase 4). Each house has a generated ruler with a name, an age and three
-skills from 0 to 10. Each skill shifts one number by 4% per point away from 5: Martial
-changes battle strength, Stewardship changes income, and Learning changes the cost to
-develop (higher is cheaper). Rulers age and die, more likely the older they are, and a
-generated heir succeeds them. Only the house carries over.
+**Rulers.** Each house has a generated ruler with a name, an age (20–50 at the start)
+and three skills from 0 to 10, each the sum of two rolls of 0–5. Each skill shifts one
+number by 4% per point away from 5: Martial changes battle strength, Stewardship changes
+income, and Learning changes the cost to develop (higher is cheaper). A ruler also has
+health, 0–10, starting at 5. Each month a ruler dies with a chance of 1/2400 plus
+(years past 30)² ÷ 72,000, where each point of health below 5 counts as 3 years older
+(and each point above, 3 years younger). A generated heir of 16–30 succeeds at once. Only
+the house carries over. In computer-only campaigns about 10 rulers die, at a median age
+of 50.
 
-**Events** (phase 4). About a dozen events, each with two choices, open in the existing
-event pop-up. One reaches you every 18–30 months. An event only changes numbers that
-already exist: gold, levies, development, a skill or a ruler's health. No event adds a
-mechanic. Computer houses don't get events.
+**Events.** Thirteen events, each with two choices, open in the existing event pop-up.
+The first reaches you 18–30 months in, and each next one 18–30 months after the last,
+never the same event twice in a row. An event only changes numbers that already exist:
+gold, levies, development of one of your counties, a skill or your ruler's health. Gold
+and levies scale with your development (an event's "−4" is four months of base income).
+A choice you can't pay for is refused; the second choice never costs gold. While an event
+waits, the months don't pass. No event adds a mechanic. Computer houses don't get events.
 
 **The chronicle.** The engine records the notable moments: wars declared and ended,
-battles, counties taken, rulers who died and houses that fell. A short feed shows the
+battles, counties taken, rulers who died (and their heirs), your events and how you
+chose, and houses that fell. A short feed shows the
 latest lines during play, and the end screen shows all of them.
 
 ## The computer houses
@@ -227,7 +239,8 @@ than half of all games and every county reached development 10 by the 1220s.
 
 - **Top-left, your house:** arms, name and rank; gold, with income per month; levies
   (available and maximum, or the army's size once raised); and counties held. During a
-  war it also names the enemy and shows the war score. Phase 4 adds the ruler.
+  war it also names the enemy and shows the war score, and the ruler's name, age, skills
+  and health. The county panel shows its holder's ruler the same way.
 - **Top-right, the date:** a date such as "1 March 1203", a pause button and three speed
   pips. Space pauses, and 1–3 set the speed.
 - **The map:** each county in its house's color, using the existing 256-entry palette with
@@ -273,7 +286,8 @@ step(state: GameState): GameState // one month: computer houses, movement, battl
 - Only relative imports and erasable TypeScript (no enums), so Node 24 runs it directly
   for the harness.
 - As a rough guard, if the engine grows past ~1,000 lines, something out of scope has
-  crept in.
+  crept in. After phase 4 it is about 1,080, of which `events.ts` is mostly the events'
+  words.
 
 ## How it fits into the site
 

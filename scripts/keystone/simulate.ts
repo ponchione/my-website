@@ -10,7 +10,7 @@ const { values } = parseArgs({ options: { games: { type: 'string', default: '500
 const games = Number(values.games)
 const firstSeed = Number(values.seed)
 
-type Result = { united: number | null, survivors: number, warMonths: number, months: number, wars: number, battles: number, taken: number, ms: number, startSizes: number[] }
+type Result = { united: number | null, survivors: number, warMonths: number, months: number, wars: number, battles: number, taken: number, ms: number, startSizes: number[], deathAges: number[] }
 
 function play(seed: number): Result {
   const started = performance.now()
@@ -33,6 +33,7 @@ function play(seed: number): Result {
     taken: count('taken'),
     ms,
     startSizes,
+    deathAges: s.chronicle.flatMap(e => (e.kind === 'died' ? [e.age] : [])),
   }
 }
 
@@ -53,6 +54,7 @@ const decades = sum(results.map(r => r.months)) / 120
 const warShare = sum(results.map(r => r.warMonths)) / sum(results.map(r => r.months))
 const full = results.filter(r => r.months === RULES.months).map(r => r.ms)
 const starts = results.flatMap(r => r.startSizes)
+const deathAges = results.flatMap(r => r.deathAges)
 
 console.log(`${results.length} computer-only campaigns, seeds ${firstSeed}–${firstSeed + games - 1}\n`)
 console.log(`Not united by ${year(RULES.months)}:  ${percent(notUnited, results.length)}  (target ≥ 80%)  ${check(notUnited >= 0.8 * results.length)}`)
@@ -60,5 +62,6 @@ if (united.length) console.log(`  united in ${year(quantile(united, 0.5))} at th
 console.log(`Houses alive at the end:  median ${quantile(survivors, 0.5)}, 10th–90th percentile ${quantile(survivors, 0.1)}–${quantile(survivors, 0.9)}  (target median ≥ 3)  ${check(quantile(survivors, 0.5) >= 3)}`)
 console.log(`Months with a war on:  ${percent(warShare, 1)}  (target most of the time, > 50%)  ${check(warShare > 0.5)}`)
 console.log(`Per decade:  ${(sum(results.map(r => r.wars)) / decades).toFixed(1)} wars, ${(sum(results.map(r => r.battles)) / decades).toFixed(1)} battles, ${(sum(results.map(r => r.taken)) / decades).toFixed(1)} counties taken`)
+if (deathAges.length) console.log(`Rulers who died:  ${(deathAges.length / results.length).toFixed(1)} a campaign, at ${quantile(deathAges, 0.5)} at the median (${quantile(deathAges, 0.1)}–${quantile(deathAges, 0.9)})`)
 console.log(`Starting counties per house:  ${Math.min(...starts)}–${Math.max(...starts)}, median ${quantile(starts, 0.5)}`)
 if (full.length) console.log(`Run time for ${RULES.months} months:  median ${quantile(full, 0.5).toFixed(1)} ms, slowest ${Math.max(...full).toFixed(1)} ms  (target < 200 ms)  ${check(Math.max(...full) < 200)}`)

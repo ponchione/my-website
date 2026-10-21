@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { describe, expect, it } from 'vitest'
 import {
-  COUNTY_IDS, RULES, apply, county, maxLevy, newGame, step,
+  COUNTY_IDS, EVENTS, RULES, ageOf, apply, county, developmentOf, maxLevy, newGame, step,
   type CountyId, type GameState, type Order,
 } from '../app/utils/keystone/engine.ts'
 import { SAVE_KEY, SAVE_VERSION, loadCampaign, saveCampaign } from '../app/utils/keystone/save.ts'
@@ -9,9 +9,20 @@ import { SAVE_KEY, SAVE_VERSION, loadCampaign, saveCampaign } from '../app/utils
 const byName = (name: string) => COUNTY_IDS.find(c => county(c).name === name)!
 const borders = (a: string, b: string) => county(byName(a)).neighbors.includes(byName(b))
 
+// A waiting event gets the first choice when the house can afford it, else the second.
+function answer(s: GameState) {
+  if (!s.event) return s
+  try {
+    return apply(s, { kind: 'choose', house: s.player!, choice: 0 })
+  }
+  catch {
+    return apply(s, { kind: 'choose', house: s.player!, choice: 1 })
+  }
+}
+
 function play(s: GameState, months: number, each?: (s: GameState) => void) {
   for (let i = 0; i < months && !s.ending; i++) {
-    s = step(s)
+    s = step(answer(s))
     each?.(s)
   }
   return s
@@ -46,10 +57,15 @@ function checkInvariants(s: GameState) {
   for (const h of s.houses) {
     if (!Number.isInteger(h.gold) || h.gold < 0) broken(`${h.name} has ${h.gold} gold`)
     if (!Number.isInteger(h.levies) || h.levies < 0) broken(`${h.name} has ${h.levies} levies`)
+    const r = h.ruler
+    for (const n of [r.martial, r.stewardship, r.learning, r.health]) {
+      if (!Number.isInteger(n) || n < 0 || n > 10) broken(`${h.name}'s ruler has a skill or health of ${n}`)
+    }
     if (h.seat === null) {
       if (h.army) broken(`${h.name} fell but kept its army`)
       continue
     }
+    if (ageOf(r, s.month) < RULES.heirAge[0]) broken(`${h.name}'s ruler is ${ageOf(r, s.month)}`)
     if (s.owner[h.seat] !== h.id) broken(`${h.name} doesn't hold its seat`)
     if (h.levies > maxLevy(s, h.id)) broken(`${h.name}'s levies overflow the pool`)
     if (!h.army) continue
@@ -113,7 +129,7 @@ describe('the engine', () => {
       let s = newGame(42, byName('Philadelphia'))
       while (!s.ending) {
         for (const order of orders[s.month] ?? []) s = apply(s, order)
-        s = step(s)
+        s = step(answer(s))
       }
       return s
     }
@@ -146,6 +162,129 @@ describe('the engine', () => {
     const s = play(newGame(3, byName('Allegheny')), 240)
     expect(s.chronicle.some(e => e.kind === 'war' && e.house === 0)).toBe(false)
     expect(s.houses[0]!.army).toBeNull()
+  })
+})
+
+describe('rulers', () => {
+  it('shift income, the cost to develop and battles by 4% a point from 5', () => {
+    const s = newGame(8, byName('Lancaster'))
+    const seat = s.houses[0]!.seat!
+    const level = s.development[seat]!
+    const ruled = (skills: Partial<GameState['houses'][number]['ruler']>, gold = 0) => ({
+      ...s,
+      event: null,
+      houses: s.houses.map(h => (h.id === 0 ? { ...h, gold, ruler: { ...h.ruler, ...skills, health: 10 } } : h)),
+    })
+    // A Stewardship of 9 earns 16% more, rounded down; 2 earns 12% less.
+    const development = developmentOf(s, 0)
+    expect(step(ruled({ stewardship: 9 })).houses[0]!.gold).toBe(Math.floor((development * 116) / 100))
+    expect(step(ruled({ stewardship: 2 })).houses[0]!.gold).toBe(Math.floor((development * 88) / 100))
+    // A Learning of 10 develops for 80% of the price, and 0 for 120%.
+    expect(apply(ruled({ learning: 10 }, 10_000), { kind: 'develop', house: 0, county: seat }).houses[0]!.gold).toBe(10_000 - 80 * level)
+    expect(apply(ruled({ learning: 0 }, 10_000), { kind: 'develop', house: 0, county: seat }).houses[0]!.gold).toBe(10_000 - 120 * level)
+    expect(() => apply(ruled({ learning: 0 }, 120 * level - 1), { kind: 'develop', house: 0, county: seat })).toThrow('Not enough gold')
+  })
+
+  it('wins more battles with more Martial', () => {
+    // Two equal armies meet over and over; only the Martial of house 0's ruler differs.
+    const wins = (martial: number) => {
+      let won = 0
+      for (let seed = 1; seed <= 300; seed++) {
+        const s = newGame(seed, null)
+        const war = s.houses.findIndex(h => h.id > 0 && s.owner.some((o, c) => o === h.id && county(c).neighbors.some(n => s.owner[n] === 0)))
+        const field = COUNTY_IDS.find(c => s.owner[c] === 0 && county(c).terrain === 'flat') ?? s.houses[0]!.seat!
+        const army = { men: 1000, county: field, target: null, march: 0, siege: 0 }
+        const ready: GameState = {
+          ...s,
+          wars: [{ attacker: 0, defender: war, since: 0, taken: [0, 0], offer: null }],
+          houses: s.houses.map(h => (h.id === 0 ? { ...h, army: { ...army }, ruler: { ...h.ruler, martial } } : h.id === war ? { ...h, army: { ...army }, ruler: { ...h.ruler, martial: 5 } } : h)),
+        }
+        const after = step(ready)
+        if (after.chronicle.some(e => e.kind === 'battle' && e.house === 0)) won++
+      }
+      return won
+    }
+    // Owner's terrain bonus is ×1 on flat land, so 5 against 5 is a coin toss.
+    expect(wins(10)).toBeGreaterThan(wins(5) + 40)
+    expect(wins(0)).toBeLessThan(wins(5) - 40)
+  })
+
+  it('age, die and are succeeded by a generated heir while the house stands', () => {
+    let s = newGame(13, byName('Erie'))
+    const founder = s.houses[0]!.ruler
+    s = { ...s, houses: s.houses.map(h => (h.id === 0 ? { ...h, ruler: { ...h.ruler, born: -12 * 80, health: 0 } } : h)) }
+    expect(ageOf(s.houses[0]!.ruler, s.month)).toBe(80)
+    // At 80 and in the worst health, the founder lasts months, not years.
+    while (!s.chronicle.some(e => e.kind === 'died' && e.house === 0)) s = play(s, 1)
+    expect(s.month).toBeLessThan(60)
+    const { ruler } = s.houses[0]!
+    expect(s.chronicle.findLast(e => e.kind === 'died' && e.house === 0)).toMatchObject({ month: s.month - 1, ruler: founder.name, heir: ruler.name })
+    expect(s.houses[0]!.name).toBe('House of Erie')
+    expect(ageOf(ruler, s.month)).toBeGreaterThanOrEqual(RULES.heirAge[0])
+    expect(ageOf(ruler, s.month)).toBeLessThanOrEqual(RULES.heirAge[1])
+    expect(ruler.health).toBe(5)
+    const fallen = play(newGame(4, null), RULES.months)
+    const gone = fallen.chronicle.filter(e => e.kind === 'fell')
+    for (const e of gone) expect(fallen.chronicle.some(d => d.kind === 'died' && d.house === e.house && d.month > e.month)).toBe(false)
+  })
+})
+
+describe('events', () => {
+  it('reach the player every 18 to 30 months and hold the months until chosen', () => {
+    let s = newGame(17, byName('Philadelphia'))
+    const arrivals: number[] = []
+    while (s.month < 240 && !s.ending) {
+      s = step(s)
+      if (!s.event) continue
+      arrivals.push(s.month)
+      expect(() => step(s)).toThrow('An event awaits')
+      expect(() => apply(s, { kind: 'choose', house: 1, choice: 1 })).toThrow()
+      s = answer(s)
+      expect(s.event).toBeNull()
+    }
+    expect(arrivals.length).toBeGreaterThanOrEqual(3)
+    expect(arrivals[0]).toBeGreaterThanOrEqual(18)
+    expect(arrivals[0]).toBeLessThanOrEqual(30)
+    for (let i = 1; i < arrivals.length; i++) {
+      expect(arrivals[i]! - arrivals[i - 1]!).toBeGreaterThanOrEqual(18)
+      expect(arrivals[i]! - arrivals[i - 1]!).toBeLessThanOrEqual(30)
+    }
+    expect(s.chronicle.filter(e => e.kind === 'event')).toHaveLength(arrivals.length)
+    expect(play(newGame(17, null), 240).event).toBeNull()
+  })
+
+  it('change only gold, levies, development, skills and health, within bounds', () => {
+    expect(EVENTS.length).toBeGreaterThanOrEqual(12)
+    const base = newGame(23, byName('Philadelphia'))
+    const c = base.houses[0]!.seat!
+    for (const event of EVENTS) {
+      expect(event.choices[1].effect.gold ?? 0, `${event.id} has a free second choice`).toBeGreaterThanOrEqual(0)
+      for (const choice of [0, 1]) {
+        const s: GameState = {
+          ...base,
+          event: { id: event.id, county: c },
+          houses: base.houses.map(h => (h.id === 0 ? { ...h, gold: 1000, levies: 500, ruler: { ...h.ruler, martial: 10, stewardship: 0, health: 1 } } : h)),
+        }
+        const after = apply(s, { kind: 'choose', house: 0, choice })
+        const effect = event.choices[choice]!.effect
+        const dev = developmentOf(s, 0)
+        const [was, now] = [s.houses[0]!, after.houses[0]!]
+        expect(now.gold, event.id).toBe(1000 + (effect.gold ?? 0) * dev)
+        expect(now.levies).toBe(Math.min(maxLevy(after, 0), Math.max(0, 500 + (effect.levies ?? 0) * dev)))
+        expect(after.development[c]).toBe(Math.min(10, Math.max(1, s.development[c]! + (effect.development ?? 0))))
+        expect(now.ruler.martial).toBe(10)
+        expect(now.ruler.stewardship).toBe(Math.max(0, (effect.stewardship ?? 0)))
+        expect(now.ruler.learning).toBe(was.ruler.learning + (effect.learning ?? 0))
+        expect(now.ruler.health).toBe(Math.max(0, 1 + (effect.health ?? 0)))
+        const { event: _e, houses: _h, development: _d, chronicle: _c, ...rest } = after
+        const { event: _e2, houses: _h2, development: _d2, chronicle: _c2, ...restBefore } = s
+        expect(rest).toEqual(restBefore)
+        expect(after.chronicle.at(-1)).toMatchObject({ kind: 'event', house: 0, event: event.id, choice, county: c })
+      }
+    }
+    const broke: GameState = { ...base, event: { id: 'winter', county: c } }
+    expect(() => apply(broke, { kind: 'choose', house: 0, choice: 0 })).toThrow('Not enough gold')
+    expect(apply(broke, { kind: 'choose', house: 0, choice: 1 }).event).toBeNull()
   })
 })
 
@@ -211,6 +350,18 @@ describe('saves', () => {
     expect(loaded.kind).toBe('saved')
     if (loaded.kind !== 'saved') return
     expect(loaded.state.rng).toBe(s.rng)
+    expect(play(loaded.state, RULES.months)).toEqual(play(s, RULES.months))
+  })
+
+  it('keeps a waiting event through a save and a reload', () => {
+    let s = newGame(31, byName('York'))
+    while (!s.event) s = step(s)
+    const store = memory()
+    saveCampaign(s, store)
+    const loaded = loadCampaign(store)
+    expect(loaded.kind === 'saved' && loaded.state.event).toEqual(s.event)
+    if (loaded.kind !== 'saved') return
+    expect(() => step(loaded.state)).toThrow('An event awaits')
     expect(play(loaded.state, RULES.months)).toEqual(play(s, RULES.months))
   })
 

@@ -6,7 +6,8 @@
 import { COUNTY_IDS, RULES, type GameState } from './engine.ts'
 
 export const SAVE_KEY = 'keystone.campaign'
-export const SAVE_VERSION = 1
+// 2: rulers and events (phase 4).
+export const SAVE_VERSION = 2
 
 type Store = Pick<Storage, 'getItem' | 'setItem'>
 
@@ -35,6 +36,8 @@ function looksLikeState(s: unknown): s is GameState {
     && Array.isArray(g.owner) && g.owner.length === COUNTY_IDS.length + 1
     && Array.isArray(g.development) && g.development.length === COUNTY_IDS.length + 1
     && Array.isArray(g.houses) && g.houses.length === RULES.houses
+    && g.houses.every(h => !!h && typeof h === 'object' && !!h.ruler && typeof h.ruler === 'object')
+    && isInt(g.nextEvent) && (g.event === null || (!!g.event && typeof g.event === 'object'))
     && Array.isArray(g.wars) && Array.isArray(g.truces) && Array.isArray(g.chronicle)
     && (g.ending === null || typeof g.ending === 'object')
 }

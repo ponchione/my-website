@@ -4,17 +4,18 @@
 
 import { computerTurn } from './ai.ts'
 import { COUNTY_IDS, county, hops, type CountyId } from './board.ts'
-import { pick, type Seeded } from './rng.ts'
+import { pick, randomInt, type Seeded } from './rng.ts'
 import {
-  RULES, alive, besiege, collect, developmentOf, execute, fight, house, march, need,
+  RULES, age, alive, arrive, besiege, collect, developmentOf, execute, fight, house, march, need, newRuler,
   type GameState, type HouseId, type Order,
 } from './rules.ts'
 
 export { COUNTY_IDS, county, type County, type CountyId, type Terrain } from './board.ts'
 export {
-  RULES, developmentOf, holdings, maxLevy, rank, siegeMonths, upkeep, warOf, warScore,
-  type Army, type Ending, type Entry, type GameState, type House, type HouseId, type Order, type War,
+  RULES, ageOf, deathChance, developCost, developmentOf, holdings, income, maxLevy, outcome, rank, siegeMonths, upkeep, warOf, warScore,
+  type Army, type Ending, type Entry, type GameState, type House, type HouseId, type Order, type Ruler, type War,
 } from './rules.ts'
+export { EVENTS, eventById, type Choice, type Effect, type KeystoneEvent } from './events.ts'
 export { AI } from './ai.ts'
 
 // A house is named for the county it was founded in.
@@ -64,13 +65,21 @@ export function newGame(seed: number, start: CountyId | null): GameState {
     player: start === null ? null : 0,
     owner,
     development,
-    houses: seats.map((seat, id) => ({ id, name: houseName(seat), seat, gold: RULES.startGold, levies: 0, army: null })),
+    houses: [],
     wars: [],
     truces: [],
     chronicle: [],
     ending: null,
+    event: null,
+    nextEvent: 0,
+  }
+  for (const [id, seat] of seats.entries()) {
+    const ruler = newRuler(s, RULES.rulerAge)
+    s.houses.push({ id, name: houseName(seat), seat, gold: RULES.startGold, levies: 0, army: null, ruler })
   }
   for (const h of s.houses) h.levies = developmentOf(s, h.id) * RULES.menPerDevelopment
+  const [soonest, latest] = RULES.eventMonths
+  s.nextEvent = soonest + randomInt(s, latest - soonest + 1)
   return s
 }
 
@@ -81,7 +90,7 @@ function copy(s: GameState): GameState {
     ...s,
     owner: [...s.owner],
     development: [...s.development],
-    houses: s.houses.map(h => ({ ...h, army: h.army && { ...h.army } })),
+    houses: s.houses.map(h => ({ ...h, army: h.army && { ...h.army }, ruler: { ...h.ruler } })),
     wars: s.wars.map(w => ({ ...w, taken: [...w.taken] })),
     truces: s.truces.map(t => ({ ...t, houses: [...t.houses] })),
     chronicle: [...s.chronicle],
@@ -95,10 +104,12 @@ export function apply(state: GameState, order: Order): GameState {
   return s
 }
 
-// One month: the computer houses' orders, then movement, battles, sieges, and gold and
-// levies.
+// One month: the computer houses' orders, then movement, battles, sieges, gold and
+// levies, and the rulers' deaths. The player's next event may arrive. A waiting event
+// holds the months back until the player chooses.
 export function step(state: GameState): GameState {
   need(!state.ending, 'The campaign is over')
+  need(!state.event, 'An event awaits a choice')
   const s = copy(state)
   for (const h of s.houses) {
     if (alive(h) && h.id !== s.player) computerTurn(s, h, order => execute(s, order))
@@ -107,12 +118,14 @@ export function step(state: GameState): GameState {
   const fought = fight(s)
   besiege(s, moved, fought)
   collect(s)
+  age(s)
   s.month++
   s.truces = s.truces.filter(t => t.until > s.month)
   const survivors = s.houses.filter(alive)
   if (s.player !== null && !alive(house(s, s.player))) s.ending = { month: s.month, kind: 'fallen', house: s.player }
   else if (survivors.length === 1) s.ending = { month: s.month, kind: 'united', house: survivors[0]!.id }
   else if (s.month >= RULES.months) s.ending = { month: s.month, kind: 'time', house: null }
+  arrive(s)
   return s
 }
 

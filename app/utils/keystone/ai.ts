@@ -4,7 +4,7 @@
 import { COUNTY_IDS, county, hops, type CountyId } from './board.ts'
 import { randomInt } from './rng.ts'
 import {
-  RULES, alive, borders, developmentAt, holdings, house, maxLevy, otherSide, ownerOf,
+  RULES, alive, borders, developCost, developmentAt, holdings, house, maxLevy, otherSide, ownerOf,
   routes, siegeMonths, truceBetween, upkeep, warOf, warScore,
   type GameState, type House, type Order, type War,
 } from './rules.ts'
@@ -26,7 +26,7 @@ export function computerTurn(s: GameState, h: House, issue: Issue) {
   const cheapest = holdings(s, h.id)
     .filter(c => developmentAt(s, c) < RULES.maxDevelopment)
     .reduce<CountyId | null>((best, c) => (best === null || developmentAt(s, c) < developmentAt(s, best) ? c : best), null)
-  if (cheapest !== null && h.gold >= RULES.developCost * developmentAt(s, cheapest) + reserve) {
+  if (cheapest !== null && h.gold >= developCost(s, h.id, cheapest) + reserve) {
     issue({ kind: 'develop', house: h.id, county: cheapest })
   }
   const war = warOf(s, h.id)

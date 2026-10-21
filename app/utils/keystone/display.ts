@@ -4,7 +4,7 @@
 import { countyById, realmById } from '~/utils/realm/map-data'
 import { NEUTRAL, palette, shade, type MapModePalette, type Rgb } from '~/utils/realm/map-modes'
 import type { ArmyBanner } from '~/utils/realm/stage'
-import { county, dateOf, type Entry, type GameState, type HouseId } from './engine.ts'
+import { county, dateOf, eventById, outcome, type Effect, type Entry, type GameState, type HouseId } from './engine.ts'
 
 // One per house, by house id: strong enough to read over the terrain, apart from one
 // another, and none of them the unclaimed parchment.
@@ -56,6 +56,11 @@ export type LinePart = { text: string, house?: HouseId }
 
 export function chronicleLine(s: GameState, entry: Entry): LinePart[] {
   const who = { text: s.houses[entry.house]!.name, house: entry.house }
+  if (entry.kind === 'died') return [{ text: `${entry.ruler} of ` }, who, { text: ` died at ${entry.age}; ${entry.heir} succeeds` }]
+  if (entry.kind === 'event') {
+    const choice = eventById(entry.event).choices[entry.choice]!
+    return [{ text: `${entry.ruler} of ` }, who, { text: ` ${fill(choice.past, entry.ruler, entry.county)}` }]
+  }
   const other = { text: s.houses[entry.other]!.name, house: entry.other }
   switch (entry.kind) {
     case 'war': return [who, { text: ' declared war on ' }, other]
@@ -68,3 +73,21 @@ export function chronicleLine(s: GameState, entry: Entry): LinePart[] {
 
 // "March 1203": the month an entry happened in.
 export const entryDate = (entry: Entry) => dateOf(entry.month).slice(2)
+
+// An event's words with the ruler's and the county's names in.
+export const fill = (text: string, ruler: string, c: number) => text.replaceAll('{ruler}', ruler).replaceAll('{county}', county(c).name)
+
+const SKILLS = { martial: 'Martial', stewardship: 'Stewardship', learning: 'Learning', health: 'health' } as const
+
+// What a choice does, as the event pop-up lists it: "−88 gold · +1 Martial".
+export function effectText(s: GameState, effect: Effect, c: number): string {
+  const o = outcome(s, effect)
+  const signed = (n: number) => (n > 0 ? `+${n}` : `−${-n}`)
+  const parts = [
+    o.gold && `${signed(o.gold)} gold`,
+    o.levies && `${signed(o.levies)} levies`,
+    o.development && `${signed(o.development)} development in ${county(c).name}`,
+    ...(['martial', 'stewardship', 'learning', 'health'] as const).map(k => o[k] && `${signed(o[k])} ${SKILLS[k]}`),
+  ].filter(Boolean)
+  return parts.length ? parts.join(' · ') : 'Nothing changes'
+}

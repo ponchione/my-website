@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Pause, Play, Swords } from '@lucide/vue'
-import { armyBanners, campaignPalette, chronicleLine, entryDate, houseColor } from '~/utils/keystone/display'
+import { armyBanners, campaignPalette, chronicleLine, effectText, entryDate, fill, houseColor } from '~/utils/keystone/display'
 import {
-  COUNTY_IDS, RULES, apply, county, dateOf, found, holdings, maxLevy, newGame, rank, score, siegeMonths, step, upkeep, warOf, warScore,
-  developmentOf, type CountyId, type GameState, type Order,
+  COUNTY_IDS, RULES, ageOf, apply, county, dateOf, developCost, eventById, found, holdings, income, maxLevy, newGame, rank, score, siegeMonths, step, upkeep, warOf, warScore,
+  type CountyId, type GameState, type Order, type Ruler,
 } from '~/utils/keystone/engine'
 import type { MapPick } from '~/utils/realm/map-data'
 import { REALM_STAGE } from '~/utils/realm/stage'
@@ -109,17 +109,17 @@ function begin(start: CountyId | null) {
 }
 
 // The months pass on their own unless paused. The campaign pauses itself when war is
-// declared on the visitor and when it ends.
+// declared on the visitor, when an event arrives and when it ends.
 function schedule() {
   clearTimeout(timer)
-  if (paused.value || rising.value || game.value?.ending) return
+  if (paused.value || rising.value || game.value?.ending || game.value?.event) return
   timer = setTimeout(() => {
     const before = game.value!
     const after = step(before)
     game.value = after
     save()
     const war = after.player === null ? undefined : warOf(after, after.player)
-    if (after.ending || (war && war.defender === after.player && !warOf(before, after.player!))) paused.value = true
+    if (after.ending || after.event || (war && war.defender === after.player && !warOf(before, after.player!))) paused.value = true
     if (after.ending) endOpen.value = true
     schedule()
   }, SPEEDS[speed.value])
@@ -180,6 +180,18 @@ const houses = computed(() => {
     .sort((a, b) => b.held - a.held || a.id - b.id)
 })
 
+// A ruler as the panels show one: name, age, the three skills and health.
+const rulerOf = (s: GameState, r: Ruler) => ({
+  name: r.name,
+  age: ageOf(r, s.month),
+  skills: [
+    { label: 'Martial', value: r.martial, title: 'Battle strength' },
+    { label: 'Stewardship', value: r.stewardship, title: 'Income' },
+    { label: 'Learning', value: r.learning, title: 'The cost to develop' },
+    { label: 'Health', value: r.health, title: 'Poor health shortens a life' },
+  ],
+})
+
 // The visitor's house, for the summary at the top left.
 const mine = computed(() => {
   const s = game.value
@@ -194,7 +206,8 @@ const mine = computed(() => {
     held,
     rank: held ? rank(s, h.id) : 'Fallen',
     gold: h.gold,
-    income: developmentOf(s, h.id) - (h.army ? upkeep(h.army.men) : 0),
+    income: income(s, h.id) - (h.army ? upkeep(h.army.men) : 0),
+    ruler: rulerOf(s, h.ruler),
     levies: h.levies,
     maxLevies: maxLevy(s, h.id),
     army: h.army && {
@@ -233,13 +246,14 @@ const place = computed(() => {
     name: `${county(c).name} County`,
     holder,
     holderName: s.houses[holder]!.name,
+    ruler: rulerOf(s, s.houses[holder]!.ruler),
     own,
     seat: s.houses[holder]!.seat === c,
     level,
     terrain: TERRAIN[county(c).terrain],
     levies: level * RULES.menPerDevelopment,
     siege: besieger && { house: besieger.name, months: besieger.army!.siege, of: siegeMonths(s, c) },
-    develop: own ? { cost: RULES.developCost * level, ...order({ kind: 'develop', house: me, county: c }) } : null,
+    develop: own ? { cost: developCost(s, me, c), ...order({ kind: 'develop', house: me, county: c }) } : null,
     raise: own && !h.army ? { men: h.levies, ...order({ kind: 'raise', house: me, county: c }) } : null,
     disband: own && h.army ? order({ kind: 'disband', house: me }) : null,
     march: h.army && h.army.county !== c ? order({ kind: 'move', house: me, county: c }) : null,
@@ -265,6 +279,23 @@ const feed = computed(() => {
   }))
 })
 
+// The event waiting on the visitor's choice, with what each choice would do.
+const pending = computed(() => {
+  const s = game.value
+  if (!s?.event || s.player === null || rising.value) return null
+  const { id, county: c } = s.event
+  const event = eventById(id)
+  const ruler = s.houses[s.player]!.ruler.name
+  return {
+    title: event.title,
+    text: fill(event.text, ruler, c),
+    choices: event.choices.map((choice, index) => {
+      const order: Order = { kind: 'choose', house: s.player!, choice: index }
+      return { key: index, label: choice.label, effect: effectText(s, choice.effect, c), order, refused: refusal(order) }
+    }),
+  }
+})
+
 const ending = computed(() => {
   const s = game.value
   const end = s?.ending
@@ -282,7 +313,7 @@ const finale = computed(() => {
   const me = s.houses[s.player]!
   const held = holdings(s, s.player).length
   const outcomes = {
-    united: { kicker: 'Victory', title: 'You unite Pennsylvania', lead: `${me.name} holds all 67 counties. Its ruler is King of Pennsylvania.` },
+    united: { kicker: 'Victory', title: 'You unite Pennsylvania', lead: `${me.name} holds all 67 counties. ${me.ruler.name} is King of Pennsylvania.` },
     fallen: { kicker: 'Defeat', title: 'Your house has fallen', lead: `${me.name} has lost its last county.` },
     time: { kicker: 'The age ends', title: `Your score: ${score(s, s.player)}`, lead: `${me.name} reaches 1250 as a ${rank(s, s.player)} with ${held} ${held === 1 ? 'county' : 'counties'}.` },
   }
@@ -305,7 +336,7 @@ const savedCampaign = computed(() => {
 const signed = (n: number) => (n > 0 ? `+${n}` : `${n}`)
 
 function togglePause() {
-  if (!game.value?.ending) paused.value = !paused.value
+  if (!game.value?.ending && !game.value?.event) paused.value = !paused.value
 }
 
 // Space pauses and 1–3 set the speed, as in the grand-strategy games; Escape lets go of
@@ -428,6 +459,20 @@ onBeforeUnmount(() => {
           </div>
           <dl class="keystone-stats">
             <div>
+              <dt>Ruler</dt>
+              <dd>{{ mine.ruler.name }}, {{ mine.ruler.age }}</dd>
+            </div>
+            <div class="keystone-stat-skills">
+              <dt class="sr-only">Skills</dt>
+              <dd>
+                <ul class="keystone-skills">
+                  <li v-for="skill in mine.ruler.skills" :key="skill.label" :title="skill.title">
+                    <span class="keystone-muted">{{ skill.label }}</span> {{ skill.value }}
+                  </li>
+                </ul>
+              </dd>
+            </div>
+            <div>
               <dt>Gold</dt>
               <dd>{{ mine.gold }} <span class="keystone-muted">({{ signed(mine.income) }} a month)</span></dd>
             </div>
@@ -487,7 +532,7 @@ onBeforeUnmount(() => {
           <button
             type="button"
             class="keystone-pause"
-            :disabled="!!game.ending"
+            :disabled="!!game.ending || !!game.event"
             :aria-label="paused ? 'Play (Space)' : 'Pause (Space)'"
             @click="togglePause"
           >
@@ -520,6 +565,17 @@ onBeforeUnmount(() => {
           <span v-if="place.seat" class="keystone-muted"> · seat</span>
         </p>
         <dl class="keystone-stats">
+          <div><dt>Ruler</dt><dd>{{ place.ruler.name }}, {{ place.ruler.age }}</dd></div>
+          <div class="keystone-stat-skills">
+            <dt class="sr-only">Skills</dt>
+            <dd>
+              <ul class="keystone-skills">
+                <li v-for="skill in place.ruler.skills" :key="skill.label" :title="skill.title">
+                  <span class="keystone-muted">{{ skill.label }}</span> {{ skill.value }}
+                </li>
+              </ul>
+            </dd>
+          </div>
           <div><dt>Development</dt><dd>{{ place.level }}</dd></div>
           <div><dt>Terrain</dt><dd>{{ place.terrain }}</dd></div>
           <div><dt>Levies</dt><dd>{{ place.levies }} men</dd></div>
@@ -569,6 +625,29 @@ onBeforeUnmount(() => {
         </ol>
       </section>
     </Transition>
+
+    <RealmEvent
+      v-if="pending && mine"
+      class="keystone-end"
+      :kicker="`${mine.name} · ${dateOf(game!.month)}`"
+      :title="pending.title"
+      described-by="keystone-event-text"
+    >
+      <p id="keystone-event-text" class="keystone-end-lead">{{ pending.text }}</p>
+      <template #options>
+        <button
+          v-for="choice in pending.choices"
+          :key="choice.key"
+          type="button"
+          class="realm-event-option keystone-choice"
+          :disabled="!!choice.refused"
+          @click="attempt(choice.order)"
+        >
+          <span class="keystone-choice-label">{{ choice.label }}</span>
+          <span class="keystone-muted">{{ choice.effect }}<template v-if="choice.refused"> · {{ choice.refused.toLowerCase() }}</template></span>
+        </button>
+      </template>
+    </RealmEvent>
 
     <RealmEvent
       v-if="finale && endOpen"
@@ -956,6 +1035,41 @@ button.keystone-ending:hover,
 button.keystone-ending:focus-visible {
   color: var(--gold);
   outline: none;
+}
+
+/* The ruler's skills, in one row that wraps. */
+.keystone-stat-skills {
+  margin: -2px 0 2px;
+}
+
+.keystone-stats > .keystone-stat-skills {
+  grid-template-columns: 1fr;
+}
+
+.keystone-skills {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 12px;
+  font-size: 14px;
+}
+
+/* An event's choices: what to do, then what it costs. */
+.keystone-choice {
+  display: grid;
+  gap: 2px;
+}
+
+.keystone-choice-label {
+  font-weight: 600;
+}
+
+.keystone-choice .keystone-muted {
+  font-size: 15px;
+}
+
+.keystone-choice:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 /* The end screen, in the event pop-up's frame, over the whole map. */
