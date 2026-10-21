@@ -127,7 +127,9 @@ async function verifyNavigationPrefetch(browser) {
 }
 
 async function verifyClientNavigation(browser) {
-  const context = await newContext(browser, { viewport: { width: 1440, height: 900 } })
+  // Routing, not motion: with motion reduced the letters open at once and the map behind
+  // them stops drawing, so slow software-rendered runners can still click them.
+  const context = await newContext(browser, { viewport: { width: 1440, height: 900 }, reducedMotion: 'reduce' })
   const page = await context.newPage()
   await page.goto(sitePage)
   await waitForSettledPage(page)
