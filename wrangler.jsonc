@@ -7,6 +7,14 @@
   "preview_urls": true,
   "routes": [
     {
+      "pattern": "ponchione.dev",
+      "custom_domain": true
+    },
+    {
+      "pattern": "www.ponchione.dev",
+      "custom_domain": true
+    },
+    {
       "pattern": "www.mitchellponchione.com",
       "custom_domain": true
     }
